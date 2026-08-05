@@ -55,3 +55,11 @@ In `openkore/control/config.txt`: `master RagnaOne`
 ### Verified
 
 OpenKore reaches the account server and receives a proper login response (invalid probe accounts return “Account name doesn't exist”).
+### Verified in-game
+
+Connected successfully with a test character:
+
+- Character: **OKTest** (Novice, Male, Base/Job 1/1)
+- Spawn: Prontera `(155, 183)`
+- Char server `6121`, map server `5121`
+
