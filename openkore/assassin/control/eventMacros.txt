@@ -1,10 +1,10 @@
-# eventMacros.txt - Job Master + Assassin leveling route
+# eventMacros.txt — Job Master + Assassin leveling route
 # Requires OpenKore eventMacro plugin (bundled in modern OpenKore).
 # Enable with: load eventMacro
 
 # ============================================================
 # Job Master @ Prontera 150,180 (stock Hercules Euphy Job Master)
-# Menu order may differ on custom scripts - tune r# if needed.
+# Menu order may differ on custom scripts — tune r# if needed.
 # First jobs often: Swordman, Magician, Archer, Acolyte, Merchant, Thief
 #   → Thief = r5
 # Thief 2nd jobs often: Assassin, Rogue
@@ -52,7 +52,275 @@ automacro Ragna_Job_ToAssassin {
 	}
 }
 
-# Identify loot — parked until @eval-safe check lands (was erroring on while/if in eval)
+# Re-equip after job change / death
+
+# ============================================================
+# Progressive lock maps
+# ============================================================
+
+automacro Ragna_Lv1_11 {
+	BaseLevel < 12
+	run-once 1
+	call {
+		do conf lockMap prt_fild08
+		do conf lockMap_randX 14
+		do conf lockMap_randY 14
+		log [RagnaOne] Lv1-11: Prontera Field 08 porings/drops
+	}
+}
+
+automacro Ragna_Lv12_20 {
+	BaseLevel 12..20
+	run-once 1
+	call {
+		do conf lockMap pay_fild08
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv12-20: Payon Field 08
+	}
+}
+
+automacro Ragna_Lv21_30 {
+	BaseLevel 21..30
+	run-once 1
+	call {
+		do conf lockMap gef_fild00
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv21-30: Geffen Field 00
+	}
+}
+
+automacro Ragna_Lv31_40 {
+	BaseLevel 31..40
+	run-once 1
+	call {
+		do conf lockMap pay_dun00
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv31-40 Assassin: Payon Cave 00 skeletons/zombies
+	}
+}
+
+automacro Ragna_Lv41_50 {
+	BaseLevel 41..50
+	run-once 1
+	call {
+		do conf lockMap pay_dun01
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv41-50 Assassin: Payon Cave 01
+	}
+}
+
+automacro Ragna_Lv51_60 {
+	BaseLevel 51..60
+	run-once 1
+	call {
+		do conf lockMap moc_pryd02
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv51-60 Assassin: Pyramid 2F classic thief/assassin spot
+	}
+}
+
+automacro Ragna_Lv61_70 {
+	BaseLevel 61..70
+	run-once 1
+	call {
+		do conf lockMap moc_pryd03
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv61-70 Assassin: Pyramid 3F
+	}
+}
+
+automacro Ragna_Lv71_80 {
+	BaseLevel 71..80
+	run-once 1
+	call {
+		do conf lockMap in_sphinx2
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv71-80 Assassin: Sphinx 2F
+	}
+}
+
+automacro Ragna_Lv81_90 {
+	BaseLevel 81..90
+	run-once 1
+	call {
+		do conf lockMap in_sphinx3
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv81-90 Assassin: Sphinx 3F
+	}
+}
+
+automacro Ragna_Lv91_99 {
+	BaseLevel 91..99
+	run-once 1
+	call {
+		do conf lockMap in_sphinx4
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv91-99 Assassin: Sphinx 4F — finish to 99
+	}
+}
+
+# Occasional sit pause to look less robotic (idle heal already handles most)
+automacro Ragna_RandomIdle {
+	BaseLevel >= 9999
+	timeout 99999
+	call {
+		log [Ragna] idle disabled
+	}
+}
+
+# After death, restock feeling
+
+automacro Ragna_EquipRefresh {
+	BaseLevel >= 1
+	timeout 1800
+	exclusive 0
+	call {
+		[
+			log [Ragna] Refreshing equipment slots
+			do eq
+			do eq
+		]
+	}
+}
+
+automacro Ragna_AfterDeath {
+	isAlive 0
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log [Ragna] Dead - no pause to avoid orphan macros
+		]
+	}
+}
+
+# ---- Town / Izlude / off-lockMap recovery (RagnaOne) ----
+automacro Ragna_TownAfterDeath {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta
+	timeout 25
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] In town - resume lockMap
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			pause 1
+		]
+	}
+}
+
+# Yank bots that wandered onto wrong fields back to lockMap
+automacro Ragna_ReturnToLock {
+	ConfigKeyNot lockMap none
+	InLockMap 0
+	timeout 40
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] Not on lockMap - resume hunt route
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			pause 2
+		]
+	}
+}
+
+# Set Prontera save once so future deaths skip Izlude spawn
+automacro Ragna_SetSaveProntera {
+	IsInMapAndCoordinate prontera
+	ConfigKeyNot ragnaSaveProntera 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log [Ragna] Setting save point at Prontera Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 151 29
+			pause 8
+			do talknpc 151 29 c r0
+			pause 4
+			do conf ragnaSaveProntera 1
+			do conf saveMap prontera
+			do conf saveMap_x 155
+			do conf saveMap_y 187
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+automacro Ragna_EscapeIzlude {
+	IsInMapAndCoordinate izlude
+	timeout 35
+	exclusive 1
+	call EscapeIzlude
+}
+
+macro EscapeIzlude {
+	log [Ragna] Escaping Izlude via west portal to prt_fild08
+	do conf attackAuto 0
+	do conf route_randomWalk 0
+	do conf lockMap none
+	pause 1
+	do move 30 78
+	pause 14
+	do conf attackAuto 2
+	do conf route_randomWalk 1
+	do conf lockMap prt_fild08
+}
+
+# If still in Izlude after west attempt, take Sailor to Alberta
+automacro Ragna_EscapeIzludeSailor {
+	IsInMapAndCoordinate izlude
+	timeout 50
+	exclusive 1
+	call {
+		[
+			log [Ragna] Still in Izlude - Sailor to Alberta
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move 201 181
+			pause 12
+			do talknpc 201 181 c r1
+			pause 6
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+automacro Ragna_EscapeIzludeIn {
+	IsInMapAndCoordinate izlude_in
+	timeout 15
+	exclusive 1
+	call {
+		[
+			log [Ragna] Leaving izlude_in to outdoor Izlude
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 116 46
+			pause 8
+		]
+	}
+}
+
+# Identify loot — parked (eventMacro @eval keyword conflicts)
 automacro Ragna_IdentifyLoot {
 	exclusive 1
 	timeout 99999

@@ -23,7 +23,7 @@ automacro Ragna_Job_ToThief {
 		do conf route_randomWalk 0
 		do move prontera 153 193
 		pause 2
-		do talknpc 150 180 c r5 c r0
+		do talknpc 150 180 c c c r5 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -44,7 +44,7 @@ automacro Ragna_Job_ToAssassin {
 		do conf route_randomWalk 0
 		do move prontera 153 193
 		pause 2
-		do talknpc 150 180 c r0 c r0
+		do talknpc 150 180 c c c r0 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -52,41 +52,7 @@ automacro Ragna_Job_ToAssassin {
 	}
 }
 
-
-# Identify unidentified loot with Magnifier, then re-check equipAuto
-
 # Re-equip after job change / death
-# Scan for unidentified gear, then Magnifier-identify and equipAuto-check
-automacro Ragna_ScanUnid {
-	BaseLevel >= 1
-	timeout 10
-	exclusive 0
-	call {
-		do eval my $c=0; foreach my $it (@{$::char->inventory->getItems()}) { next unless $it; next if $it->{identified}; next unless ($it->{type}==4 || $it->{type}==5 || $it->{type}==8); $c++; } Commands::run("conf ragna_unid ".($c>0?1:0));
-	}
-}
-
-automacro Ragna_IdentifyLoot {
-	BaseLevel >= 1
-	ConfigKey ragna_unid 1
-	InInventory "Magnifier" > 0
-	timeout 10
-	exclusive 1
-	call {
-		[
-			log [Ragna] Magnifier: identify loot then equip check
-			do is Magnifier
-			pause 1.2
-			do identify 0
-			pause 1
-			do eq
-			pause 0.5
-			do conf ragna_unid 0
-			log [Ragna] Identify/equip pass done
-		]
-	}
-}
-
 automacro Ragna_EquipRefresh {
 	timeout 90
 	call {
@@ -227,5 +193,16 @@ automacro Ragna_AfterDeath {
 	call {
 		log [RagnaOne] Died — recovering in town before returning
 		pause 8
+	}
+}
+
+# Identify loot — parked (eventMacro @eval keyword conflicts)
+automacro Ragna_IdentifyLoot {
+	exclusive 1
+	timeout 99999
+	BaseLevel >= 9999
+	InInventory "Magnifier" > 0
+	call {
+		log [Ragna] IdentifyLoot parked
 	}
 }
