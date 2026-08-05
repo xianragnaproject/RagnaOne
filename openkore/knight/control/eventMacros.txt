@@ -48,15 +48,6 @@ automacro Ragna_Job_ToKnight {
 	}
 }
 
-automacro Ragna_EquipRefresh {
-	BaseLevel >= 1
-	timeout 90
-	call {
-		do reload conf
-		log [RagnaOne] Refresh equipAuto rules
-	}
-}
-
 automacro Ragna_Lv1_11 {
 	BaseLevel < 12
 	run-once 1
@@ -176,12 +167,89 @@ automacro Ragna_RandomIdle {
 	}
 }
 
+automacro Ragna_EquipRefresh {
+	BaseLevel >= 1
+	timeout 600
+	exclusive 1
+	call {
+		[
+			log [Ragna] Refreshing equipment slots
+			do eq
+			do eq
+		]
+	}
+}
+
 automacro Ragna_AfterDeath {
 	isAlive 0
-	delay 3
-	run-once 0
+	timeout 30
+	exclusive 1
 	call {
-		log [RagnaOne] Died recovering in town before returning
-		pause 8
+		[
+			log [Ragna] Dead - no pause to avoid orphan macros
+		]
+	}
+}
+
+# ---- Town / Izlude recovery (RagnaOne) ----
+automacro Ragna_TownAfterDeath {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,izlude_in
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log [Ragna] In town after death - resume lockMap
+			do reload conf
+			pause 1
+		]
+	}
+}
+
+automacro Ragna_EscapeIzlude {
+	IsInMapAndCoordinate izlude
+	timeout 8
+	exclusive 1
+	call EscapeIzlude
+}
+
+macro EscapeIzlude {
+	log [Ragna] Escaping Izlude step-walk west then south
+	do west
+	pause 2
+	do west
+	pause 2
+	do west
+	pause 2
+	do west
+	pause 2
+	do west
+	pause 2
+	do south
+	pause 2
+	do south
+	pause 2
+	do south
+	pause 2
+	do west
+	pause 2
+	do west
+	pause 2
+}
+
+automacro Ragna_EscapeIzludeIn {
+	IsInMapAndCoordinate izlude_in
+	timeout 8
+	exclusive 1
+	call {
+		[
+			log [Ragna] Leaving izlude_in toward outdoor Izlude
+			do move 126 64
+			pause 4
+			do south
+			pause 2
+			do south
+			pause 2
+		]
 	}
 }
