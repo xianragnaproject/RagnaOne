@@ -387,6 +387,7 @@ saveMap_warpChatCommand
 macro_orphans terminate
 
 ragnaSavePayon 0
+ragnaShopsPayon 0
 ragnaSaveProntera 0
 
 attackRouteMaxPathDistance 30

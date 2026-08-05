@@ -113,6 +113,25 @@ automacro Ragna_SetSavePayon {
 	}
 }
 
+# At Base 12+ switch sell/buy NPCs from Prontera to Payon
+automacro Ragna_ShopsPayon {
+	BaseLevel >= 12
+	ConfigKeyNot ragnaShopsPayon 1
+	timeout 60
+	exclusive 1
+	call {
+		[
+			log [Ragna] Lv12+ — switching sell/buy NPCs to Payon
+			do conf sellAuto_npc payon_in01 5 49
+			do conf sellAuto_standpoint payon_in01 7 49
+			do eval map { my $i = $_; my $item = $config{"buyAuto_$i"} || ""; my $npc = ($item =~ /Potion|Magnifier|Wing|^Arrow$/i && "payon_in01 5 49") || ($item =~ /Cotton Shirt|Jacket/ && "payon_in01 7 119") || "payon_in01 15 119"; my $stand = ($item =~ /Potion|Magnifier|Wing|^Arrow$/i && "payon_in01 7 49") || ($item =~ /Cotton Shirt|Jacket/ && "payon_in01 10 119") || "payon_in01 15 117"; configModify("buyAuto_${i}_npc", $npc); configModify("buyAuto_${i}_standpoint", $stand); } grep { exists $config{"buyAuto_$_"} } (0..20);
+			do conf ragnaShopsPayon 1
+			log [Ragna] Sell/buy now use Payon shops (tool/armor/weapon)
+		]
+	}
+}
+
+
 
 automacro Ragna_Lv21_30 {
 	BaseLevel 21..30
