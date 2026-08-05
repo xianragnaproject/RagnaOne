@@ -9,12 +9,11 @@ if [[ ! -d "$OK/.git" && ! -f "$OK/openkore.pl" ]]; then
   git clone --depth 1 https://github.com/OpenKore/openkore.git "$OK"
 fi
 
-# Ensure build deps (best-effort)
-if ! command -v scons >/dev/null 2>&1; then
-  sudo apt-get update -qq
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus
-fi
+# Ensure build deps (idempotent)
+sudo apt-get update -qq
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+  build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus
+# OpenKore's Makefile invokes `python`; python-is-python3 provides it.
 
 # Apply RagnaOne server definition if missing
 SNIPPET="$ROOT/openkore-config/servers-ragnaone.txt"
