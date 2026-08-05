@@ -50,7 +50,8 @@ automacro Ragna_Job_ToKnight {
 
 automacro Ragna_Lv1_11 {
 	BaseLevel < 12
-	run-once 1
+	ConfigKeyNot lockMap prt_fild08
+	timeout 45
 	call {
 		do conf lockMap prt_fild08
 		do conf lockMap_randX 14
@@ -61,7 +62,8 @@ automacro Ragna_Lv1_11 {
 
 automacro Ragna_Lv12_20 {
 	BaseLevel 12..20
-	run-once 1
+	ConfigKeyNot lockMap pay_fild08
+	timeout 45
 	call {
 		do conf lockMap pay_fild08
 		do conf lockMap_randX 12
@@ -72,7 +74,8 @@ automacro Ragna_Lv12_20 {
 
 automacro Ragna_Lv21_30 {
 	BaseLevel 21..30
-	run-once 1
+	ConfigKeyNot lockMap gef_fild00
+	timeout 45
 	call {
 		do conf lockMap gef_fild00
 		do conf lockMap_randX 12
@@ -83,7 +86,8 @@ automacro Ragna_Lv21_30 {
 
 automacro Ragna_Lv31_40 {
 	BaseLevel 31..40
-	run-once 1
+	ConfigKeyNot lockMap pay_dun00
+	timeout 45
 	call {
 		do conf lockMap pay_dun00
 		do conf lockMap_randX 10
@@ -94,7 +98,8 @@ automacro Ragna_Lv31_40 {
 
 automacro Ragna_Lv41_50 {
 	BaseLevel 41..50
-	run-once 1
+	ConfigKeyNot lockMap pay_dun01
+	timeout 45
 	call {
 		do conf lockMap pay_dun01
 		do conf lockMap_randX 10
@@ -105,7 +110,8 @@ automacro Ragna_Lv41_50 {
 
 automacro Ragna_Lv51_60 {
 	BaseLevel 51..60
-	run-once 1
+	ConfigKeyNot lockMap moc_pryd02
+	timeout 45
 	call {
 		do conf lockMap moc_pryd02
 		do conf lockMap_randX 10
@@ -116,7 +122,8 @@ automacro Ragna_Lv51_60 {
 
 automacro Ragna_Lv61_70 {
 	BaseLevel 61..70
-	run-once 1
+	ConfigKeyNot lockMap moc_pryd03
+	timeout 45
 	call {
 		do conf lockMap moc_pryd03
 		do conf lockMap_randX 8
@@ -127,7 +134,8 @@ automacro Ragna_Lv61_70 {
 
 automacro Ragna_Lv71_80 {
 	BaseLevel 71..80
-	run-once 1
+	ConfigKeyNot lockMap in_sphinx2
+	timeout 45
 	call {
 		do conf lockMap in_sphinx2
 		do conf lockMap_randX 8
@@ -138,7 +146,8 @@ automacro Ragna_Lv71_80 {
 
 automacro Ragna_Lv81_90 {
 	BaseLevel 81..90
-	run-once 1
+	ConfigKeyNot lockMap in_sphinx3
+	timeout 45
 	call {
 		do conf lockMap in_sphinx3
 		do conf lockMap_randX 8
@@ -149,7 +158,8 @@ automacro Ragna_Lv81_90 {
 
 automacro Ragna_Lv91_99 {
 	BaseLevel 91..99
-	run-once 1
+	ConfigKeyNot lockMap in_sphinx4
+	timeout 45
 	call {
 		do conf lockMap in_sphinx4
 		do conf lockMap_randX 8
