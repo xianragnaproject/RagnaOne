@@ -1,78 +1,66 @@
-# RagnaOne OpenKore — Human-like Leveler
+# RagnaOne OpenKore packs
 
-OpenKore control pack for your Hercules pre-RE server (`PACKETVER 20180620`).
+Human-like levelers for your Hercules pre-RE server (`PACKETVER 20180620`, `173.208.138.84`).
 
-Behavior goals:
-- Level toward **base 99**
-- Hunt, loot, **sell** junk, **buy** potions
-- Sit when low HP/SP, rest in town, take breaks
-- Change hunting maps as level rises (acts more like a normal player)
+| Pack | Path | Job path |
+|------|------|----------|
+| **Assassin** | `openkore/assassin/` (also `openkore/control/`) | Novice → Thief → Assassin |
+| **Knight** | `openkore/knight/` | Novice → Swordman → Knight |
 
-## 1) Install OpenKore
-
-On the bot PC or Linux host:
+## Install on the OpenKore host (multi-bot)
 
 ```bash
-git clone https://github.com/OpenKore/openkore.git
-cd openkore
+git clone https://github.com/OpenKore/openkore.git ~/openkore-assassin
+git clone https://github.com/OpenKore/openkore.git ~/openkore-knight
+
+git clone -b cursor/openkore-human-leveler-159c https://github.com/xianragnaproject/RagnaOne.git ~/RagnaOne
+cd ~/RagnaOne
+
+./openkore/install-into-openkore.sh ~/openkore-assassin assassin
+./openkore/install-into-openkore.sh ~/openkore-knight knight
 ```
 
-Copy this pack over OpenKore’s `control/` (and servers table):
+Edit each config:
 
 ```bash
-# from your RagnaOne checkout
-cp -r openkore/control/* /path/to/openkore/control/
-cp openkore/tables/servers.txt /path/to/openkore/tables/servers.txt
-# optional macros
-cp openkore/control/eventMacros.txt /path/to/openkore/control/eventMacros.txt
+nano ~/openkore-assassin/control/config.txt   # account A
+nano ~/openkore-knight/control/config.txt     # account B
 ```
 
-## 2) Create an account on your server
+Set `username` / `password` (different accounts).
 
-Register a normal account on Hercules, create a **Novice → Thief → Assassin** character (config is tuned for Assassin).
-
-Edit `control/config.txt`:
-
-```txt
-username YOUR_ACCOUNT
-password YOUR_PASSWORD
-char 0
-```
-
-Server IP is already set for `173.208.138.84` in `tables/servers.txt`.
-
-## 3) Run
+Start separately:
 
 ```bash
-cd /path/to/openkore
-# Linux
-./openkore.pl
-# or Windows: start.exe
+tmux new -s ok-assassin -d "cd ~/openkore-assassin && perl ./openkore.pl"
+tmux new -s ok-knight  -d "cd ~/openkore-knight  && perl ./openkore.pl"
 ```
 
-Select **RagnaOne** from the master server list.
+## Knight map route
 
-## Job Master + equips
+| Base Lv | Map |
+|--------|-----|
+| 1–11 | prt_fild08 |
+| 12–20 | pay_fild08 |
+| 21–30 | gef_fild00 |
+| 31–40 | pay_dun00 |
+| 41–50 | pay_dun01 |
+| 51–60 | gef_fild10 (Orcs) |
+| 61–70 | orcsdun01 |
+| 71–80 | c_tower1 |
+| 81–90 | gl_step |
+| 91–99 | gl_knt01 |
 
-**Job Master** is assumed at Prontera `153,193` (stock Hercules Euphy script).
+Job Master: Prontera `153,193` → Swordman (`r0`) → Knight (`r0`).
 
-Flow:
-1. Novice Job 10+ → Job Master → **Thief**
-2. Thief Job 40+ (Base 40+) → Job Master → **Assassin**
+Equips: Knife → Sword+Guard → Bastard Sword+Shield → Two-Handed Sword / Broad Sword.
 
-If your menu order differs, edit responses in `control/eventMacros.txt` (`r5` for Thief, `r0` for Assassin).
+## Assassin map route
 
-**Equips:** buys Knife → Main Gauche → Jur/Katar from Prontera weapon NPC and auto-equips better Assassin gear as base level rises. Keep-list prevents selling those weapons/armors.
+See `assassin/control/eventMacros.txt` (Pyramid / Sphinx path).
 
-## 5) Important notes
+## Notes
 
-- This is for **your own private server** testing/population.
-- Map NPC coordinates may need tuning if your custom NPCs differ from stock Hercules.
-- If login fails, set `serverType` in `servers.txt` to match OpenKore’s closest type for `20180620` (try `kRO_RagexeRE_2018_06_20e` or nearest listed type).
-- Raise rates slowly; if one-shotting everything, lower `attackAuto` aggression or pick harder maps in `eventMacros.txt`.
-
-## 6) Quick tuning
-
-- Stop at a level: set `dcOnLevel 99` (disconnect at 99) or leave blank to keep farming.
-- Safer / slower: increase `sitAuto_hp_lower` / `sitAuto_sp_lower`.
-- More human: enable break times in `config.txt` (`autoBreakTime`).
+- Enable Job Master on Hercules: `npc/custom/jobmaster.txt` in `scripts_custom.conf`
+- Tune Job Master `r#` and weapon NPC `175,126` if your scripts differ
+- `dcOnLevel 99` disconnects at base 99

@@ -1,0 +1,411 @@
+######## RagnaOne — Knight human-like leveler (edit username/password) ########
+
+master RagnaOne
+server 0
+username CHANGE_ME
+password CHANGE_ME
+loginPinCode
+char 0
+
+XKore 0
+secureAdminPassword 1
+adminPassword ragnaone
+commandPrefix ;
+
+pauseCharLogin 3
+pauseCharServer 2
+pauseMapServer 2
+ignoreInvalidLogin 0
+
+whenInGame_requestCashPoints 0
+
+######## Combat ########
+
+attackAuto 2
+attackAuto_party 1
+attackAuto_onlyWhenSafe 0
+attackAuto_inLockOnly 1
+attackAuto_notInTown 1
+attackAuto_notWhile_storageAuto 1
+attackAuto_notWhile_buyAuto 1
+attackAuto_notWhile_sellAuto 1
+attackDistance 1
+attackDistanceAuto 1
+attackMaxDistance 1
+attackMaxRouteTime 6
+attackMinPlayerDistance 3
+attackMinPortalDistance 4
+attackUseWeapon 1
+attackNoGiveup 0
+attackCanSnipe 0
+attackCheckLOS 1
+attackChangeTarget 1
+aggressiveAntiKS 1
+
+######## Lock map — starter; eventMacros updates by level ########
+
+lockMap prt_fild08
+lockMap_x
+lockMap_y
+lockMap_randX 12
+lockMap_randY 12
+
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+route_randomWalk_maxRouteTime 30
+route_randomWalk_avoidMobDensity 0
+route_step 2
+route_escape_randomWalk 1
+route_teleportWhenClose 0
+
+######## Deaths / town recovery ########
+
+autoMoveOnDeath 1
+autoMoveOnDeath_map prontera
+autoMoveOnDeath_x 155
+autoMoveOnDeath_y 187
+
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnStorageFull 0
+dcOnLevel 99
+dcPause 1
+
+######## Sit / heal ########
+
+sitAuto_hp_lower 45
+sitAuto_hp_upper 85
+sitAuto_sp_lower 15
+sitAuto_sp_upper 40
+sitAuto_over_50 0
+sitAuto_idle 1
+sitAuto_idle_wait 8
+sitTensionRelax 0
+
+useSelf_item Red Potion {
+	hp < 55%
+	timeout 2
+	disabled 0
+}
+useSelf_item Orange Potion {
+	hp < 40%
+	timeout 2
+	disabled 0
+}
+useSelf_item Butterfly Wing {
+	hp < 15%
+	inLockOnly 1
+	timeout 30
+	disabled 0
+}
+
+# Knight combat skills
+attackSkillSlot Bash {
+	lvl 10
+	dist 1
+	sp > 12
+	inLockOnly 1
+	notInTown 1
+	timeout 1
+	disabled 0
+}
+attackSkillSlot Magnum Break {
+	lvl 10
+	dist 1
+	sp > 25
+	aggressives > 1
+	inLockOnly 1
+	notInTown 1
+	timeout 3
+	disabled 0
+}
+attackSkillSlot Bowling Bash {
+	lvl 10
+	dist 1
+	sp > 20
+	JobID 7
+	inLockOnly 1
+	notInTown 1
+	timeout 2
+	disabled 0
+}
+attackSkillSlot Provoke {
+	lvl 5
+	dist 2
+	sp > 10
+	inLockOnly 1
+	notInTown 1
+	timeout 5
+	disabled 0
+}
+useSelf_skill Endure {
+	lvl 5
+	sp > 15
+	hp < 60%
+	whenStatusInactive Endure
+	inLockOnly 1
+	timeout 20
+	disabled 0
+}
+useSelf_skill Two-Hand Quicken {
+	lvl 10
+	sp > 20
+	whenStatusInactive Two-Hand Quicken
+	JobID 7
+	inLockOnly 1
+	timeout 60
+	disabled 0
+}
+
+######## Weight / loot ########
+
+itemsTakeAuto 2
+itemsTakeAuto_party 0
+itemsGatherAuto 2
+itemsMaxWeight 55
+itemsMaxWeight_sellOrStore 70
+itemsMaxNum_sellOrStore 90
+itemsTakeGreed 0
+
+######## Storage / sell / buy — Prontera ########
+
+storageAuto 1
+storageAuto_npc prontera 151 29
+storageAuto_distance 4
+storageAuto_npc_type 1
+storageAuto_npc_steps c r0
+storageAuto_password
+storageAuto_keepOpen 0
+storageAuto_useChatCommand
+storageAuto_notInTown 0
+storageAuto_forceGetStorage 0
+
+sellAuto 1
+sellAuto_npc prontera 79 102
+sellAuto_standpoint prontera 82 104
+sellAuto_distance 3
+sellAuto_maxDistance 8
+sellAuto_npc_steps s
+
+buyAuto Red Potion {
+	npc prontera 79 102
+	standpoint prontera 82 104
+	distance 3
+	minAmount 8
+	maxAmount 50
+	disabled 0
+}
+buyAuto Orange Potion {
+	npc prontera 79 102
+	standpoint prontera 82 104
+	distance 3
+	minAmount 0
+	maxAmount 25
+	minBase 20
+	disabled 0
+}
+buyAuto Fly Wing {
+	npc prontera 79 102
+	standpoint prontera 82 104
+	distance 3
+	minAmount 2
+	maxAmount 20
+	disabled 0
+}
+buyAuto Butterfly Wing {
+	npc prontera 79 102
+	standpoint prontera 82 104
+	distance 3
+	minAmount 1
+	maxAmount 5
+	disabled 0
+}
+
+# Weapons / armor buys (Prontera weapon dealer — tune coords if needed)
+buyAuto Knife {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	maxBase 11
+	disabled 0
+}
+buyAuto Sword {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 12
+	maxBase 39
+	disabled 0
+}
+buyAuto Bastard Sword {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 40
+	disabled 0
+}
+buyAuto Two-Handed Sword {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 55
+	JobID 7
+	disabled 0
+}
+buyAuto Guard {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 12
+	maxBase 39
+	disabled 0
+}
+buyAuto Shield {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 40
+	disabled 0
+}
+buyAuto Cotton Shirt {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	maxBase 20
+	disabled 0
+}
+buyAuto Jacket {
+	npc prontera 175 126
+	distance 3
+	minAmount 0
+	maxAmount 1
+	minBase 21
+	disabled 0
+}
+
+######## Equips — Swordsman / Knight progression ########
+
+autoSwitch_default_rightHand Bastard Sword
+autoSwitch_default_leftHand Shield
+
+equipAuto {
+	rightHand Knife
+	armor Cotton Shirt
+	shoes Sandals
+	robe Hood
+	maxBase 11
+	disabled 0
+}
+equipAuto {
+	rightHand Sword
+	leftHand Guard
+	armor Adventure Suit
+	shoes Shoes
+	robe Hood
+	minBase 12
+	maxBase 39
+	JobID 1
+	disabled 0
+}
+equipAuto {
+	rightHand Bastard Sword
+	leftHand Shield
+	armor Jacket
+	shoes Boots
+	robe Mantle
+	minBase 40
+	JobID 7
+	disabled 0
+}
+equipAuto {
+	rightHand Two-Handed Sword
+	armor Chain Mail
+	shoes Boots
+	robe Muffler
+	minBase 55
+	JobID 7
+	disabled 0
+}
+equipAuto {
+	rightHand Broad Sword
+	leftHand Shield
+	armor Chain Mail
+	shoes Greaves
+	robe Muffler
+	minBase 70
+	JobID 7
+	disabled 0
+}
+equipAuto {
+	rightHand Bastard Sword
+	leftHand Shield
+	JobID 7
+	timeout 5
+	disabled 0
+}
+
+######## Teleport / escape ########
+
+teleportAuto_hp 12
+teleportAuto_sp 0
+teleportAuto_idle 0
+teleportAuto_portal 0
+teleportAuto_search 0
+teleportAuto_root 0
+teleportAuto_totemon 0
+teleportAuto_attackCount 0
+teleportAuto_atkMu 0
+useTeleportAuto Fly Wing 1
+
+######## Jobs / skills — Novice → Swordman → Knight ########
+
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Two-Hand Quicken 10, Bowling Bash 10, Pierce 5, Brandish Spear 5, Spear Mastery 5, Riding 1, Counter Attack 5
+
+statsAddAuto 1
+statsAddAuto_list 10 str, 10 vit, 10 dex, 5 agi, 5 luk, 40 str, 30 vit, 25 dex, 15 agi, 10 luk, 80 str, 50 vit, 40 dex, 25 agi, 15 luk, 99 str, 60 vit, 50 dex, 40 agi, 20 luk
+statsAdd_over_99 1
+
+######## Human-like breaks ########
+
+autoBreakTime {
+	startTime 04:00
+	stopTime 05:00
+}
+autoBreakTime {
+	startTime 12:30
+	stopTime 13:00
+}
+
+autoRestart 0
+autoRestartSleep 1
+autoSleepMin 600
+autoSleepSeed 400
+
+autoResponse 0
+dealAuto 3
+partyAuto 0
+guildAutoDeny 1
+follow 0
+
+ignoreAll 0
+verbose 1
+showDomain 0
+showDomain_chatChat 1
+
+clientSight 15
+route_avoidWalls 1
+route_removeMissingPortals_irrational 0
+gameGuard 0
+
+saveMap prontera
+saveMap_x 155
+saveMap_y 187
+saveMap_warpChatCommand
