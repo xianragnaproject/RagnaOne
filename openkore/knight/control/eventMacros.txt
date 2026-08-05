@@ -313,6 +313,27 @@ automacro Ragna_SetSavePayon {
 	}
 }
 
+# Apply Payon NPC coords to every buyAuto_* entry (called by Ragna_ShopsPayon)
+sub Ragna_ApplyPayonShops {
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		my ($npc, $stand);
+		if ($item =~ /Potion|Magnifier|Wing|^Arrow$/i) {
+			$npc = "payon_in01 5 49";
+			$stand = "payon_in01 7 49";
+		} elsif ($item =~ /Cotton Shirt|Jacket/) {
+			$npc = "payon_in01 7 119";
+			$stand = "payon_in01 10 119";
+		} else {
+			$npc = "payon_in01 15 119";
+			$stand = "payon_in01 15 117";
+		}
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand");
+	}
+	return 1;
+}
+
 # At Base 12+ switch sell/buy NPCs from Prontera to Payon
 automacro Ragna_ShopsPayon {
 	BaseLevel >= 12
@@ -324,9 +345,9 @@ automacro Ragna_ShopsPayon {
 			log [Ragna] Lv12+ — switching sell/buy NPCs to Payon
 			do conf sellAuto_npc payon_in01 5 49
 			do conf sellAuto_standpoint payon_in01 7 49
-			do eval map { my $i = $_; my $item = $config{"buyAuto_$i"} || ""; my $npc = ($item =~ /Potion|Magnifier|Wing|^Arrow$/i && "payon_in01 5 49") || ($item =~ /Cotton Shirt|Jacket/ && "payon_in01 7 119") || "payon_in01 15 119"; my $stand = ($item =~ /Potion|Magnifier|Wing|^Arrow$/i && "payon_in01 7 49") || ($item =~ /Cotton Shirt|Jacket/ && "payon_in01 10 119") || "payon_in01 15 117"; configModify("buyAuto_${i}_npc", $npc); configModify("buyAuto_${i}_standpoint", $stand); } grep { exists $config{"buyAuto_$_"} } (0..20);
+			do eval Ragna_ApplyPayonShops()
 			do conf ragnaShopsPayon 1
-			log [Ragna] Sell/buy now use Payon shops (tool/armor/weapon)
+			log [Ragna] Sell/buy now use Payon shops - tool armor weapon
 		]
 	}
 }
