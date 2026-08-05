@@ -41,7 +41,7 @@ attackCanSnipe 0
 attackCheckLOS 0
 attackChangeTarget 1
 aggressiveAntiKS 0
-
+attackAuto_allowKS 1
 ######## Lock map — starter; eventMacros updates by level ########
 
 lockMap prt_fild08

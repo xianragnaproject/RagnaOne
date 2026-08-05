@@ -35,3 +35,9 @@ echo "Run: cd $TARGET && perl ./openkore.pl"
 if [[ -f "$ROOT/scripts/patch-attack-min-distance.sh" ]]; then
   bash "$ROOT/scripts/patch-attack-min-distance.sh" "$TARGET/src/Misc.pm" || true
 fi
+
+# Allow KS when attackAuto_allowKS 1 (multi-bot shared targets)
+if [[ -f "$ROOT/scripts/patch-allow-ks.sh" ]]; then
+  bash "$ROOT/scripts/patch-allow-ks.sh" "$TARGET/src/Misc.pm" || true
+fi
+
