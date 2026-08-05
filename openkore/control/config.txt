@@ -9,7 +9,7 @@ char 0
 
 XKore 0
 secureAdminPassword 1
-adminPassword ragnaone
+adminPassword clusecem
 commandPrefix ;
 
 pauseCharLogin 3
@@ -47,8 +47,8 @@ aggressiveAntiKS 1
 lockMap prt_fild08
 lockMap_x
 lockMap_y
-lockMap_randX 12
-lockMap_randY 12
+lockMap_randX 14
+lockMap_randY 14
 
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
@@ -134,109 +134,109 @@ itemsTakeGreed 0
 
 ######## Storage / sell / buy — Prontera stock NPCs ########
 
-storageAuto 1
+storageAuto 0
 storageAuto_npc prontera 151 29
-storageAuto_distance 4
+storageAuto_distance 5
 storageAuto_npc_type 1
-storageAuto_npc_steps c r0
+storageAuto_npc_steps c r1
 storageAuto_password
 storageAuto_keepOpen 0
 storageAuto_useChatCommand
 storageAuto_notInTown 0
 storageAuto_forceGetStorage 0
 
-sellAuto 1
-sellAuto_npc prontera 79 102
-sellAuto_standpoint prontera 82 104
-sellAuto_distance 3
+sellAuto 0
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 126 74
+sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 
 # Potions + wings — buy when low (tool dealer Prontera)
 buyAuto Red Potion {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 5
 	maxAmount 40
-	disabled 0
+	disabled 1
 }
 buyAuto Orange Potion {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 0
 	maxAmount 20
 	minBase 20
-	disabled 0
+	disabled 1
 }
 buyAuto Fly Wing {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 2
 	maxAmount 20
-	disabled 0
+	disabled 1
 }
 buyAuto Butterfly Wing {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 1
 	maxAmount 5
-	disabled 0
+	disabled 1
 }
 
 # Starter / Assassin weapons — Prontera weapon dealer (tune coords if needed)
 buyAuto Knife {
-	npc prontera 175 126
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	maxBase 11
-	disabled 0
+	disabled 1
 }
 buyAuto Main Gauche {
-	npc prontera 175 126
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 12
 	maxBase 39
-	disabled 0
+	disabled 1
 }
 buyAuto Jur {
-	npc prontera 175 126
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 40
-	disabled 0
+	disabled 1
 }
 buyAuto Katar {
-	npc prontera 175 126
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 55
-	disabled 0
+	disabled 1
 }
 buyAuto Cotton Shirt {
-	npc prontera 175 126
+	npc prt_in 172 132
 	distance 3
 	minAmount 0
 	maxAmount 1
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 buyAuto Jacket {
-	npc prontera 175 126
+	npc prt_in 172 132
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 21
 	maxBase 50
-	disabled 0
+	disabled 1
 }
 
 ######## Equips — wear best Assassin-friendly gear in inventory ########
@@ -324,7 +324,7 @@ useTeleportAuto Fly Wing 1
 # Double Strafe / Sonic Blow focused AGI-ASPD build for pre-RE.
 
 skillsAddAuto 1
-skillsAddAuto_list Basic Skill 9, Double Attack 10, Improve Dodge 10, Stealth 3, Hiding 5, Envenom 5, Detoxify 1, Steal 5, Right-Hand Mastery 5, Left-Hand Mastery 5, Katar Mastery 10, Sonic Blow 10, Grimtooth 5, Cloaking 5, Enchant Poison 5, Poison React 5, Venom Dust 5, Venom Splasher 5
+skillsAddAuto_list Basic Skill 9, Double Attack 10, Improve Dodge 10, Hiding 5, Envenom 5, Detoxify 1, Steal 5, Righthand Mastery 5, Lefthand Mastery 5, Katar Mastery 10, Sonic Blow 10, Grimtooth 5, Cloaking 5, Enchant Poison 5, Poison React 5, Venom Dust 5, Venom Splasher 5
 
 statsAddAuto 1
 statsAddAuto_list 10 agi, 10 dex, 10 str, 5 vit, 5 luk, 40 agi, 30 dex, 30 str, 20 vit, 10 luk, 80 agi, 50 dex, 40 str, 30 vit, 20 luk, 99 agi, 60 dex, 50 str, 40 vit, 30 luk
@@ -374,3 +374,4 @@ saveMap_warpChatCommand
 
 ######## Optional: disconnect when done leveling ########
 # dcOnLevel 99 already set above
+macro_orphans terminate

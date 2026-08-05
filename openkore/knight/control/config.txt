@@ -1,4 +1,4 @@
-######## RagnaOne — Knight human-like leveler (edit username/password) ########
+######## RagnaOne — human-like leveler (edit username/password) ########
 
 master RagnaOne
 server 0
@@ -6,10 +6,8 @@ username CHANGE_ME
 password CHANGE_ME
 loginPinCode
 char 0
-
-XKore 0
 secureAdminPassword 1
-adminPassword ragnaone
+adminPassword youcibou
 commandPrefix ;
 
 pauseCharLogin 3
@@ -19,7 +17,7 @@ ignoreInvalidLogin 0
 
 whenInGame_requestCashPoints 0
 
-######## Combat ########
+######## Combat — play like a careful player ########
 
 attackAuto 2
 attackAuto_party 1
@@ -47,8 +45,8 @@ aggressiveAntiKS 1
 lockMap prt_fild08
 lockMap_x
 lockMap_y
-lockMap_randX 12
-lockMap_randY 12
+lockMap_randX 14
+lockMap_randY 14
 
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
@@ -71,24 +69,24 @@ dcOnStorageFull 0
 dcOnLevel 99
 dcPause 1
 
-######## Sit / heal ########
+######## Sit / heal — human pacing ########
 
-sitAuto_hp_lower 45
-sitAuto_hp_upper 85
-sitAuto_sp_lower 15
-sitAuto_sp_upper 40
+sitAuto_hp_lower 40
+sitAuto_hp_upper 80
+sitAuto_sp_lower 20
+sitAuto_sp_upper 50
 sitAuto_over_50 0
 sitAuto_idle 1
 sitAuto_idle_wait 8
 sitTensionRelax 0
 
 useSelf_item Red Potion {
-	hp < 55%
+	hp < 50%
 	timeout 2
 	disabled 0
 }
 useSelf_item Orange Potion {
-	hp < 40%
+	hp < 35%
 	timeout 2
 	disabled 0
 }
@@ -99,11 +97,11 @@ useSelf_item Butterfly Wing {
 	disabled 0
 }
 
-# Knight combat skills
+# Swordman / Knight skills in combat
 attackSkillSlot Bash {
 	lvl 10
 	dist 1
-	sp > 12
+	sp > 15
 	inLockOnly 1
 	notInTown 1
 	timeout 1
@@ -113,7 +111,6 @@ attackSkillSlot Magnum Break {
 	lvl 10
 	dist 1
 	sp > 25
-	aggressives > 1
 	inLockOnly 1
 	notInTown 1
 	timeout 3
@@ -123,37 +120,9 @@ attackSkillSlot Bowling Bash {
 	lvl 10
 	dist 1
 	sp > 20
-	JobID 7
 	inLockOnly 1
 	notInTown 1
 	timeout 2
-	disabled 0
-}
-attackSkillSlot Provoke {
-	lvl 5
-	dist 2
-	sp > 10
-	inLockOnly 1
-	notInTown 1
-	timeout 5
-	disabled 0
-}
-useSelf_skill Endure {
-	lvl 5
-	sp > 15
-	hp < 60%
-	whenStatusInactive Endure
-	inLockOnly 1
-	timeout 20
-	disabled 0
-}
-useSelf_skill Two-Hand Quicken {
-	lvl 10
-	sp > 20
-	whenStatusInactive Two-Hand Quicken
-	JobID 7
-	inLockOnly 1
-	timeout 60
 	disabled 0
 }
 
@@ -162,218 +131,167 @@ useSelf_skill Two-Hand Quicken {
 itemsTakeAuto 2
 itemsTakeAuto_party 0
 itemsGatherAuto 2
-itemsMaxWeight 55
+itemsMaxWeight 50
 itemsMaxWeight_sellOrStore 70
 itemsMaxNum_sellOrStore 90
 itemsTakeGreed 0
 
-######## Storage / sell / buy — Prontera ########
+######## Storage / sell / buy — Prontera stock NPCs ########
 
-storageAuto 1
+storageAuto 0
 storageAuto_npc prontera 151 29
-storageAuto_distance 4
+storageAuto_distance 5
 storageAuto_npc_type 1
-storageAuto_npc_steps c r0
+storageAuto_npc_steps c r1
 storageAuto_password
 storageAuto_keepOpen 0
 storageAuto_useChatCommand
 storageAuto_notInTown 0
 storageAuto_forceGetStorage 0
 
-sellAuto 1
-sellAuto_npc prontera 79 102
-sellAuto_standpoint prontera 82 104
-sellAuto_distance 3
+sellAuto 0
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 126 74
+sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 
+# Potions + wings — buy when low (tool dealer Prontera)
 buyAuto Red Potion {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
-	minAmount 8
-	maxAmount 50
-	disabled 0
+	minAmount 5
+	maxAmount 40
+	disabled 1
 }
 buyAuto Orange Potion {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 0
-	maxAmount 25
+	maxAmount 20
 	minBase 20
-	disabled 0
+	disabled 1
 }
 buyAuto Fly Wing {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 2
 	maxAmount 20
-	disabled 0
+	disabled 1
 }
 buyAuto Butterfly Wing {
-	npc prontera 79 102
-	standpoint prontera 82 104
+	npc prt_in 126 76
+	standpoint prt_in 126 74
 	distance 3
 	minAmount 1
 	maxAmount 5
-	disabled 0
+	disabled 1
 }
 
-# Weapons / armor buys (Prontera weapon dealer — tune coords if needed)
-buyAuto Knife {
-	npc prontera 175 126
+# Starter / Knight weapons — Prontera weapon dealer
+buyAuto Sword {
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	maxBase 11
-	disabled 0
+	disabled 1
 }
-buyAuto Sword {
-	npc prontera 175 126
+buyAuto Falchion {
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 12
 	maxBase 39
-	disabled 0
+	disabled 1
 }
-buyAuto Bastard Sword {
-	npc prontera 175 126
+buyAuto Blade {
+	npc prt_in 172 130
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 40
-	disabled 0
-}
-buyAuto Two-Handed Sword {
-	npc prontera 175 126
-	distance 3
-	minAmount 0
-	maxAmount 1
-	minBase 55
-	JobID 7
-	disabled 0
-}
-buyAuto Guard {
-	npc prontera 175 126
-	distance 3
-	minAmount 0
-	maxAmount 1
-	minBase 12
-	maxBase 39
-	disabled 0
-}
-buyAuto Shield {
-	npc prontera 175 126
-	distance 3
-	minAmount 0
-	maxAmount 1
-	minBase 40
-	disabled 0
+	disabled 1
 }
 buyAuto Cotton Shirt {
-	npc prontera 175 126
+	npc prt_in 172 132
 	distance 3
 	minAmount 0
 	maxAmount 1
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 buyAuto Jacket {
-	npc prontera 175 126
+	npc prt_in 172 132
 	distance 3
 	minAmount 0
 	maxAmount 1
 	minBase 21
-	disabled 0
+	maxBase 50
+	disabled 1
 }
 
-######## Equips — Swordsman / Knight progression ########
+######## Equips — wear best Knight-friendly gear in inventory ########
+# Prefer swords; Blade once leveled.
 
-autoSwitch_default_rightHand Bastard Sword
-autoSwitch_default_leftHand Shield
+autoSwitch_default_rightHand Sword
+autoSwitch_default_leftHand
 
 equipAuto {
-	rightHand Knife
-	armor Cotton Shirt
-	shoes Sandals
-	robe Hood
+	rightHand Sword
+	minBase 1
 	maxBase 11
 	disabled 0
 }
+
 equipAuto {
-	rightHand Sword
-	leftHand Guard
-	armor Adventure Suit
-	shoes Shoes
-	robe Hood
+	rightHand Falchion
 	minBase 12
-	maxBase 39
+	disabled 0
+}
+
+equipAuto {
+	rightHand Blade
+	minBase 40
 	JobID 1
 	disabled 0
 }
+
 equipAuto {
-	rightHand Bastard Sword
-	leftHand Shield
-	armor Jacket
-	shoes Boots
-	robe Mantle
+	rightHand Blade
 	minBase 40
 	JobID 7
 	disabled 0
 }
+
 equipAuto {
-	rightHand Two-Handed Sword
-	armor Chain Mail
-	shoes Boots
-	robe Muffler
-	minBase 55
-	JobID 7
-	disabled 0
-}
-equipAuto {
-	rightHand Broad Sword
-	leftHand Shield
-	armor Chain Mail
-	shoes Greaves
-	robe Muffler
-	minBase 70
-	JobID 7
-	disabled 0
-}
-equipAuto {
-	rightHand Bastard Sword
-	leftHand Shield
-	JobID 7
-	timeout 5
+	armor Cotton Shirt
+	maxBase 20
 	disabled 0
 }
 
-######## Teleport / escape ########
+equipAuto {
+	armor Jacket
+	minBase 21
+	disabled 0
+}
 
-teleportAuto_hp 12
-teleportAuto_sp 0
-teleportAuto_idle 0
-teleportAuto_portal 0
-teleportAuto_search 0
-teleportAuto_root 0
-teleportAuto_totemon 0
-teleportAuto_attackCount 0
-teleportAuto_atkMu 0
-useTeleportAuto Fly Wing 1
-
-######## Jobs / skills — Novice → Swordman → Knight ########
+######## Jobs / skills — Knight path (Novice → Swordman → Knight) ########
+# Create character as Novice, jobchange to Swordman then Knight on your server.
+# Double Strafe / Sonic Blow focused AGI-ASPD build for pre-RE.
 
 skillsAddAuto 1
-skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Two-Hand Quicken 10, Bowling Bash 10, Pierce 5, Brandish Spear 5, Spear Mastery 5, Riding 1, Counter Attack 5
+skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Increase HP Recovery 5, Two-Handed Sword Mastery 10, Two-Hand Quicken 10, Bowling Bash 10, Auto Counter 5, Pierce 5, Brandish Spear 5, Riding 1, Cavalry Mastery 5
 
 statsAddAuto 1
-statsAddAuto_list 10 str, 10 vit, 10 dex, 5 agi, 5 luk, 40 str, 30 vit, 25 dex, 15 agi, 10 luk, 80 str, 50 vit, 40 dex, 25 agi, 15 luk, 99 str, 60 vit, 50 dex, 40 agi, 20 luk
+statsAddAuto_list 10 str, 10 vit, 10 dex, 5 agi, 5 luk, 40 str, 30 vit, 30 dex, 20 agi, 10 luk, 80 str, 50 vit, 40 dex, 30 agi, 20 luk, 99 str, 60 vit, 50 dex, 40 agi, 30 luk
 statsAdd_over_99 1
 
-######## Human-like breaks ########
+######## Human-like breaks (needs breakTime plugin if available) ########
 
 autoBreakTime {
 	startTime 04:00
@@ -389,6 +307,8 @@ autoRestartSleep 1
 autoSleepMin 600
 autoSleepSeed 400
 
+######## Chat / look less botty ########
+
 autoResponse 0
 dealAuto 3
 partyAuto 0
@@ -400,12 +320,19 @@ verbose 1
 showDomain 0
 showDomain_chatChat 1
 
+######## Misc ########
+
 clientSight 15
 route_avoidWalls 1
 route_removeMissingPortals_irrational 0
 gameGuard 0
 
+# Save point / respawn feel natural
 saveMap prontera
 saveMap_x 155
 saveMap_y 187
 saveMap_warpChatCommand
+
+######## Optional: disconnect when done leveling ########
+# dcOnLevel 99 already set above
+macro_orphans terminate

@@ -3,7 +3,7 @@
 # Enable with: load eventMacro
 
 # ============================================================
-# Job Master @ Prontera 153,193 (stock Hercules Euphy Job Master)
+# Job Master @ Prontera 150,180 (stock Hercules Euphy Job Master)
 # Menu order may differ on custom scripts — tune r# if needed.
 # First jobs often: Swordman, Magician, Archer, Acolyte, Merchant, Thief
 #   → Thief = r5
@@ -23,7 +23,7 @@ automacro Ragna_Job_ToThief {
 		do conf route_randomWalk 0
 		do move prontera 153 193
 		pause 2
-		do talknpc 153 193 c r5 c r0
+		do talknpc 150 180 c r5 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -44,7 +44,7 @@ automacro Ragna_Job_ToAssassin {
 		do conf route_randomWalk 0
 		do move prontera 153 193
 		pause 2
-		do talknpc 153 193 c r0 c r0
+		do talknpc 150 180 c r0 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -72,7 +72,7 @@ automacro Ragna_Lv1_11 {
 		do conf lockMap prt_fild08
 		do conf lockMap_randX 14
 		do conf lockMap_randY 14
-		log [RagnaOne] Lv1-11: Prontera Field 08 (porings/drops)
+		log [RagnaOne] Lv1-11: Prontera Field 08 porings/drops
 	}
 }
 
@@ -105,7 +105,7 @@ automacro Ragna_Lv31_40 {
 		do conf lockMap pay_dun00
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Lv31-40 Assassin: Payon Cave 00 (skeletons/zombies)
+		log [RagnaOne] Lv31-40 Assassin: Payon Cave 00 skeletons/zombies
 	}
 }
 
@@ -127,7 +127,7 @@ automacro Ragna_Lv51_60 {
 		do conf lockMap moc_pryd02
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Lv51-60 Assassin: Pyramid 2F (classic thief/assassin spot)
+		log [RagnaOne] Lv51-60 Assassin: Pyramid 2F classic thief/assassin spot
 	}
 }
 
@@ -177,22 +177,21 @@ automacro Ragna_Lv91_99 {
 
 # Occasional sit pause to look less robotic (idle heal already handles most)
 automacro Ragna_RandomIdle {
+	BaseLevel >= 1
 	timeout 420
 	call {
 		log [RagnaOne] Taking a short idle pause...
-		do sit
-		pause 8..18
-		do stand
+		pause 12
 	}
 }
 
 # After death, restock feeling
 automacro Ragna_AfterDeath {
-	ConfigKeyNotIn isDead 0
+	isAlive 0
 	delay 3
 	run-once 0
 	call {
 		log [RagnaOne] Died — recovering in town before returning
-		pause 5..12
+		pause 8
 	}
 }

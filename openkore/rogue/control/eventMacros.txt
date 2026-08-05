@@ -1,0 +1,181 @@
+# Rogue path: Novice → Thief → Rogue
+# Job Master @ prontera 150,180
+
+automacro Ragna_Job_ToThief {
+	JobID 0
+	JobLevel >= 10
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Novice Job10+ → Job Master → Thief
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 150 180
+		pause 2
+		do talknpc 150 180 c r5 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Thief requested
+	}
+}
+
+automacro Ragna_Job_ToRogue {
+	JobID 6
+	JobLevel >= 40
+	BaseLevel >= 40
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Thief Job40+ → Job Master → Rogue
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 150 180
+		pause 2
+		do talknpc 150 180 c r1 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Rogue requested
+	}
+}
+
+automacro Ragna_EquipRefresh {
+	BaseLevel >= 1
+	timeout 90
+	call {
+		do reload conf
+		log [RagnaOne] Refresh equipAuto rules
+	}
+}
+
+automacro Ragna_Lv1_11 {
+	BaseLevel < 12
+	run-once 1
+	call {
+		do conf lockMap prt_fild08
+		do conf lockMap_randX 14
+		do conf lockMap_randY 14
+		log [RagnaOne] Lv1-11: Prontera Field 08 porings/drops
+	}
+}
+
+automacro Ragna_Lv12_20 {
+	BaseLevel 12..20
+	run-once 1
+	call {
+		do conf lockMap pay_fild08
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv12-20: Payon Field 08
+	}
+}
+
+automacro Ragna_Lv21_30 {
+	BaseLevel 21..30
+	run-once 1
+	call {
+		do conf lockMap gef_fild00
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv21-30: Geffen Field 00
+	}
+}
+
+automacro Ragna_Lv31_40 {
+	BaseLevel 31..40
+	run-once 1
+	call {
+		do conf lockMap pay_dun00
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv31-40 Rogue: Payon Cave 00
+	}
+}
+
+automacro Ragna_Lv41_50 {
+	BaseLevel 41..50
+	run-once 1
+	call {
+		do conf lockMap pay_dun01
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv41-50 Rogue: Payon Cave 01
+	}
+}
+
+automacro Ragna_Lv51_60 {
+	BaseLevel 51..60
+	run-once 1
+	call {
+		do conf lockMap moc_pryd02
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv51-60 Rogue: Pyramid 2F
+	}
+}
+
+automacro Ragna_Lv61_70 {
+	BaseLevel 61..70
+	run-once 1
+	call {
+		do conf lockMap moc_pryd03
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv61-70 Rogue: Pyramid 3F
+	}
+}
+
+automacro Ragna_Lv71_80 {
+	BaseLevel 71..80
+	run-once 1
+	call {
+		do conf lockMap in_sphinx2
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv71-80 Rogue: Sphinx 2F
+	}
+}
+
+automacro Ragna_Lv81_90 {
+	BaseLevel 81..90
+	run-once 1
+	call {
+		do conf lockMap in_sphinx3
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv81-90 Rogue: Sphinx 3F
+	}
+}
+
+automacro Ragna_Lv91_99 {
+	BaseLevel 91..99
+	run-once 1
+	call {
+		do conf lockMap in_sphinx4
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv91-99 Rogue: Sphinx 4F finish to 99
+	}
+}
+
+automacro Ragna_RandomIdle {
+	BaseLevel >= 1
+	timeout 420
+	call {
+		log [RagnaOne] Taking a short idle pause...
+		pause 12
+	}
+}
+
+automacro Ragna_AfterDeath {
+	isAlive 0
+	delay 3
+	run-once 0
+	call {
+		log [RagnaOne] Died recovering in town before returning
+		pause 8
+	}
+}

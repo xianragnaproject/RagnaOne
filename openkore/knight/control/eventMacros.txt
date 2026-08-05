@@ -1,9 +1,11 @@
 # eventMacros.txt — Job Master + Knight leveling route
-# load eventMacro
+# Novice → Swordman → Knight  |  same map progression as Assassin pack
 
-# Job Master @ Prontera 153,193 (Euphy)
-# First jobs: Swordman=r0, Magician, Archer, Acolyte, Merchant, Thief
-# Swordman 2nd: Knight=r0, Crusader=r1
+# Job Master @ Prontera 150,180 (live Job Master#ep2)
+# First jobs: Swordman, Magician, Archer, Acolyte, Merchant, Thief
+#   → Swordman = r0
+# Swordman 2nd: Knight, Crusader
+#   → Knight = r0
 
 automacro Ragna_Job_ToSwordman {
 	JobID 0
@@ -12,12 +14,12 @@ automacro Ragna_Job_ToSwordman {
 	run-once 1
 	timeout 60
 	call {
-		log [RagnaOne] Novice Job10+ → Job Master → Swordman
+		log [RagnaOne] Novice Job10+ → Prontera Job Master → Swordman
 		do conf attackAuto 0
 		do conf route_randomWalk 0
-		do move prontera 153 193
+		do move prontera 150 180
 		pause 2
-		do talknpc 153 193 c r0 c r0
+		do talknpc 150 180 c r0 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -33,12 +35,12 @@ automacro Ragna_Job_ToKnight {
 	run-once 1
 	timeout 60
 	call {
-		log [RagnaOne] Swordman Job40+ → Job Master → Knight
+		log [RagnaOne] Swordman Job40+ → Prontera Job Master → Knight
 		do conf attackAuto 0
 		do conf route_randomWalk 0
-		do move prontera 153 193
+		do move prontera 150 180
 		pause 2
-		do talknpc 153 193 c r0 c r0
+		do talknpc 150 180 c r0 c r0
 		pause 3
 		do conf attackAuto 2
 		do conf route_randomWalk 1
@@ -47,14 +49,14 @@ automacro Ragna_Job_ToKnight {
 }
 
 automacro Ragna_EquipRefresh {
+	BaseLevel >= 1
 	timeout 90
 	call {
 		do reload conf
-		log [RagnaOne] Refresh Knight equipAuto rules
+		log [RagnaOne] Refresh equipAuto rules
 	}
 }
 
-# Progressive maps — Knight/orc-friendly late game
 automacro Ragna_Lv1_11 {
 	BaseLevel < 12
 	run-once 1
@@ -62,7 +64,7 @@ automacro Ragna_Lv1_11 {
 		do conf lockMap prt_fild08
 		do conf lockMap_randX 14
 		do conf lockMap_randY 14
-		log [RagnaOne] Knight Lv1-11: Prontera Field 08
+		log [RagnaOne] Lv1-11: Prontera Field 08 porings/drops
 	}
 }
 
@@ -73,7 +75,7 @@ automacro Ragna_Lv12_20 {
 		do conf lockMap pay_fild08
 		do conf lockMap_randX 12
 		do conf lockMap_randY 12
-		log [RagnaOne] Knight Lv12-20: Payon Field 08
+		log [RagnaOne] Lv12-20: Payon Field 08
 	}
 }
 
@@ -84,7 +86,7 @@ automacro Ragna_Lv21_30 {
 		do conf lockMap gef_fild00
 		do conf lockMap_randX 12
 		do conf lockMap_randY 12
-		log [RagnaOne] Knight Lv21-30: Geffen Field 00
+		log [RagnaOne] Lv21-30: Geffen Field 00
 	}
 }
 
@@ -95,7 +97,7 @@ automacro Ragna_Lv31_40 {
 		do conf lockMap pay_dun00
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Knight Lv31-40: Payon Cave 00
+		log [RagnaOne] Lv31-40 Knight: Payon Cave 00
 	}
 }
 
@@ -106,7 +108,7 @@ automacro Ragna_Lv41_50 {
 		do conf lockMap pay_dun01
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Knight Lv41-50: Payon Cave 01
+		log [RagnaOne] Lv41-50 Knight: Payon Cave 01
 	}
 }
 
@@ -114,10 +116,10 @@ automacro Ragna_Lv51_60 {
 	BaseLevel 51..60
 	run-once 1
 	call {
-		do conf lockMap gef_fild10
+		do conf lockMap moc_pryd02
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Knight Lv51-60: Geffen Field 10 (Orcs)
+		log [RagnaOne] Lv51-60 Knight: Pyramid 2F
 	}
 }
 
@@ -125,10 +127,10 @@ automacro Ragna_Lv61_70 {
 	BaseLevel 61..70
 	run-once 1
 	call {
-		do conf lockMap orcsdun01
+		do conf lockMap moc_pryd03
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Knight Lv61-70: Orc Dungeon 01
+		log [RagnaOne] Lv61-70 Knight: Pyramid 3F
 	}
 }
 
@@ -136,10 +138,10 @@ automacro Ragna_Lv71_80 {
 	BaseLevel 71..80
 	run-once 1
 	call {
-		do conf lockMap c_tower1
+		do conf lockMap in_sphinx2
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Knight Lv71-80: Clock Tower 1F
+		log [RagnaOne] Lv71-80 Knight: Sphinx 2F
 	}
 }
 
@@ -147,10 +149,10 @@ automacro Ragna_Lv81_90 {
 	BaseLevel 81..90
 	run-once 1
 	call {
-		do conf lockMap gl_step
+		do conf lockMap in_sphinx3
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Knight Lv81-90: Glast Heim Staircase
+		log [RagnaOne] Lv81-90 Knight: Sphinx 3F
 	}
 }
 
@@ -158,29 +160,28 @@ automacro Ragna_Lv91_99 {
 	BaseLevel 91..99
 	run-once 1
 	call {
-		do conf lockMap gl_knt01
+		do conf lockMap in_sphinx4
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Knight Lv91-99: Glast Heim Chivalry 01 — finish to 99
+		log [RagnaOne] Lv91-99 Knight: Sphinx 4F finish to 99
 	}
 }
 
 automacro Ragna_RandomIdle {
+	BaseLevel >= 1
 	timeout 420
 	call {
-		log [RagnaOne] Knight short idle pause...
-		do sit
-		pause 8..18
-		do stand
+		log [RagnaOne] Taking a short idle pause...
+		pause 12
 	}
 }
 
 automacro Ragna_AfterDeath {
-	ConfigKeyNotIn isDead 0
+	isAlive 0
 	delay 3
 	run-once 0
 	call {
-		log [RagnaOne] Died — recovering in town
-		pause 5..12
+		log [RagnaOne] Died recovering in town before returning
+		pause 8
 	}
 }

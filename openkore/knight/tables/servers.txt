@@ -1,6 +1,4 @@
-# RagnaOne Hercules (pre-RE, PACKETVER 20180620)
-# Place this file at openkore/tables/servers.txt
-# Or merge the [RagnaOne] block into your existing servers.txt
+# RagnaOne OpenKore servers entry
 
 [RagnaOne]
 ip 173.208.138.84
@@ -9,7 +7,8 @@ master_version 14
 version 55
 serverType kRO_RagexeRE_2018_06_20e
 serverEncoding Western
-charBlockSize 147
+charBlockSize 155
+addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
 addSize 0
 charNameFilter
 pinCode 0
@@ -27,7 +26,3 @@ private 1
 dead 0
 title RagnaOne Pre-RE
 
-# If login fails, try nearest types from OpenKore tables, e.g.:
-# serverType kRO_RagexeRE_2018_04_18b
-# serverType kRO_RagexeRE_2018_06_21a
-# Or leave serverType blank and let OpenKore probe (less reliable).
