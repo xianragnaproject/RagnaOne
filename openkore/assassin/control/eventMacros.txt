@@ -179,6 +179,22 @@ automacro Ragna_RandomIdle {
 
 # After death, restock feeling
 
+
+# Equip any available weapon/armor from inventory if slots empty (shops missing on this host)
+automacro Ragna_EquipIfEmpty {
+	BaseLevel >= 1
+	timeout 45
+	exclusive 1
+	Eval (!$char->{equipment}{rightHand} || !$char->{equipment}{armor})
+	call {
+		[
+			log [Ragna] Empty gear slot - equipping best from inventory
+			do eq
+			pause 0.5
+		]
+	}
+}
+
 automacro Ragna_EquipRefresh {
 	BaseLevel >= 1
 	timeout 1800
@@ -204,23 +220,44 @@ automacro Ragna_AfterDeath {
 }
 
 # ---- Town / Izlude / off-lockMap recovery (RagnaOne) ----
+
+
+# Yank bots that wandered onto wrong fields back to lockMap
+automacro Ragna_TownSell {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,prt_in
+	timeout 20
+	exclusive 1
+	Eval (Misc::percent_weight($char) >= 10) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] Town weight >= 10% - selling junk
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do eval AI::queue("sellAuto");
+			pause 1
+			do eq
+		]
+	}
+}
+
 automacro Ragna_TownAfterDeath {
 	ConfigKeyNot lockMap none
-	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta
+	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,prt_in
 	timeout 25
 	exclusive 1
 	Eval !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] In town - resume lockMap
+			log [Ragna] In town - resume hunt + equip check
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			pause 1
+			do eq
 		]
 	}
 }
 
-# Yank bots that wandered onto wrong fields back to lockMap
 automacro Ragna_ReturnToLock {
 	ConfigKeyNot lockMap none
 	InLockMap 0

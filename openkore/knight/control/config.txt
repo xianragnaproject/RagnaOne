@@ -220,19 +220,21 @@ buyAuto Butterfly Wing {
 buyAuto Sword {
 	npc prt_in 172 130
 	distance 3
-	minAmount 0
+	minAmount 1
 	maxAmount 1
 	maxBase 11
 	disabled 1
+	zeny > 50
 }
 buyAuto Falchion {
 	npc prt_in 172 130
 	distance 3
-	minAmount 0
+	minAmount 1
 	maxAmount 1
 	minBase 12
 	maxBase 39
 	disabled 1
+	zeny > 500
 }
 buyAuto Blade {
 	npc prt_in 172 130
@@ -245,19 +247,21 @@ buyAuto Blade {
 buyAuto Cotton Shirt {
 	npc prt_in 172 132
 	distance 3
-	minAmount 0
+	minAmount 1
 	maxAmount 1
 	maxBase 20
 	disabled 1
+	zeny > 50
 }
 buyAuto Jacket {
 	npc prt_in 172 132
 	distance 3
-	minAmount 0
+	minAmount 1
 	maxAmount 1
 	minBase 21
 	maxBase 50
 	disabled 1
+	zeny > 800
 }
 
 ######## Equips — wear best Knight-friendly gear in inventory ########
