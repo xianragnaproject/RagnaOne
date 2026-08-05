@@ -1,9 +1,14 @@
-# Classic 2nd-job coverage
+# Classic 2-1 second jobs only
 
-All 13 classic 2nd jobs have packs under `openkore/<class>/`.
+Supported packs:
 
-Live host profiles (example): `~/openkore/profiles/{Nemo,Night,Black,Wizard,...}`
+- Assassin (Thief → Assassin)
+- Knight (Swordman → Knight)
+- Wizard (Magician → Wizard)
+- Hunter (Archer → Hunter)
+- Priest (Acolyte → Priest)
+- Blacksmith (Merchant → Blacksmith)
 
-Job Master: Prontera `150,180`.
+Not included: 2-2 jobs (Crusader, Sage, Monk, Alchemist, Rogue, Bard, Dancer).
 
-Dancer requires female character creation (`sex F`).
+Job Master: Prontera `150,180`. Second-job menu choice is `r0` for every 2-1 path.
