@@ -142,8 +142,8 @@ attackSkillSlot Bowling Bash {
 itemsTakeAuto 2
 itemsTakeAuto_party 0
 itemsGatherAuto 2
-itemsMaxWeight 55
-itemsMaxWeight_sellOrStore 50
+itemsMaxWeight 40
+itemsMaxWeight_sellOrStore 30
 itemsMaxNum_sellOrStore 90
 itemsTakeGreed 0
 
