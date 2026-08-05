@@ -56,25 +56,19 @@ automacro Ragna_Job_ToAssassin {
 # Identify unidentified loot with Magnifier, then re-check equipAuto
 automacro Ragna_IdentifyLoot {
 	BaseLevel >= 1
-	InInventory Magnifier > 0
-	timeout 8
+	InInventory "Magnifier" > 0
+	timeout 5
 	exclusive 1
-	Eval my $n=0; for my $it (@{$char->inventory->getItems()}) { next unless $it; $n++ if !$it->{identified}; } $n > 0
+	Eval my $n=0; foreach my $it (@{$char->inventory->getItems()}) { $n++ if ($it && !$it->{identified}); } $n > 0
 	call {
 		[
-			log [Ragna] Magnifier: identifying loot, then equip check
+			log [Ragna] Magnifier: identify loot then equip check
 			do is Magnifier
 			pause 1
-		]
-		$i = 0
-		while (&eval(scalar(grep { defined $_ && $_ ne "" } @::identifyID)) > 0 && $i < 15) {
 			do identify 0
-			pause 0.6
-			$i++
-		}
-		[
+			pause 0.8
 			do eq
-			pause 1
+			pause 0.5
 			log [Ragna] Identify/equip pass done
 		]
 	}

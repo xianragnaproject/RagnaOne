@@ -21,6 +21,7 @@ Carrot 5 0 0
 
 # Keep gear (do not sell)
 Club 1 0 1
+Club [4] 1 0 1
 Knife 0 0 0
 Main Gauche 0 0 0
 Dirk 0 0 0
