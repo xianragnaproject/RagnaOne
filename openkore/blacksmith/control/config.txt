@@ -131,8 +131,8 @@ attackSkillSlot Cart Revolution {
 itemsTakeAuto 2
 itemsTakeAuto_party 0
 itemsGatherAuto 2
-itemsMaxWeight 50
-itemsMaxWeight_sellOrStore 70
+itemsMaxWeight 55
+itemsMaxWeight_sellOrStore 50
 itemsMaxNum_sellOrStore 90
 itemsTakeGreed 0
 
@@ -149,7 +149,7 @@ storageAuto_useChatCommand
 storageAuto_notInTown 0
 storageAuto_forceGetStorage 0
 
-sellAuto 0
+sellAuto 1
 sellAuto_npc prt_in 126 76
 sellAuto_standpoint prt_in 126 74
 sellAuto_distance 5
