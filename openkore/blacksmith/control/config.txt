@@ -29,16 +29,16 @@ attackAuto_notWhile_buyAuto 1
 attackAuto_notWhile_sellAuto 1
 attackDistance 1
 attackDistanceAuto 1
-attackMaxDistance 1
-attackMaxRouteTime 6
-attackMinPlayerDistance 3
+attackMaxDistance 14
+attackMaxRouteTime 30
+attackMinPlayerDistance 0
 attackMinPortalDistance 4
 attackUseWeapon 1
-attackNoGiveup 0
+attackNoGiveup 1
 attackCanSnipe 0
 attackCheckLOS 1
 attackChangeTarget 1
-aggressiveAntiKS 1
+aggressiveAntiKS 0
 
 ######## Lock map — starter; eventMacros updates by level ########
 
@@ -321,7 +321,7 @@ showDomain_chatChat 1
 
 ######## Misc ########
 
-clientSight 15
+clientSight 20
 route_avoidWalls 1
 route_removeMissingPortals_irrational 0
 gameGuard 0

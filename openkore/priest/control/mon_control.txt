@@ -96,4 +96,4 @@ Maya -1 1 0
 Knight of Abyss -1 1 0
 
 # Default: attack if aggressive only
-all 1 0 0
+all 2 0 1
