@@ -170,14 +170,10 @@ automacro Ragna_Lv91_99 {
 
 # Occasional sit pause to look less robotic (idle heal already handles most)
 automacro Ragna_RandomIdle {
-	BaseLevel >= 1
-	timeout 900
-	exclusive 0
+	BaseLevel >= 9999
+	timeout 99999
 	call {
-		[
-			log [Ragna] Brief idle
-			pause 2
-		]
+		log [Ragna] idle disabled
 	}
 }
 

@@ -153,14 +153,10 @@ automacro Ragna_Lv91_99 {
 }
 
 automacro Ragna_RandomIdle {
-	BaseLevel >= 1
-	timeout 900
-	exclusive 0
+	BaseLevel >= 9999
+	timeout 99999
 	call {
-		[
-			log [Ragna] Brief idle
-			pause 2
-		]
+		log [Ragna] idle disabled
 	}
 }
 
