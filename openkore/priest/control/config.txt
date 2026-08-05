@@ -157,23 +157,37 @@ sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 
-# Potions + wings — buy when low (tool dealer Prontera)
+# Potions — buy when low if zeny available (tool dealer + fruit vendor)
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
 	distance 3
+	price 50
 	minAmount 5
 	maxAmount 40
-	disabled 1
+	zeny > 500
+	disabled 0
 }
 buyAuto Orange Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
 	distance 3
+	price 200
 	minAmount 0
-	maxAmount 20
+	maxAmount 15
 	minBase 20
-	disabled 1
+	zeny > 5000
+	disabled 0
+}
+buyAuto Apple {
+	npc prontera 104 49
+	standpoint prontera 107 51
+	distance 5
+	price 15
+	minAmount 10
+	maxAmount 80
+	zeny > 200
+	disabled 0
 }
 buyAuto Fly Wing {
 	npc prt_in 126 76
