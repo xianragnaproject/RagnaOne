@@ -208,15 +208,16 @@ buyAuto Butterfly Wing {
 }
 
 # Starter / Priest weapons
-buyAuto Mace {
+buyAuto Rod [3] {
 	npc prt_in 172 130
 	distance 3
 	minAmount 1
 	maxAmount 1
 	minBase 1
-	maxBase 11
-	disabled 1
+	maxBase 39
+	disabled 0
 	zeny > 50
+	standpoint prt_in 172 128
 }
 buyAuto Morning Star {
 	npc prt_in 172 130
@@ -227,6 +228,7 @@ buyAuto Morning Star {
 	maxBase 39
 	disabled 1
 	zeny > 500
+	standpoint prt_in 172 128
 }
 buyAuto Sword Mace {
 	npc prt_in 172 130
@@ -242,8 +244,9 @@ buyAuto Cotton Shirt {
 	minAmount 1
 	maxAmount 1
 	maxBase 20
-	disabled 1
-	zeny > 50
+	disabled 0
+	zeny > 10
+	standpoint prt_in 172 134
 }
 buyAuto Jacket {
 	npc prt_in 172 132
@@ -252,14 +255,21 @@ buyAuto Jacket {
 	maxAmount 1
 	minBase 21
 	maxBase 50
-	disabled 1
-	zeny > 800
+	disabled 0
+	zeny > 200
+	standpoint prt_in 172 134
 }
 
 ######## Equips ########
 
 autoSwitch_default_rightHand Mace
 autoSwitch_default_leftHand
+
+equipAuto {
+	rightHand Rod [3]
+	maxBase 39
+	disabled 0
+}
 
 equipAuto {
 	rightHand Mace
@@ -310,12 +320,12 @@ equipAuto {
 equipAuto {
 	rightHand Club [4]
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 equipAuto {
 	rightHand Knife [4]
 	maxBase 40
-	disabled 0
+	disabled 1
 }
 
 ######## Jobs / skills — Priest path (Novice → Acolyte → Priest) ########

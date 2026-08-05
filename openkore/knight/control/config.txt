@@ -217,32 +217,36 @@ buyAuto Butterfly Wing {
 }
 
 # Starter / Knight weapons — Prontera weapon dealer
-buyAuto Sword {
+buyAuto Sword [3] {
 	npc prt_in 172 130
 	distance 3
 	minAmount 1
 	maxAmount 1
 	maxBase 11
-	disabled 1
+	disabled 0
 	zeny > 50
+	standpoint prt_in 172 128
 }
-buyAuto Falchion {
+buyAuto Falchion [3] {
 	npc prt_in 172 130
 	distance 3
 	minAmount 1
 	maxAmount 1
 	minBase 12
 	maxBase 39
-	disabled 1
-	zeny > 500
+	disabled 0
+	zeny > 1500
+	standpoint prt_in 172 128
 }
-buyAuto Blade {
+buyAuto Blade [3] {
 	npc prt_in 172 130
 	distance 3
-	minAmount 0
+	minAmount 1
 	maxAmount 1
 	minBase 40
-	disabled 1
+	disabled 0
+	zeny > 2900
+	standpoint prt_in 172 128
 }
 buyAuto Cotton Shirt {
 	npc prt_in 172 132
@@ -250,8 +254,9 @@ buyAuto Cotton Shirt {
 	minAmount 1
 	maxAmount 1
 	maxBase 20
-	disabled 1
-	zeny > 50
+	disabled 0
+	zeny > 10
+	standpoint prt_in 172 134
 }
 buyAuto Jacket {
 	npc prt_in 172 132
@@ -260,8 +265,9 @@ buyAuto Jacket {
 	maxAmount 1
 	minBase 21
 	maxBase 50
-	disabled 1
-	zeny > 800
+	disabled 0
+	zeny > 200
+	standpoint prt_in 172 134
 }
 
 ######## Equips — wear best Knight-friendly gear in inventory ########
@@ -269,6 +275,12 @@ buyAuto Jacket {
 
 autoSwitch_default_rightHand Sword
 autoSwitch_default_leftHand
+
+equipAuto {
+	rightHand Sword [3]
+	maxBase 11
+	disabled 0
+}
 
 equipAuto {
 	rightHand Sword
@@ -312,12 +324,12 @@ equipAuto {
 equipAuto {
 	rightHand Club [4]
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 equipAuto {
 	rightHand Knife [4]
 	maxBase 40
-	disabled 0
+	disabled 1
 }
 
 ######## Jobs / skills — Knight path (Novice → Swordman → Knight) ########

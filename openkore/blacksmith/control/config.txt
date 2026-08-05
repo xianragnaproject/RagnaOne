@@ -217,14 +217,15 @@ buyAuto Butterfly Wing {
 }
 
 # Starter / Blacksmith weapons — Prontera weapon dealer
-buyAuto Axe {
+buyAuto Axe [3] {
 	npc prt_in 172 130
 	distance 3
 	minAmount 1
 	maxAmount 1
-	maxBase 11
-	disabled 1
-	zeny > 50
+	maxBase 39
+	disabled 0
+	zeny > 100
+	standpoint prt_in 172 128
 }
 buyAuto Battle Axe {
 	npc prt_in 172 130
@@ -235,6 +236,7 @@ buyAuto Battle Axe {
 	maxBase 39
 	disabled 1
 	zeny > 500
+	standpoint prt_in 172 128
 }
 buyAuto Hammer {
 	npc prt_in 172 130
@@ -250,8 +252,9 @@ buyAuto Cotton Shirt {
 	minAmount 1
 	maxAmount 1
 	maxBase 20
-	disabled 1
-	zeny > 50
+	disabled 0
+	zeny > 10
+	standpoint prt_in 172 134
 }
 buyAuto Jacket {
 	npc prt_in 172 132
@@ -260,14 +263,21 @@ buyAuto Jacket {
 	maxAmount 1
 	minBase 21
 	maxBase 50
-	disabled 1
-	zeny > 800
+	disabled 0
+	zeny > 200
+	standpoint prt_in 172 134
 }
 
 ######## Equips — wear best Blacksmith-friendly gear ########
 
 autoSwitch_default_rightHand Axe
 autoSwitch_default_leftHand
+
+equipAuto {
+	rightHand Axe [3]
+	maxBase 39
+	disabled 0
+}
 
 equipAuto {
 	rightHand Axe
@@ -279,7 +289,7 @@ equipAuto {
 equipAuto {
 	rightHand Battle Axe
 	minBase 12
-	disabled 0
+	disabled 1
 }
 
 equipAuto {
@@ -311,12 +321,12 @@ equipAuto {
 equipAuto {
 	rightHand Club [4]
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 equipAuto {
 	rightHand Knife [4]
 	maxBase 40
-	disabled 0
+	disabled 1
 }
 
 ######## Jobs / skills — Blacksmith path (Novice → Merchant → Blacksmith) ########

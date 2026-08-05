@@ -217,15 +217,25 @@ buyAuto Butterfly Wing {
 }
 
 # Starter / Hunter weapons
-buyAuto Bow {
+buyAuto Arrow {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 3
+	minAmount 50
+	maxAmount 500
+	zeny > 50
+	disabled 0
+}
+buyAuto Bow [3] {
 	npc prt_in 172 130
 	distance 3
 	minAmount 1
 	maxAmount 1
 	minBase 1
-	maxBase 11
-	disabled 1
-	zeny > 50
+	maxBase 39
+	disabled 0
+	zeny > 1000
+	standpoint prt_in 172 128
 }
 buyAuto Composite Bow {
 	npc prt_in 172 130
@@ -236,6 +246,7 @@ buyAuto Composite Bow {
 	maxBase 39
 	disabled 1
 	zeny > 500
+	standpoint prt_in 172 128
 }
 buyAuto Great Bow {
 	npc prt_in 172 130
@@ -251,8 +262,9 @@ buyAuto Cotton Shirt {
 	minAmount 1
 	maxAmount 1
 	maxBase 20
-	disabled 1
-	zeny > 50
+	disabled 0
+	zeny > 10
+	standpoint prt_in 172 134
 }
 buyAuto Jacket {
 	npc prt_in 172 132
@@ -261,14 +273,21 @@ buyAuto Jacket {
 	maxAmount 1
 	minBase 21
 	maxBase 50
-	disabled 1
-	zeny > 800
+	disabled 0
+	zeny > 200
+	standpoint prt_in 172 134
 }
 
 ######## Equips ########
 
 autoSwitch_default_rightHand Bow
 autoSwitch_default_leftHand
+
+equipAuto {
+	rightHand Bow [3]
+	maxBase 39
+	disabled 0
+}
 
 equipAuto {
 	rightHand Bow
@@ -319,12 +338,12 @@ equipAuto {
 equipAuto {
 	rightHand Club [4]
 	maxBase 20
-	disabled 0
+	disabled 1
 }
 equipAuto {
 	rightHand Knife [4]
 	maxBase 40
-	disabled 0
+	disabled 1
 }
 
 ######## Jobs / skills — Hunter path (Novice → Archer → Hunter) ########
