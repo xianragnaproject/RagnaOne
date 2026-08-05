@@ -83,9 +83,36 @@ automacro Ragna_Lv12_20 {
 		do conf lockMap pay_fild08
 		do conf lockMap_randX 12
 		do conf lockMap_randY 12
-		log [RagnaOne] Lv12-20: Payon Field 08
+		log [RagnaOne] Lv12-20: Payon Field 08 (save→Payon Kafra)
 	}
 }
+
+# At Base 12+ set save point in Payon (respawn near pay_fild08 hunt)
+automacro Ragna_SetSavePayon {
+	BaseLevel >= 12
+	ConfigKeyNot ragnaSavePayon 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log [Ragna] Lv12+ — setting save point at Payon Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move payon 181 104
+			pause 12
+			do talknpc 181 104 c r0
+			pause 4
+			do conf ragnaSavePayon 1
+			do conf saveMap payon
+			do conf saveMap_x 181
+			do conf saveMap_y 104
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			log [Ragna] Save point set to Payon
+		]
+	}
+}
+
 
 automacro Ragna_Lv21_30 {
 	BaseLevel 21..30
