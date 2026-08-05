@@ -82,13 +82,23 @@ sitAuto_idle 1
 sitAuto_idle_wait 8
 sitTensionRelax 0
 
-useSelf_item Red Potion {
+useSelf_item Apple {
 	hp < 50%
+	timeout 1
+	disabled 0
+}
+useSelf_item Novice Potion {
+	hp < 45%
+	timeout 1
+	disabled 0
+}
+useSelf_item Red Potion {
+	hp < 35%
 	timeout 2
 	disabled 0
 }
 useSelf_item Orange Potion {
-	hp < 35%
+	hp < 25%
 	timeout 2
 	disabled 0
 }

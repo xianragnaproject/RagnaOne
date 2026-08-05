@@ -15,7 +15,7 @@ Iron Arrow 50 0 0
 Silver Arrow 50 0 0
 Fire Arrow 50 0 0
 Novice Potion 20 0 0
-Apple 5 0 0
+Apple 50 0 0
 Carrot 5 0 0
 
 # Keep gear (do not sell)
