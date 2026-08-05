@@ -1,0 +1,175 @@
+######## AssassinClean — Lv1-13 Prontera field leveler ########
+
+master RagnaOne
+char 0
+server 0
+username CHANGE_ME
+password CHANGE_ME
+loginPinCode
+XKore 0
+
+secureAdminPassword 1
+adminPassword clusecem
+commandPrefix ;
+
+pauseCharLogin 3
+pauseCharServer 2
+pauseMapServer 2
+ignoreInvalidLogin 0
+
+######## Combat ########
+attackAuto 2
+attackAuto_party 1
+attackAuto_onlyWhenSafe 0
+attackAuto_inLockOnly 1
+attackAuto_notInTown 1
+attackAuto_notWhile_storageAuto 1
+attackAuto_notWhile_buyAuto 1
+attackAuto_notWhile_sellAuto 1
+attackDistance 1
+attackDistanceAuto 1
+attackMaxDistance 18
+attackMaxRouteTime 45
+attackMinPlayerDistance 0
+attackMinPortalDistance 0
+attackUseWeapon 1
+attackNoGiveup 1
+attackCanSnipe 0
+attackCheckLOS 0
+attackChangeTarget 1
+aggressiveAntiKS 0
+attackAuto_allowKS 1
+
+######## Hunt ########
+lockMap prt_fild08
+lockMap_x
+lockMap_y
+lockMap_randX 14
+lockMap_randY 14
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+route_randomWalk_maxRouteTime 10
+route_step 2
+route_escape_randomWalk 1
+
+######## Deaths ########
+autoMoveOnDeath 1
+autoMoveOnDeath_map prontera
+autoMoveOnDeath_x 155
+autoMoveOnDeath_y 50
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnStorageFull 0
+dcOnLevel 99
+dcPause 1
+
+######## Sit / heal ########
+sitAuto_hp_lower 40
+sitAuto_hp_upper 80
+sitAuto_sp_lower 15
+sitAuto_sp_upper 40
+sitAuto_idle 1
+sitAuto_idle_wait 8
+
+######## Weight / sell at 20% ########
+itemsMaxWeight 35
+itemsMaxWeight_sellOrStore 20
+itemsMaxNum_sellOrStore 90
+itemsTakeAuto 1
+itemsGatherAuto 2
+
+storageAuto 0
+sellAuto 1
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 126 74
+sellAuto_distance 5
+sellAuto_maxDistance 8
+sellAuto_npc_steps s
+
+######## Potions: use Novice stock first; buy Red when low after Lv2 ########
+buyAuto Red Potion {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	price 50
+	minAmount 5
+	maxAmount 40
+	minBase 2
+	zeny > 500
+	disabled 0
+}
+
+useSelf_item Novice Potion {
+	hp < 65%
+	inInventory Novice Potion > 0
+	timeout 1.2
+	disabled 0
+}
+useSelf_item Red Potion {
+	hp < 60%
+	inInventory Red Potion > 0
+	timeout 1.2
+	disabled 0
+}
+
+######## Gear buys after a bit of leveling / zeny ########
+buyAuto Knife [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 3
+	minAmount 1
+	maxAmount 1
+	minBase 5
+	maxBase 39
+	zeny > 200
+	disabled 0
+}
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 3
+	minAmount 1
+	maxAmount 1
+	minBase 5
+	maxBase 39
+	zeny > 100
+	disabled 0
+}
+
+######## Equip ########
+autoSwitch_default_rightHand Knife
+autoSwitch_default_leftHand
+equipAuto {
+	rightHand Knife [3]
+	maxBase 39
+	disabled 0
+}
+equipAuto {
+	rightHand Knife
+	maxBase 39
+	disabled 0
+}
+equipAuto {
+	rightHand Novice Main-Gauche
+	maxBase 11
+	disabled 0
+}
+equipAuto {
+	armor Cotton Shirt
+	maxBase 39
+	disabled 0
+}
+
+######## Save ########
+saveMap prontera
+saveMap_x 155
+saveMap_y 50
+ragnaSaveProntera 0
+
+######## Misc ########
+follow 0
+dealAuto 3
+partyAuto 1
+guildAutoDeny 1
+verbose 1
+dcOnEmptyArrow 0

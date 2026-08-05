@@ -1,0 +1,141 @@
+# AssassinClean — Lv1-13 macros only
+# 1) Prontera south Kafra save
+# 2) Sell at 20% weight (config itemsMaxWeight_sellOrStore)
+# 3) Buy potions when low (buyAuto in config)
+# Extra: equip refresh, return to lockMap, Job Master to Thief at Job 10
+
+automacro Ragna_SetSavePronteraSouth {
+	IsInMapAndCoordinate prontera
+	ConfigKeyNot ragnaSaveProntera 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log [Ragna] Setting save at Prontera south Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 151 29
+			pause 8
+			do talknpc 151 29 c r0
+			pause 4
+			do conf ragnaSaveProntera 1
+			do conf saveMap prontera
+			do conf saveMap_x 155
+			do conf saveMap_y 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			log [Ragna] Save set Prontera south - hunting prt_fild08
+		]
+	}
+}
+
+# After death / in town with junk: sell if weight >= 10%
+automacro Ragna_TownSell {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,prt_in
+	timeout 25
+	exclusive 1
+	Eval (Misc::percent_weight($char) >= 10) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] In town with weight - selling
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do eval AI::queue("sellAuto");
+			pause 1
+			do eq
+		]
+	}
+}
+
+automacro Ragna_TownResume {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,prt_in
+	timeout 30
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] In town - resume hunt
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do eq
+		]
+	}
+}
+
+automacro Ragna_ReturnToLock {
+	ConfigKeyNot lockMap none
+	InLockMap 0
+	timeout 40
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] Off lockMap - resume hunt
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+automacro Ragna_EquipRefresh {
+	BaseLevel >= 1
+	timeout 120
+	exclusive 0
+	call {
+		[
+			do eq
+		]
+	}
+}
+
+# Escape Izlude spawn if save not set yet
+automacro Ragna_EscapeIzlude {
+	IsInMapAndCoordinate izlude
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log [Ragna] Leaving Izlude west to prt_fild08
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			pause 1
+			do move 30 78
+			pause 14
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+# Job change Novice -> Thief at Job Lv 10 via Prontera Job Master
+automacro Ragna_Job_ToThief {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	ConfigKeyNot ragnaJobThief 1
+	timeout 120
+	exclusive 1
+	call {
+		[
+			log [Ragna] Job change to Thief at Prontera Job Master
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 150 180
+			pause 14
+			do talknpc 150 180 c c c r1 c r0
+			pause 5
+			do conf ragnaJobThief 1
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			do eq
+			log [Ragna] Now Thief - back to prt_fild08
+		]
+	}
+}
