@@ -90,11 +90,10 @@ sellAuto_npc_steps s
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
-	distance 3
-	price 50
+	distance 5
 	minAmount 5
 	maxAmount 40
-	minBase 2
+	minBase 3
 	zeny > 500
 	disabled 0
 }
