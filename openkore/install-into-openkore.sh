@@ -30,3 +30,8 @@ cp -f "$ROOT/tables/servers.txt" "$TARGET/tables/servers.txt"
 echo "Installed '$CLASS' pack into $TARGET"
 echo "Edit $TARGET/control/config.txt → username / password"
 echo "Run: cd $TARGET && perl ./openkore.pl"
+
+# Honor attackMinPlayerDistance 0 (needed for multi-bot hunting)
+if [[ -f "$ROOT/scripts/patch-attack-min-distance.sh" ]]; then
+  bash "$ROOT/scripts/patch-attack-min-distance.sh" "$TARGET/src/Misc.pm" || true
+fi
