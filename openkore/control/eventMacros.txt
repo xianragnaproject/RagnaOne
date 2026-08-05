@@ -57,10 +57,13 @@ automacro Ragna_Job_ToAssassin {
 automacro Ragna_IdentifyLoot {
 	BaseLevel >= 1
 	InInventory "Magnifier" > 0
-	timeout 5
+	timeout 6
 	exclusive 1
-	Eval my $n=0; foreach my $it (@{$char->inventory->getItems()}) { $n++ if ($it && !$it->{identified}); } $n > 0
 	call {
+		$n = @eval(my $c=0; foreach my $it (@{$char->inventory->getItems()}) { $c++ if ($it && !$it->{identified}); } $c)
+		if ($n < 1) {
+			stop
+		}
 		[
 			log [Ragna] Magnifier: identify loot then equip check
 			do is Magnifier

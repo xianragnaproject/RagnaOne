@@ -318,6 +318,11 @@ equipAuto {
 	maxBase 20
 	disabled 0
 }
+equipAuto {
+	rightHand Knife [4]
+	maxBase 40
+	disabled 0
+}
 
 ######## Jobs / skills — Blacksmith path (Novice → Merchant → Blacksmith) ########
 # Create character as Novice, jobchange to Merchant then Blacksmith.

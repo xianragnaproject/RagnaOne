@@ -319,6 +319,11 @@ equipAuto {
 	maxBase 20
 	disabled 0
 }
+equipAuto {
+	rightHand Knife [4]
+	maxBase 40
+	disabled 0
+}
 
 ######## Jobs / skills — Knight path (Novice → Swordman → Knight) ########
 # Create character as Novice, jobchange to Swordman then Knight on your server.

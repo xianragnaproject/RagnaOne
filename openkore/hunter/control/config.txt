@@ -326,6 +326,11 @@ equipAuto {
 	maxBase 20
 	disabled 0
 }
+equipAuto {
+	rightHand Knife [4]
+	maxBase 40
+	disabled 0
+}
 
 ######## Jobs / skills — Hunter path (Novice → Archer → Hunter) ########
 # Create Novice, jobchange accordingly.
