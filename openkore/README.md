@@ -52,16 +52,17 @@ cd /path/to/openkore
 
 Select **RagnaOne** from the master server list.
 
-## 4) What it does
+## Job Master + equips
 
-| Feature | Setting |
-|--------|---------|
-| Auto-attack | On, only in lock map |
-| Lock maps | Changes with base level (fields around Prontera/Payon/Geffen/Morroc) |
-| Buy | Red/Orange potions, Fly Wings when low |
-| Sell | Junk loot at Prontera tool dealer |
-| Storage | Dump loot in Prontera Kafra when heavy |
-| Human-like | Random walk, sit to heal, breaks, not KS-aggressive |
+**Job Master** is assumed at Prontera `153,193` (stock Hercules Euphy script).
+
+Flow:
+1. Novice Job 10+ → Job Master → **Thief**
+2. Thief Job 40+ (Base 40+) → Job Master → **Assassin**
+
+If your menu order differs, edit responses in `control/eventMacros.txt` (`r5` for Thief, `r0` for Assassin).
+
+**Equips:** buys Knife → Main Gauche → Jur/Katar from Prontera weapon NPC and auto-equips better Assassin gear as base level rises. Keep-list prevents selling those weapons/armors.
 
 ## 5) Important notes
 

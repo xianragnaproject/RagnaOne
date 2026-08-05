@@ -1,7 +1,69 @@
-# eventMacros.txt — change hunting grounds by base level (normal player route)
+# eventMacros.txt — Job Master + Assassin leveling route
 # Requires OpenKore eventMacro plugin (bundled in modern OpenKore).
 # Enable with: load eventMacro
-# Or ensure automacro/eventMacro is active in your OpenKore build.
+
+# ============================================================
+# Job Master @ Prontera 153,193 (stock Hercules Euphy Job Master)
+# Menu order may differ on custom scripts — tune r# if needed.
+# First jobs often: Swordman, Magician, Archer, Acolyte, Merchant, Thief
+#   → Thief = r5
+# Thief 2nd jobs often: Assassin, Rogue
+#   → Assassin = r0
+# ============================================================
+
+automacro Ragna_Job_ToThief {
+	JobID 0
+	JobLevel >= 10
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Novice Job10+ → Prontera Job Master → Thief
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 153 193
+		pause 2
+		do talknpc 153 193 c r5 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Thief requested
+	}
+}
+
+automacro Ragna_Job_ToAssassin {
+	JobID 6
+	JobLevel >= 40
+	BaseLevel >= 40
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Thief Job40+ → Prontera Job Master → Assassin
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 153 193
+		pause 2
+		do talknpc 153 193 c r0 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Assassin requested
+	}
+}
+
+# Re-equip after job change / death
+automacro Ragna_EquipRefresh {
+	timeout 90
+	call {
+		do reload conf
+		log [RagnaOne] Refresh equipAuto rules
+	}
+}
+
+# ============================================================
+# Progressive lock maps
+# ============================================================
 
 automacro Ragna_Lv1_11 {
 	BaseLevel < 12
