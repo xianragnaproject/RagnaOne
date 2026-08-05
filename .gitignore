@@ -1,0 +1,7 @@
+# Local OpenKore checkout (cloned by scripts/setup-openkore.sh)
+/openkore/
+
+# Runtime / secrets
+**/config.runtime.*.txt
+**/*.log
+**/logs/

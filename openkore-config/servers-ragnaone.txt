@@ -1,0 +1,12 @@
+# RagnaOne - Hercules pre-renewal (PACKETVER 20180620)
+# Source: http://173.208.138.84/Config.local.js
+[RagnaOne]
+ip 173.208.138.84
+port 6900
+master_version 1
+version 55
+serverType kRO_RagexeRE_2018_06_20e
+serverEncoding Western
+charBlockSize 155
+addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
+private 1
