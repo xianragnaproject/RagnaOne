@@ -1,0 +1,136 @@
+# eventMacros.txt — change hunting grounds by base level (normal player route)
+# Requires OpenKore eventMacro plugin (bundled in modern OpenKore).
+# Enable with: load eventMacro
+# Or ensure automacro/eventMacro is active in your OpenKore build.
+
+automacro Ragna_Lv1_11 {
+	BaseLevel < 12
+	run-once 1
+	call {
+		do conf lockMap prt_fild08
+		do conf lockMap_randX 14
+		do conf lockMap_randY 14
+		log [RagnaOne] Lv1-11: Prontera Field 08 (porings/drops)
+	}
+}
+
+automacro Ragna_Lv12_20 {
+	BaseLevel 12..20
+	run-once 1
+	call {
+		do conf lockMap pay_fild08
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv12-20: Payon Field 08
+	}
+}
+
+automacro Ragna_Lv21_30 {
+	BaseLevel 21..30
+	run-once 1
+	call {
+		do conf lockMap gef_fild00
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv21-30: Geffen Field 00
+	}
+}
+
+automacro Ragna_Lv31_40 {
+	BaseLevel 31..40
+	run-once 1
+	call {
+		do conf lockMap pay_dun00
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv31-40: Payon Cave 00
+	}
+}
+
+automacro Ragna_Lv41_50 {
+	BaseLevel 41..50
+	run-once 1
+	call {
+		do conf lockMap moc_fild11
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv41-50: Morroc Field 11
+	}
+}
+
+automacro Ragna_Lv51_60 {
+	BaseLevel 51..60
+	run-once 1
+	call {
+		do conf lockMap cmd_fild01
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv51-60: Comodo Field 01
+	}
+}
+
+automacro Ragna_Lv61_70 {
+	BaseLevel 61..70
+	run-once 1
+	call {
+		do conf lockMap gef_fild10
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv61-70: Geffen Field 10 (orcs)
+	}
+}
+
+automacro Ragna_Lv71_80 {
+	BaseLevel 71..80
+	run-once 1
+	call {
+		do conf lockMap moc_fild17
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv71-80: Morroc Field 17
+	}
+}
+
+automacro Ragna_Lv81_90 {
+	BaseLevel 81..90
+	run-once 1
+	call {
+		do conf lockMap beach_dun
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv81-90: Beach Dungeon
+	}
+}
+
+automacro Ragna_Lv91_99 {
+	BaseLevel 91..99
+	run-once 1
+	call {
+		do conf lockMap mag_dun01
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv91-99: Magma Dungeon 01 — finishing to 99
+	}
+}
+
+# Occasional sit pause to look less robotic (idle heal already handles most)
+automacro Ragna_RandomIdle {
+	timeout 420
+	call {
+		log [RagnaOne] Taking a short idle pause...
+		do sit
+		pause 8..18
+		do stand
+	}
+}
+
+# After death, restock feeling
+automacro Ragna_AfterDeath {
+	ConfigKeyNotIn isDead 0
+	delay 3
+	run-once 0
+	call {
+		log [RagnaOne] Died — recovering in town before returning
+		pause 5..12
+	}
+}
