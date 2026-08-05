@@ -209,6 +209,7 @@ automacro Ragna_TownAfterDeath {
 	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta
 	timeout 25
 	exclusive 1
+	Eval !AI::inQueue("sellAuto") && !AI::inQueue("storageAuto") && !AI::inQueue("buyAuto")
 	call {
 		[
 			log [Ragna] In town - resume lockMap
@@ -226,6 +227,7 @@ automacro Ragna_ReturnToLock {
 	InLockMap 0
 	timeout 40
 	exclusive 1
+	Eval !AI::inQueue("sellAuto") && !AI::inQueue("storageAuto") && !AI::inQueue("buyAuto")
 	call {
 		[
 			log [Ragna] Not on lockMap - resume hunt route
