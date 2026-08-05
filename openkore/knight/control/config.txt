@@ -29,14 +29,14 @@ attackAuto_notWhile_buyAuto 1
 attackAuto_notWhile_sellAuto 1
 attackDistance 1
 attackDistanceAuto 1
-attackMaxDistance 14
-attackMaxRouteTime 30
+attackMaxDistance 18
+attackMaxRouteTime 45
 attackMinPlayerDistance 0
-attackMinPortalDistance 4
+attackMinPortalDistance 0
 attackUseWeapon 1
 attackNoGiveup 1
 attackCanSnipe 0
-attackCheckLOS 1
+attackCheckLOS 0
 attackChangeTarget 1
 aggressiveAntiKS 0
 
@@ -50,7 +50,7 @@ lockMap_randY 14
 
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
-route_randomWalk_maxRouteTime 30
+route_randomWalk_maxRouteTime 10
 route_randomWalk_avoidMobDensity 0
 route_step 2
 route_escape_randomWalk 1
@@ -322,7 +322,7 @@ showDomain_chatChat 1
 
 ######## Misc ########
 
-clientSight 20
+clientSight 25
 route_avoidWalls 1
 route_removeMissingPortals_irrational 0
 gameGuard 0
@@ -338,3 +338,5 @@ saveMap_warpChatCommand
 macro_orphans terminate
 
 ragnaSaveProntera 0
+
+attackRouteMaxPathDistance 30
