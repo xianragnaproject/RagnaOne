@@ -40,6 +40,7 @@ attackCheckLOS 0
 attackChangeTarget 1
 aggressiveAntiKS 0
 attackAuto_allowKS 1
+ragna_unid 0
 ######## Lock map — starter; eventMacros updates by level ########
 
 lockMap prt_fild08
@@ -188,16 +189,6 @@ buyAuto Magnifier {
 	maxAmount 15
 	zeny > 200
 	disabled 0
-}
-buyAuto Apple {
-	npc prontera 104 49
-	standpoint prontera 115 55
-	distance 6
-	price 15
-	minAmount 5
-	maxAmount 50
-	zeny > 200
-	disabled 1
 }
 buyAuto Fly Wing {
 	npc prt_in 126 76
