@@ -16,9 +16,11 @@ Silver Arrow 50 0 0
 Fire Arrow 50 0 0
 Novice Potion 20 0 0
 Apple 50 0 0
+Magnifier 15 0 0
 Carrot 5 0 0
 
 # Keep gear (do not sell)
+Club 1 0 1
 Knife 0 0 0
 Main Gauche 0 0 0
 Dirk 0 0 0
