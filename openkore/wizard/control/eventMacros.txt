@@ -185,7 +185,7 @@ automacro Ragna_AfterDeath {
 	}
 }
 
-# ---- Town / Izlude recovery (RagnaOne) ----
+# ---- Town / Izlude / off-lockMap recovery (RagnaOne) ----
 automacro Ragna_TownAfterDeath {
 	ConfigKeyNot lockMap none
 	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta
@@ -193,16 +193,61 @@ automacro Ragna_TownAfterDeath {
 	exclusive 1
 	call {
 		[
-			log [Ragna] In town after death - resume lockMap
+			log [Ragna] In town - resume lockMap
+			do conf attackAuto 2
+			do conf route_randomWalk 1
 			do reload conf
 			pause 1
 		]
 	}
 }
 
+# Yank bots that wandered onto wrong fields back to lockMap
+automacro Ragna_ReturnToLock {
+	ConfigKeyNot lockMap none
+	InLockMap 0
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log [Ragna] Not on lockMap - resume hunt route
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do reload conf
+			pause 2
+		]
+	}
+}
+
+# Set Prontera save once so future deaths skip Izlude spawn
+automacro Ragna_SetSaveProntera {
+	IsInMapAndCoordinate prontera
+	ConfigKeyNot ragnaSaveProntera 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log [Ragna] Setting save point at Prontera Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 151 29
+			pause 8
+			do talknpc 151 29 c r0
+			pause 4
+			do conf ragnaSaveProntera 1
+			do conf saveMap prontera
+			do conf saveMap_x 155
+			do conf saveMap_y 187
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
 automacro Ragna_EscapeIzlude {
 	IsInMapAndCoordinate izlude
-	timeout 25
+	timeout 35
 	exclusive 1
 	call EscapeIzlude
 }
@@ -211,24 +256,48 @@ macro EscapeIzlude {
 	log [Ragna] Escaping Izlude via west portal to prt_fild08
 	do conf attackAuto 0
 	do conf route_randomWalk 0
+	do conf lockMap none
+	pause 1
 	do move 30 78
-	pause 8
+	pause 14
 	do conf attackAuto 2
 	do conf route_randomWalk 1
 	do conf lockMap prt_fild08
 }
 
-automacro Ragna_EscapeIzludeIn {
-	IsInMapAndCoordinate izlude_in
-	timeout 12
+# If still in Izlude after west attempt, take Sailor to Alberta
+automacro Ragna_EscapeIzludeSailor {
+	IsInMapAndCoordinate izlude
+	timeout 50
 	exclusive 1
 	call {
 		[
-			log [Ragna] Leaving izlude_in toward outdoor Izlude
+			log [Ragna] Still in Izlude - Sailor to Alberta
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move 201 181
+			pause 12
+			do talknpc 201 181 c r1
+			pause 6
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+automacro Ragna_EscapeIzludeIn {
+	IsInMapAndCoordinate izlude_in
+	timeout 15
+	exclusive 1
+	call {
+		[
+			log [Ragna] Leaving izlude_in to outdoor Izlude
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 116 46
-			pause 6
+			pause 8
 		]
 	}
 }

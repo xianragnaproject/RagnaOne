@@ -335,4 +335,4 @@ saveMap_warpChatCommand
 # dcOnLevel 99 already set above
 macro_orphans terminate
 
-
+ragnaSaveProntera 0

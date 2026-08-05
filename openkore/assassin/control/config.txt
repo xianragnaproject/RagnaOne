@@ -375,3 +375,5 @@ saveMap_warpChatCommand
 ######## Optional: disconnect when done leveling ########
 # dcOnLevel 99 already set above
 macro_orphans terminate
+
+ragnaSaveProntera 0
