@@ -29,7 +29,7 @@ cp openkore/control/eventMacros.txt /path/to/openkore/control/eventMacros.txt
 
 ## 2) Create an account on your server
 
-Register a normal account on Hercules, create a character (Swordsman / Archer / Mage / Merchant all work; starter config assumes melee beginner → Swordsman path).
+Register a normal account on Hercules, create a **Novice → Thief → Assassin** character (config is tuned for Assassin).
 
 Edit `control/config.txt`:
 

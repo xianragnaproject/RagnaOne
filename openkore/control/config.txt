@@ -99,6 +99,29 @@ useSelf_item Butterfly Wing {
 	disabled 0
 }
 
+# Assassin skills in combat
+attackSkillSlot Sonic Blow {
+	lvl 10
+	dist 1
+	sp > 20
+	monsters
+	notMonsters
+	inLockOnly 1
+	notInTown 1
+	timeout 1
+	disabled 0
+}
+attackSkillSlot Enchant Poison {
+	lvl 5
+	dist 1
+	sp > 30
+	whenStatusInactive Enchant Poison
+	inLockOnly 1
+	notInTown 1
+	timeout 30
+	disabled 0
+}
+
 ######## Weight / loot ########
 
 itemsTakeAuto 2
@@ -177,13 +200,15 @@ teleportAuto_attackCount 0
 teleportAuto_atkMu 0
 useTeleportAuto Fly Wing 1
 
-######## Jobs / skills (starter melee-friendly) ########
+######## Jobs / skills — Assassin path (Novice → Thief → Assassin) ########
+# Create character as Novice, jobchange to Thief then Assassin on your server.
+# Double Strafe / Sonic Blow focused AGI-ASPD build for pre-RE.
 
 skillsAddAuto 1
-skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Two-Hand Quicken 10
+skillsAddAuto_list Basic Skill 9, Double Attack 10, Improve Dodge 10, Stealth 3, Hiding 5, Envenom 5, Detoxify 1, Steal 5, Right-Hand Mastery 5, Left-Hand Mastery 5, Katar Mastery 10, Sonic Blow 10, Grimtooth 5, Cloaking 5, Enchant Poison 5, Poison React 5, Venom Dust 5, Venom Splasher 5
 
 statsAddAuto 1
-statsAddAuto_list 10 str, 10 agi, 10 vit, 5 dex, 5 luk, 40 str, 30 agi, 30 vit, 20 dex, 10 luk, 80 str, 50 agi, 40 vit, 30 dex, 20 luk
+statsAddAuto_list 10 agi, 10 dex, 10 str, 5 vit, 5 luk, 40 agi, 30 dex, 30 str, 20 vit, 10 luk, 80 agi, 50 dex, 40 str, 30 vit, 20 luk, 99 agi, 60 dex, 50 str, 40 vit, 30 luk
 statsAdd_over_99 1
 
 ######## Human-like breaks (needs breakTime plugin if available) ########

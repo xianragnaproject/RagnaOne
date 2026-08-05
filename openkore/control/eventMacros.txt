@@ -43,7 +43,7 @@ automacro Ragna_Lv31_40 {
 		do conf lockMap pay_dun00
 		do conf lockMap_randX 10
 		do conf lockMap_randY 10
-		log [RagnaOne] Lv31-40: Payon Cave 00
+		log [RagnaOne] Lv31-40 Assassin: Payon Cave 00 (skeletons/zombies)
 	}
 }
 
@@ -51,10 +51,10 @@ automacro Ragna_Lv41_50 {
 	BaseLevel 41..50
 	run-once 1
 	call {
-		do conf lockMap moc_fild11
-		do conf lockMap_randX 12
-		do conf lockMap_randY 12
-		log [RagnaOne] Lv41-50: Morroc Field 11
+		do conf lockMap pay_dun01
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv41-50 Assassin: Payon Cave 01
 	}
 }
 
@@ -62,10 +62,10 @@ automacro Ragna_Lv51_60 {
 	BaseLevel 51..60
 	run-once 1
 	call {
-		do conf lockMap cmd_fild01
-		do conf lockMap_randX 12
-		do conf lockMap_randY 12
-		log [RagnaOne] Lv51-60: Comodo Field 01
+		do conf lockMap moc_pryd02
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv51-60 Assassin: Pyramid 2F (classic thief/assassin spot)
 	}
 }
 
@@ -73,10 +73,10 @@ automacro Ragna_Lv61_70 {
 	BaseLevel 61..70
 	run-once 1
 	call {
-		do conf lockMap gef_fild10
-		do conf lockMap_randX 10
-		do conf lockMap_randY 10
-		log [RagnaOne] Lv61-70: Geffen Field 10 (orcs)
+		do conf lockMap moc_pryd03
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv61-70 Assassin: Pyramid 3F
 	}
 }
 
@@ -84,10 +84,10 @@ automacro Ragna_Lv71_80 {
 	BaseLevel 71..80
 	run-once 1
 	call {
-		do conf lockMap moc_fild17
-		do conf lockMap_randX 10
-		do conf lockMap_randY 10
-		log [RagnaOne] Lv71-80: Morroc Field 17
+		do conf lockMap in_sphinx2
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv71-80 Assassin: Sphinx 2F
 	}
 }
 
@@ -95,10 +95,10 @@ automacro Ragna_Lv81_90 {
 	BaseLevel 81..90
 	run-once 1
 	call {
-		do conf lockMap beach_dun
+		do conf lockMap in_sphinx3
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Lv81-90: Beach Dungeon
+		log [RagnaOne] Lv81-90 Assassin: Sphinx 3F
 	}
 }
 
@@ -106,10 +106,10 @@ automacro Ragna_Lv91_99 {
 	BaseLevel 91..99
 	run-once 1
 	call {
-		do conf lockMap mag_dun01
+		do conf lockMap in_sphinx4
 		do conf lockMap_randX 8
 		do conf lockMap_randY 8
-		log [RagnaOne] Lv91-99: Magma Dungeon 01 — finishing to 99
+		log [RagnaOne] Lv91-99 Assassin: Sphinx 4F — finish to 99
 	}
 }
 
