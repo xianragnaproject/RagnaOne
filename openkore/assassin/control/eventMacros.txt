@@ -207,7 +207,7 @@ automacro Ragna_AfterDeath {
 # ---- Town / Izlude recovery (RagnaOne) ----
 automacro Ragna_TownAfterDeath {
 	ConfigKeyNot lockMap none
-	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,izlude_in
+	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta
 	timeout 25
 	exclusive 1
 	call {
@@ -221,48 +221,33 @@ automacro Ragna_TownAfterDeath {
 
 automacro Ragna_EscapeIzlude {
 	IsInMapAndCoordinate izlude
-	timeout 8
+	timeout 25
 	exclusive 1
 	call EscapeIzlude
 }
 
 macro EscapeIzlude {
-	log [Ragna] Escaping Izlude step-walk west then south
-	do west
-	pause 2
-	do west
-	pause 2
-	do west
-	pause 2
-	do west
-	pause 2
-	do west
-	pause 2
-	do south
-	pause 2
-	do south
-	pause 2
-	do south
-	pause 2
-	do west
-	pause 2
-	do west
-	pause 2
+	log [Ragna] Escaping Izlude via west portal to prt_fild08
+	do conf attackAuto 0
+	do conf route_randomWalk 0
+	do move 30 78
+	pause 8
+	do conf attackAuto 2
+	do conf route_randomWalk 1
+	do conf lockMap prt_fild08
 }
 
 automacro Ragna_EscapeIzludeIn {
 	IsInMapAndCoordinate izlude_in
-	timeout 8
+	timeout 12
 	exclusive 1
 	call {
 		[
 			log [Ragna] Leaving izlude_in toward outdoor Izlude
-			do move 126 64
-			pause 4
-			do south
-			pause 2
-			do south
-			pause 2
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 116 46
+			pause 6
 		]
 	}
 }
