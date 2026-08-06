@@ -48,7 +48,7 @@ lockMap_randX 14
 lockMap_randY 14
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
-route_randomWalk_maxRouteTime 10
+route_randomWalk_maxRouteTime 30
 route_step 2
 route_escape_randomWalk 1
 

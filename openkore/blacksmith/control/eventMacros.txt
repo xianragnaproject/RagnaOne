@@ -52,6 +52,7 @@ automacro Ragna_Lv1_11 {
 	BaseLevel < 12
 	ConfigKeyNot lockMap prt_fild08
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap prt_fild08
 		do conf lockMap_randX 14
@@ -64,11 +65,12 @@ automacro Ragna_Lv12_20 {
 	BaseLevel 12..20
 	ConfigKeyNot lockMap pay_fild08
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap pay_fild08
 		do conf lockMap_randX 12
 		do conf lockMap_randY 12
-		log [RagnaOne] Lv12-20: Payon Field 08 (save→Payon Kafra)
+ log [RagnaOne] Lv12-20: Payon Field 08 
 	}
 }
 
@@ -76,6 +78,7 @@ automacro Ragna_Lv21_30 {
 	BaseLevel 21..30
 	ConfigKeyNot lockMap gef_fild00
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap gef_fild00
 		do conf lockMap_randX 12
@@ -88,6 +91,7 @@ automacro Ragna_Lv31_40 {
 	BaseLevel 31..40
 	ConfigKeyNot lockMap pay_dun00
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap pay_dun00
 		do conf lockMap_randX 10
@@ -100,6 +104,7 @@ automacro Ragna_Lv41_50 {
 	BaseLevel 41..50
 	ConfigKeyNot lockMap pay_dun01
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap pay_dun01
 		do conf lockMap_randX 10
@@ -112,6 +117,7 @@ automacro Ragna_Lv51_60 {
 	BaseLevel 51..60
 	ConfigKeyNot lockMap moc_pryd02
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap moc_pryd02
 		do conf lockMap_randX 10
@@ -124,6 +130,7 @@ automacro Ragna_Lv61_70 {
 	BaseLevel 61..70
 	ConfigKeyNot lockMap moc_pryd03
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap moc_pryd03
 		do conf lockMap_randX 8
@@ -136,6 +143,7 @@ automacro Ragna_Lv71_80 {
 	BaseLevel 71..80
 	ConfigKeyNot lockMap in_sphinx2
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap in_sphinx2
 		do conf lockMap_randX 8
@@ -148,6 +156,7 @@ automacro Ragna_Lv81_90 {
 	BaseLevel 81..90
 	ConfigKeyNot lockMap in_sphinx3
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap in_sphinx3
 		do conf lockMap_randX 8
@@ -160,6 +169,7 @@ automacro Ragna_Lv91_99 {
 	BaseLevel 91..99
 	ConfigKeyNot lockMap in_sphinx4
 	timeout 45
+	ConfigKeyNot ragnaGearRestock 1
 	call {
 		do conf lockMap in_sphinx4
 		do conf lockMap_randX 8
@@ -220,6 +230,68 @@ automacro Ragna_AfterDeath {
 
 
 # Yank bots that wandered onto wrong fields back to lockMap
+
+
+
+# Unequipped: force sell/buy restock; pause hunt return until gear is on
+automacro Ragna_UnequippedRestock {
+	BaseLevel >= 1
+	ConfigKeyNot ragnaGearRestock 1
+	timeout 75
+	exclusive 1
+	Eval ((!$char->{equipment}{rightHand}) || (!$char->{equipment}{armor})) && (Misc::percent_weight($char) >= 8) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] Empty gear + junk - Prontera sell/buy restock
+			do conf ragnaGearRestock 1
+			do conf ragnaLockMapBackup @config(lockMap)
+			do conf ragnaShopsPayon 0
+			do conf lockMap none
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do eval Ragna_ApplyPronteraShops()
+			do eval AI::queue("sellAuto");
+			pause 2
+		]
+	}
+}
+
+automacro Ragna_GearRestockDone {
+	ConfigKey ragnaGearRestock 1
+	timeout 30
+	exclusive 1
+	Eval ($char->{equipment}{rightHand} && $char->{equipment}{armor})
+	call {
+		[
+			log [Ragna] Gear restocked - resume hunt
+			do conf ragnaGearRestock 0
+			do conf lockMap @config(ragnaLockMapBackup)
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf ragnaShopsPayon 0
+			do eq
+		]
+	}
+}
+
+# If restock flag set but sell/buy not running and still naked, re-queue sell
+automacro Ragna_GearRestockRetry {
+	ConfigKey ragnaGearRestock 1
+	timeout 90
+	exclusive 1
+	Eval ((!$char->{equipment}{rightHand}) || (!$char->{equipment}{armor})) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
+	call {
+		[
+			log [Ragna] Gear restock retry - queue sellAuto again
+			do conf lockMap none
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do eval Ragna_ApplyPronteraShops()
+			do eval AI::queue("sellAuto");
+		]
+	}
+}
+
 automacro Ragna_TownSell {
 	ConfigKeyNot lockMap none
 	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,prt_in,payon_in01
@@ -240,6 +312,7 @@ automacro Ragna_TownSell {
 
 automacro Ragna_TownAfterDeath {
 	ConfigKeyNot lockMap none
+	ConfigKeyNot ragnaGearRestock 1
 	IsInMapAndCoordinate prontera,morocc,geffen,payon,alberta,prt_in,payon_in01
 	timeout 25
 	exclusive 1
@@ -257,6 +330,7 @@ automacro Ragna_TownAfterDeath {
 
 automacro Ragna_ReturnToLock {
 	ConfigKeyNot lockMap none
+	ConfigKeyNot ragnaGearRestock 1
 	InLockMap 0
 	timeout 40
 	exclusive 1
@@ -301,6 +375,7 @@ automacro Ragna_SetSaveProntera {
 automacro Ragna_SetSavePayon {
 	BaseLevel >= 12
 	ConfigKeyNot ragnaSavePayon 1
+	ConfigKeyNot ragnaGearRestock 1
 	timeout 90
 	exclusive 1
 	call {
@@ -324,6 +399,29 @@ automacro Ragna_SetSavePayon {
 }
 
 # Apply Payon NPC coords to every buyAuto_* entry (called by Ragna_ShopsPayon)
+
+sub Ragna_ApplyPronteraShops {
+	Commands::run("conf sellAuto_npc prt_in 126 76");
+	Commands::run("conf sellAuto_standpoint prt_in 126 74");
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		my ($npc, $stand);
+		if ($item =~ /Potion|Magnifier|Wing|^Arrow$/i) {
+			$npc = "prt_in 126 76";
+			$stand = "prt_in 126 74";
+		} elsif ($item =~ /Cotton Shirt|Jacket/) {
+			$npc = "prt_in 172 132";
+			$stand = "prt_in 172 134";
+		} else {
+			$npc = "prt_in 172 130";
+			$stand = "prt_in 172 128";
+		}
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand");
+	}
+	return 1;
+}
+
 sub Ragna_ApplyPayonShops {
 	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
 		my $item = $config{"buyAuto_$i"} || "";
@@ -429,5 +527,96 @@ automacro Ragna_IdentifyLoot {
 	InInventory "Magnifier" > 0
 	call {
 		log [Ragna] IdentifyLoot parked
+	}
+}
+
+# ============================================================
+
+# ============================================================
+# Field Scout#prt08 @ prt_fild08 170,360
+# Daily hunt quest (50x/day): kill 20 on prt_fild08
+# Reward: 500 Base / 500 Job / 1000 Zeny
+# Quest ID 60202 | mission mob_id 10363 (map hunt counter)
+# Accept sequence: talknpc 170 360 c c r0
+# Turn-in: talk again after 20/20 (sequence confirmed live)
+# Disable with: conf ragnaFieldScoutOff 1
+# ============================================================
+
+automacro Ragna_FieldScout_Accept {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	timeout 55
+	exclusive 1
+	Eval do { my $d = (localtime)[3]; my $c = (($config{ragnaFieldScoutDay} || 0) == $d) ? ($config{ragnaFieldScoutCount} || 0) : 0; $c < 50 }
+	call {
+		[
+			log [Ragna] Field Scout — accept hunt quest (20 kills)
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 170 360
+			pause 12
+			do talknpc 170 360 c c r0
+			pause 4
+			do conf lockMap prt_fild08
+			do conf lockMap_x 170
+			do conf lockMap_y 320
+			do conf lockMap_randX 35
+			do conf lockMap_randY 35
+			do conf route_randomWalk_maxRouteTime 45
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			log [Ragna] Field Scout quest active — hunting prt_fild08
+		]
+	}
+}
+
+# Pull novices on other maps toward the scout (early levels only)
+automacro Ragna_FieldScout_GoField {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	BaseLevel <= 20
+	QuestInactive 60202
+	ConfigKeyNot lockMap prt_fild08
+	timeout 90
+	exclusive 1
+	Eval do { my $d = (localtime)[3]; my $c = (($config{ragnaFieldScoutDay} || 0) == $d) ? ($config{ragnaFieldScoutCount} || 0) : 0; $c < 50 }
+	call {
+		[
+			log [Ragna] Field Scout — route novice to prt_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			do conf lockMap_x 170
+			do conf lockMap_y 320
+			do conf lockMap_randX 35
+			do conf lockMap_randY 35
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	QuestHuntCompleted 60202 10363
+	timeout 35
+	exclusive 1
+	call {
+		[
+			log [Ragna] Field Scout — turn in 20/20
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 170 360
+			pause 12
+			do talknpc 170 360 c c r0
+			pause 4
+			do eval my $d = (localtime)[3]; if (($config{ragnaFieldScoutDay} || 0) != $d) { Commands::run("conf ragnaFieldScoutDay $d"); Commands::run("conf ragnaFieldScoutCount 1"); } else { Commands::run("conf ragnaFieldScoutCount " . (($config{ragnaFieldScoutCount} || 0) + 1)); }
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			do conf lockMap_x 170
+			do conf lockMap_y 320
+			log [Ragna] Field Scout turn-in done — runs today updated
+		]
 	}
 }
