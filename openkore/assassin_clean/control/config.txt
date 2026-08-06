@@ -28,7 +28,7 @@ attackAuto_notWhile_buyAuto 1
 attackAuto_notWhile_sellAuto 1
 attackDistance 1
 attackDistanceAuto 1
-attackMaxDistance 18
+attackMaxDistance 1
 attackMaxRouteTime 45
 attackMinPlayerDistance 0
 attackMinPortalDistance 0
@@ -48,7 +48,7 @@ lockMap_randX 14
 lockMap_randY 14
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
-route_randomWalk_maxRouteTime 30
+route_randomWalk_maxRouteTime 60
 route_step 2
 route_escape_randomWalk 1
 
@@ -64,11 +64,11 @@ dcOnLevel 99
 dcPause 1
 
 ######## Sit / heal ########
-sitAuto_hp_lower 40
+sitAuto_hp_lower 30
 sitAuto_hp_upper 80
 sitAuto_sp_lower 15
 sitAuto_sp_upper 40
-sitAuto_idle 1
+sitAuto_idle 0
 sitAuto_idle_wait 8
 
 ######## Sell loot at 20% weight ########

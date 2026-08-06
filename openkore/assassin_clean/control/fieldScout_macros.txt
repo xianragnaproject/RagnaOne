@@ -28,7 +28,6 @@ automacro Ragna_FieldScout_Accept {
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
-			do conf attackMaxDistance 18
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 30
@@ -50,7 +49,6 @@ automacro Ragna_FieldScout_GoField {
 	call {
 		[
 			log [Ragna] Field Scout — route novice to prt_fild08
-			do conf attackMaxDistance 18
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 30
@@ -76,7 +74,6 @@ automacro Ragna_FieldScout_TurnIn {
 			do talknpc 170 360 c c r0
 			pause 4
 			do eval my $d = (localtime)[3]; if (($config{ragnaFieldScoutDay} || 0) != $d) { Commands::run("conf ragnaFieldScoutDay $d"); Commands::run("conf ragnaFieldScoutCount 1"); } else { Commands::run("conf ragnaFieldScoutCount " . (($config{ragnaFieldScoutCount} || 0) + 1)); }
-			do conf attackMaxDistance 18
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 30
