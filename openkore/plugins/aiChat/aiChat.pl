@@ -385,4 +385,13 @@ sub _localFallback {
 	return $replies[int(rand(@replies))];
 }
 
+sub _findCurl {
+	for my $c (qw(curl curl.exe)) {
+		# bare name works if on PATH
+		my $out = `$c --version 2>&1`;
+		return $c if defined $out && $out =~ /curl/i;
+	}
+	return;
+}
+
 1;
