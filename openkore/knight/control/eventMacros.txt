@@ -535,23 +535,25 @@ automacro Ragna_IdentifyLoot {
 # ============================================================
 
 # ============================================================
+
+# ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
-# Daily hunt quest (50x/day): kill 20 on prt_fild08
+# Daily hunt quest (50x/day): kill 20 on prt_fild08 — Novice only
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
-# Accept: talknpc 170 360 c c r0
-# Turn-in: talk again after 20/20 (same sequence)
+# Accept:  talknpc 170 360 c c r0
+# Turn-in: talknpc 170 360 c c   (reward auto-claims; no menu)
 # Disable with: conf ragnaFieldScoutOff 1
 # ============================================================
 
 automacro Ragna_FieldScout_Accept {
 	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
 	timeout 55
 	exclusive 1
-	Eval do { my $d = (localtime)[3]; my $c = (($config{ragnaFieldScoutDay} || 0) == $d) ? ($config{ragnaFieldScoutCount} || 0) : 0; $c < 50 }
 	call {
 		[
 			log [Ragna] Field Scout — accept hunt quest (20 kills)
@@ -564,9 +566,10 @@ automacro Ragna_FieldScout_Accept {
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
+			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do conf route_randomWalk_maxRouteTime 30
+			do conf route_randomWalk_maxRouteTime 60
 			log [Ragna] Field Scout quest active — hunting prt_fild08
 		]
 	}
@@ -581,13 +584,13 @@ automacro Ragna_FieldScout_GoField {
 	ConfigKeyNot lockMap prt_fild08
 	timeout 90
 	exclusive 1
-	Eval do { my $d = (localtime)[3]; my $c = (($config{ragnaFieldScoutDay} || 0) == $d) ? ($config{ragnaFieldScoutCount} || 0) : 0; $c < 50 }
 	call {
 		[
 			log [Ragna] Field Scout — route novice to prt_fild08
+			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do conf route_randomWalk_maxRouteTime 30
+			do conf route_randomWalk_maxRouteTime 60
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
@@ -597,6 +600,7 @@ automacro Ragna_FieldScout_GoField {
 
 automacro Ragna_FieldScout_TurnIn {
 	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
 	QuestHuntCompleted 60202 10363
 	timeout 35
 	exclusive 1
@@ -607,16 +611,16 @@ automacro Ragna_FieldScout_TurnIn {
 			do conf route_randomWalk 0
 			do move 170 360
 			pause 12
-			do talknpc 170 360 c c r0
+			do talknpc 170 360 c c
 			pause 4
-			do eval my $d = (localtime)[3]; if (($config{ragnaFieldScoutDay} || 0) != $d) { Commands::run("conf ragnaFieldScoutDay $d"); Commands::run("conf ragnaFieldScoutCount 1"); } else { Commands::run("conf ragnaFieldScoutCount " . (($config{ragnaFieldScoutCount} || 0) + 1)); }
+			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do conf route_randomWalk_maxRouteTime 30
+			do conf route_randomWalk_maxRouteTime 60
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
-			log [Ragna] Field Scout turn-in done — runs today updated
+			log [Ragna] Field Scout turn-in done — resume hunt
 		]
 	}
 }

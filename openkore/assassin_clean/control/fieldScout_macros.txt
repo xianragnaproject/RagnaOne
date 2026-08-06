@@ -1,6 +1,6 @@
 # ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
-# Daily hunt quest (50x/day): kill 20 on prt_fild08
+# Daily hunt quest (50x/day): kill 20 on prt_fild08 — Novice only
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
 # Accept:  talknpc 170 360 c c r0
@@ -10,6 +10,7 @@
 
 automacro Ragna_FieldScout_Accept {
 	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
@@ -61,6 +62,7 @@ automacro Ragna_FieldScout_GoField {
 
 automacro Ragna_FieldScout_TurnIn {
 	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
 	QuestHuntCompleted 60202 10363
 	timeout 35
 	exclusive 1
