@@ -179,12 +179,14 @@ automacro Ragna_Job_ToThief {
 # ============================================================
 
 # ============================================================
-# Field Scout#prt08 @ prt_fild08 170,360
+# Field Scout#prt08a @ prt_fild08 160,370  (also prt08b at 180,370)
 # Daily hunt quest (50x/day): kill 20 on prt_fild08 - Novice only
-# Reward: 500 Base / 500 Job / 1000 Zeny
+# Reward: 500 Base / 500 Job / 1000 Zeny / 20 Red Potions
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
-# Accept:  talknpc 170 360 c c r0
-# Turn-in: talknpc 170 360 c c   (reward auto-claims; no menu)
+# Accept:  talknpc 160 370 c c r0
+# Turn-in: talknpc 160 370 c c
+# Note: main label Field Scout#prt08 at 170,360 is often missing;
+#       use prt08a. Must walk in range first or TalkNPC cannot see NPC.
 # Disable with: conf ragnaFieldScoutOff 1
 # ============================================================
 
@@ -194,17 +196,17 @@ automacro Ragna_FieldScout_Accept {
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
-	timeout 55
+	timeout 70
 	exclusive 1
 	call {
 		[
 			log Ragna Field Scout accept hunt 20 kills
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do move 170 360
-			pause 12
-			do talknpc 170 360 c c r0
-			pause 4
+			do move 160 368
+			pause 22
+			do talknpc 160 370 c c r0
+			pause 14
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
@@ -244,17 +246,45 @@ automacro Ragna_FieldScout_TurnIn {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
 	QuestHuntCompleted 60202 10363
-	timeout 35
+	timeout 70
 	exclusive 1
 	call {
 		[
 			log Ragna Field Scout turn in 20 of 20
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do move 170 360
-			pause 12
-			do talknpc 170 360 c c
-			pause 4
+			do move 160 368
+			pause 22
+			do talknpc 160 370 c c
+			pause 14
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Ragna Field Scout turn-in done resume hunt
+		]
+	}
+}
+
+# Fallback if prt08a is out of sight - try prt08b at 180,370
+automacro Ragna_FieldScout_TurnIn_B {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout turn in via prt08b
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 180 368
+			pause 22
+			do talknpc 180 370 c c
+			pause 14
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
