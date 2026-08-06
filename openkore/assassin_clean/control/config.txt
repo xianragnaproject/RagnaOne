@@ -119,11 +119,6 @@ equipAuto {
 	JobID 0
 	disabled 0
 }
-equipAuto {
-	rightHand Knife [3]
-	JobIDNot 0
-	disabled 0
-}
 
 ######## Save ########
 saveMap prontera
