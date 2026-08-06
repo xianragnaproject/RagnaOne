@@ -46,10 +46,10 @@ automacro Ragna_TownSell {
 	}
 }
 
-# After buy/sell finishes, leave prt_in before portal loop traps the bot
+# After buy/sell at tool dealer finishes, leave prt_in before portal loop traps the bot
 automacro Ragna_EscapePrtShop {
 	ConfigKey ragnaShop 1
-	IsInMapAndCoordinate prt_in
+	isInMapAndCloseToCoordinate prt_in 126 76 25
 	InInventoryID 501 >= 3
 	timeout 50
 	exclusive 1
@@ -71,10 +71,10 @@ automacro Ragna_EscapePrtShop {
 	}
 }
 
-# If still stuck in prt_in after escape attempt, Butterfly Wing out
+# If still stuck in tool-shop area after escape attempt, Butterfly Wing out
 automacro Ragna_WingOutPrtIn {
 	ConfigKey ragnaShop 1
-	IsInMapAndCoordinate prt_in
+	isInMapAndCloseToCoordinate prt_in 126 76 25
 	InInventoryID 602 > 0
 	timeout 90
 	exclusive 1
