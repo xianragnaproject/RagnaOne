@@ -113,6 +113,15 @@ buyAuto Knife [3] {
 	zeny > 50
 	disabled 0
 }
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 10
+	disabled 0
+}
 buyAuto Butterfly Wing {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
@@ -144,10 +153,11 @@ autoSwitch_default_leftHand
 equipAuto {
 	rightHand Novice Main-Gauche
 	JobID 0
-	disabled 0
+	disabled 1
 }
 equipAuto {
 	rightHand Knife [3]
+	armor Cotton Shirt
 	JobID 6
 	disabled 0
 }
@@ -165,6 +175,9 @@ ragnaSaveProntera 0
 ragnaShop 1
 ragnaFieldScoutOff 0
 ragnaJobThief 0
+ragnaThiefGear 0
+ragnaSavePayon 0
+ragnaShopsPayon 0
 
 ######## Misc ########
 follow 0
@@ -175,3 +188,6 @@ verbose 1
 dcOnEmptyArrow 0
 ragnaFieldScoutOff 0
 ragnaJobThief 0
+ragnaThiefGear 0
+ragnaSavePayon 0
+ragnaShopsPayon 0
