@@ -99,7 +99,7 @@ automacro Ragna_TownResume {
 	IsInMapAndCoordinate prontera
 	timeout 30
 	exclusive 1
-	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto")) && !($char->{jobID} == 0 && $char->{lv_job} >= 10)
 	call {
 		[
 			log Ragna In town - resume hunt
@@ -146,12 +146,35 @@ automacro Ragna_EscapeIzlude {
 }
 
 # Job change Novice -> Thief at Job Lv 10
-automacro Ragna_Job_ToThief {
+# Wait until Field Scout quest is finished (not active), then walk to Job Master and talk.
+automacro Ragna_Job_ToThief_Go {
 	JobID 0
 	JobLevel >= 10
 	BaseLevel >= 10
+	QuestInactive 60202
 	ConfigKeyNot ragnaJobThief 1
-	timeout 120
+	NpcNotNear /Job Master/
+	timeout 35
+	exclusive 1
+	call {
+		[
+			log Ragna Walk to Prontera Job Master for Thief
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 150 178
+		]
+	}
+}
+
+automacro Ragna_Job_ToThief_Talk {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	QuestInactive 60202
+	ConfigKeyNot ragnaJobThief 1
+	NpcNear /Job Master/
+	timeout 30
 	exclusive 1
 	call {
 		[
@@ -159,10 +182,9 @@ automacro Ragna_Job_ToThief {
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
-			do move prontera 150 180
-			pause 14
+			pause 2
 			do talknpc 150 180 c c c r1 c r0
-			pause 5
+			pause 12
 			do conf ragnaJobThief 1
 			do conf attackAuto 2
 			do conf route_randomWalk 1

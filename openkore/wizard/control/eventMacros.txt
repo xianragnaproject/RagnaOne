@@ -545,6 +545,7 @@ automacro Ragna_IdentifyLoot {
 automacro Ragna_FieldScout_Accept_Go {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
@@ -564,6 +565,7 @@ automacro Ragna_FieldScout_Accept_Go {
 automacro Ragna_FieldScout_Accept_Talk {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
@@ -596,6 +598,7 @@ automacro Ragna_FieldScout_Accept_Talk {
 automacro Ragna_FieldScout_GoField {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 20
 	QuestInactive 60202
 	ConfigKeyNot lockMap prt_fild08
