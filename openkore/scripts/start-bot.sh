@@ -4,8 +4,12 @@ PROFILE="${1:-}"
 OK="${HOME}/openkore"
 [[ -n "$PROFILE" ]] || { echo "Usage: $0 <ProfileName>"; ls -1 "$OK/profiles"; exit 1; }
 [[ -f "$OK/profiles/$PROFILE/config.txt" ]] || { echo "Missing profile $PROFILE"; exit 1; }
-SESSION=$(printf 'ok-%s' "$PROFILE" | tr -c 'A-Za-z0-9_-' '_' )
-SESSION="${SESSION#_}"; SESSION="${SESSION%_}"
+if [[ "$PROFILE" == "Nemo" ]]; then
+  SESSION=openkore
+else
+  SESSION=$(printf 'ok-%s' "$PROFILE" | tr -c 'A-Za-z0-9_-' '_' )
+  SESSION="${SESSION#_}"; SESSION="${SESSION%_}"
+fi
 if tmux -f /exec-daemon/tmux.portal.conf has-session -t "=$SESSION" 2>/dev/null; then
   echo "Already running: tmux attach -t $SESSION"; exit 0
 fi

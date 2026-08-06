@@ -1,4 +1,4 @@
-######## AssassinClean — Novice prt_fild08 → Thief gear → Payon / pay_fild08 ########
+######## WizardClean — Novice prt_fild08 → Magician gear → Payon / pay_fild08 ########
 
 master RagnaOne
 char 0
@@ -104,7 +104,7 @@ buyAuto Red Potion {
 }
 # Escape wing for prt_in portal loop (buy when Field Scout zeny allows)
 
-buyAuto Knife [3] {
+buyAuto Rod [3] {
 	npc prt_in 172 130
 	standpoint prt_in 172 128
 	distance 5
@@ -156,14 +156,9 @@ equipAuto {
 	disabled 1
 }
 equipAuto {
-	rightHand Knife [3]
+	rightHand Rod [3]
 	armor Cotton Shirt
-	JobID 6
-	disabled 0
-}
-equipAuto {
-	rightHand Main Gauche
-	JobID 6
+	JobID 2
 	disabled 0
 }
 
@@ -183,6 +178,7 @@ verbose 1
 dcOnEmptyArrow 0
 ragnaFieldScoutOff 0
 ragnaJobThief 0
+ragnaJob1st 0
 ragnaThiefGear 0
 ragnaSavePayon 0
 ragnaShopsPayon 0

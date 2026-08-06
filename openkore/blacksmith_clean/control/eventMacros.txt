@@ -1,0 +1,581 @@
+# AssassinClean - Lv1-13: hunt / buy pots / sell loot
+# No equipment shopping while Novice
+
+automacro Ragna_SetSavePronteraSouth {
+	IsInMapAndCoordinate prontera
+	ConfigKeyNot ragnaSaveProntera 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log Ragna Setting save at Prontera south Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 151 29
+			pause 8
+			do talknpc 151 29 c r0
+			pause 4
+			do conf ragnaSaveProntera 1
+			do conf saveMap prontera
+			do conf saveMap_x 155
+			do conf saveMap_y 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			log Ragna Save set Prontera south - hunting prt_fild08
+		]
+	}
+}
+
+# Sell loot in town when overweight (sellAuto also triggers via itemsMaxWeight_sellOrStore)
+automacro Ragna_TownSell {
+	ConfigKey ragnaShop 1
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,prt_in,payon,payon_in01
+	timeout 25
+	exclusive 1
+	Eval (Misc::percent_weight($char) >= 18) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	call {
+		[
+			log Ragna In town with weight - selling loot
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do eval AI::queue("sellAuto");
+			pause 1
+		]
+	}
+}
+
+# After buy/sell at tool dealer finishes, leave prt_in before portal loop traps the bot
+# Skip while Thief is still shopping for Knife/Cotton Shirt
+automacro Ragna_EscapePrtShop {
+	ConfigKey ragnaShop 1
+	isInMapAndCloseToCoordinate prt_in 126 76 25
+	InInventoryID 501 >= 3
+	timeout 50
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC")) && !($config{ragnaJob1st} && !$config{ragnaThiefGear})
+	call {
+		[
+			log Ragna Leaving Prontera tool shop avoid portal loop
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 1
+			do move 126 70
+			pause 3
+			do move prontera 160 70
+			pause 14
+			do eval Ragna_ResumeHuntLock()
+		]
+	}
+}
+
+# If still stuck in tool-shop area after escape attempt, Butterfly Wing out
+automacro Ragna_WingOutPrtIn {
+	ConfigKey ragnaShop 1
+	isInMapAndCloseToCoordinate prt_in 126 76 25
+	InInventoryID 602 > 0
+	timeout 90
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC")) && !($config{ragnaJob1st} && !$config{ragnaThiefGear})
+	call {
+		[
+			log Ragna Stuck in prt_in Butterfly Wing escape
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 1
+			do is Butterfly Wing
+			pause 4
+			do eval Ragna_ResumeHuntLock()
+		]
+	}
+}
+
+automacro Ragna_TownResume {
+	ConfigKeyNot lockMap none
+	IsInMapAndCoordinate prontera,payon
+	timeout 30
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto")) && !($char->{jobID} == 0 && $char->{lv_job} >= 10) && !($config{ragnaJob1st} && !$config{ragnaSavePayon})
+	call {
+		[
+			log Ragna In town - resume hunt
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+automacro Ragna_ReturnToLock {
+	ConfigKeyNot lockMap none
+	InLockMap 0
+	timeout 40
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto")) && !($char->{jobID} == 0 && $char->{lv_job} >= 10 && !$config{ragnaJob1st}) && !($config{ragnaJob1st} && !$config{ragnaSavePayon})
+	call {
+		[
+			log Ragna Off lockMap - resume hunt
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+# Escape Izlude spawn if save not set yet
+automacro Ragna_EscapeIzlude {
+	IsInMapAndCoordinate izlude
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log Ragna Leaving Izlude west to prt_fild08
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			pause 1
+			do move 30 78
+			pause 14
+			do eval Ragna_ResumeHuntLock()
+		]
+	}
+}
+
+# Job change Novice -> Thief at Job Lv 10
+# 1) Finish Field Scout if active (QuestInactive 60202)
+# 2) Spend Basic Skill to 9
+# 3) Walk to Job Master, talk: class menu r5 = Thief, then confirm
+automacro Ragna_Job_BasicSkill {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	QuestInactive 60202
+	ConfigKeyNot ragnaJob1st 1
+	SkillLevel NV_BASIC < 9
+	timeout 20
+	exclusive 1
+	call {
+		[
+			log Ragna Spending skill points on Basic Skill
+			do skills add 1
+			pause 1
+		]
+	}
+}
+
+automacro Ragna_Job_ToMerchant_Go {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	QuestInactive 60202
+	ConfigKeyNot ragnaJob1st 1
+	SkillLevel NV_BASIC >= 9
+	NpcNotNear /Job Master/
+	timeout 35
+	exclusive 1
+	call {
+		[
+			log Ragna Walk to Prontera Job Master for Merchant
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 150 178
+		]
+	}
+}
+
+automacro Ragna_Job_ToMerchant_Talk {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	QuestInactive 60202
+	ConfigKeyNot ragnaJob1st 1
+	SkillLevel NV_BASIC >= 9
+	NpcNear /Job Master/
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log Ragna Job change to Merchant at Prontera Job Master
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			pause 2
+			do talknpc 150 180 c c c r4 c r0
+			pause 14
+		]
+	}
+}
+
+# Confirm Thief after jobID changes — then buy gear / Payon / pay_fild08
+automacro Ragna_Job_ToMerchant_Done {
+	JobID 5
+	ConfigKeyNot ragnaJob1st 1
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log Ragna Now Merchant - buy gear then Payon pay_fild08
+			do conf ragnaJobThief 1
+			do conf ragnaJob1st 1
+			do conf ragnaFieldScoutOff 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+		]
+	}
+}
+
+# Resume lockMap: Payon field after save, else Prontera field (novice era)
+sub Ragna_ResumeHuntLock {
+	my $map = ($config{ragnaSavePayon}) ? "pay_fild08" : "prt_fild08";
+	Commands::run("conf lockMap $map");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf route_randomWalk 1");
+	return 1;
+}
+
+sub Ragna_ApplyPayonShops {
+	Commands::run("conf sellAuto_npc payon_in01 5 49");
+	Commands::run("conf sellAuto_standpoint payon_in01 7 49");
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		my ($npc, $stand);
+		if ($item =~ /Potion|Magnifier|Wing|^Arrow$/i) {
+			$npc = "payon_in01 5 49";
+			$stand = "payon_in01 7 49";
+		} elsif ($item =~ /Cotton Shirt|Jacket/) {
+			$npc = "payon_in01 7 119";
+			$stand = "payon_in01 10 119";
+		} else {
+			$npc = "payon_in01 15 119";
+			$stand = "payon_in01 15 117";
+		}
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand");
+	}
+	return 1;
+}
+
+# After Thief: walk Prontera weapon/armor dealers so buyAuto gets Knife + Cotton Shirt
+automacro Ragna_Merchant_BuyWeapon {
+	JobID 5
+	ConfigKey ragnaJob1st 1
+	ConfigKeyNot ragnaThiefGear 1
+	InInventory "Axe [3]" < 1
+	timeout 50
+	exclusive 1
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log Ragna Merchant buy Axe [3] at Prontera weapon dealer
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prt_in 172 128
+			pause 28
+		]
+	}
+}
+
+automacro Ragna_Merchant_BuyShirt {
+	JobID 5
+	ConfigKey ragnaJob1st 1
+	ConfigKeyNot ragnaThiefGear 1
+	InInventory "Axe [3]" > 0
+	InInventory "Cotton Shirt" < 1
+	timeout 50
+	exclusive 1
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log Ragna Merchant buy Cotton Shirt at Prontera armor dealer
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prt_in 172 134
+			pause 28
+		]
+	}
+}
+
+# Mark gear done once Axe [3] + Cotton Shirt are in inventory
+automacro Ragna_Merchant_GearDone {
+	JobID 5
+	ConfigKey ragnaJob1st 1
+	ConfigKeyNot ragnaThiefGear 1
+	InInventory "Axe [3]" > 0
+	InInventory "Cotton Shirt" > 0
+	timeout 20
+	exclusive 1
+	call {
+		[
+			log Ragna Merchant gear acquired - equip then Payon
+			do eq Axe [3]
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf ragnaThiefGear 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+		]
+	}
+}
+
+# Save point at Payon Kafra (near pay_fild08)
+automacro Ragna_Merchant_SavePayon {
+	JobID 5
+	ConfigKey ragnaJob1st 1
+	ConfigKey ragnaThiefGear 1
+	ConfigKeyNot ragnaSavePayon 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log Ragna Merchant set save at Payon Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move payon 181 104
+			pause 14
+			do talknpc 181 104 c r0
+			pause 4
+			do conf ragnaSavePayon 1
+			do conf saveMap payon
+			do conf saveMap_x 181
+			do conf saveMap_y 104
+			do conf autoMoveOnDeath_map payon
+			do conf autoMoveOnDeath_x 181
+			do conf autoMoveOnDeath_y 104
+			log Ragna Save point set to Payon
+		]
+	}
+}
+
+# Switch sell/buy NPCs to Payon shops
+automacro Ragna_Merchant_ShopsPayon {
+	JobID 5
+	ConfigKey ragnaSavePayon 1
+	ConfigKeyNot ragnaShopsPayon 1
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log Ragna Switching sell/buy NPCs to Payon
+			do eval Ragna_ApplyPayonShops()
+			do conf ragnaShopsPayon 1
+			log Ragna Sell/buy now use Payon tool armor weapon
+		]
+	}
+}
+
+# Hunt pay_fild08 after Payon save + shops
+automacro Ragna_Merchant_HuntPayFild08 {
+	JobID 5
+	ConfigKey ragnaShopsPayon 1
+	ConfigKeyNot lockMap pay_fild08
+	timeout 40
+	exclusive 1
+	call {
+		[
+			log Ragna Merchant hunting pay_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap pay_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+		]
+	}
+}
+
+# Leave Payon tool shop after buy/sell so portal loops do not trap the bot
+automacro Ragna_EscapePayShop {
+	ConfigKey ragnaShopsPayon 1
+	isInMapAndCloseToCoordinate payon_in01 5 49 25
+	InInventoryID 501 >= 3
+	timeout 50
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call {
+		[
+			log Ragna Leaving Payon tool shop
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 1
+			do move payon 160 100
+			pause 12
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap pay_fild08
+		]
+	}
+}
+
+# ============================================================
+
+# ============================================================
+
+# ============================================================
+
+# ============================================================
+# Field Scout on prt_fild08
+# Working NPCs: Field Scout#prt08a (160,370), Field Scout#prt08b (180,370)
+# Main Field Scout#prt08 (170,360) is often missing from the actor list.
+# TalkNPC requires the NPC already in sight - walk first, then talk.
+# Quest 60202 | mission 10363 | 50 runs/day
+# Reward: 500 Base / 500 Job / 1000 Zeny / 20 Red Potions
+# Accept steps: c c r0 | Turn-in steps: c c
+# Disable: conf ragnaFieldScoutOff 1
+# ============================================================
+
+# --- Accept: walk toward scouts when no active quest ---
+automacro Ragna_FieldScout_Accept_Go {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	NpcNotNear /Field Scout#prt08/
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to accept
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_Accept_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout accept hunt 20 kills
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 160 370 c c r0
+			pause 12
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			log Ragna Field Scout active hunting prt_fild08
+		]
+	}
+}
+
+# Accept via prt08a only (Go walks to 160,368). prt08b accept removed to avoid talk races.
+
+# Pull novices on other maps toward the scout
+automacro Ragna_FieldScout_GoField {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 20
+	QuestInactive 60202
+	ConfigKeyNot lockMap prt_fild08
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout route novice to prt_fild08
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+		]
+	}
+}
+
+# --- Turn-in: walk to scout when 20/20 ---
+automacro Ragna_FieldScout_TurnIn_Go {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNotNear /Field Scout#prt08/
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to turn in
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 20
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout turn in 20 of 20
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 160 370 c c
+			pause 12
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Ragna Field Scout turn-in done resume hunt
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn_TalkB {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08b/
+	timeout 55
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout turn in via prt08b
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 180 370 c c
+			pause 12
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Ragna Field Scout turn-in done resume hunt
+		]
+	}
+}

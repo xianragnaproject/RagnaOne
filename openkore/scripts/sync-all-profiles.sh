@@ -12,6 +12,12 @@ ACCOUNT_MAP="${ACCOUNT_MAP:-$PROFILES_ROOT/ACCOUNT_MAP.txt}"
 pack_for() {
   local name="$1"
   case "$name" in
+    AssassinClean*) echo assassin_clean ;;
+    KnightClean*) echo knight_clean ;;
+    WizardClean*) echo wizard_clean ;;
+    HunterClean*) echo hunter_clean ;;
+    PriestClean*) echo priest_clean ;;
+    BlacksmithClean*) echo blacksmith_clean ;;
     Black|Blacksmith*) echo blacksmith ;;
     Night|Nemo|Assassin*) echo assassin ;;
     Hunter*) echo hunter ;;
@@ -39,6 +45,15 @@ from pathlib import Path
 packs_root, profiles_root, account_map = map(Path, sys.argv[1:4])
 
 def pack_for(name):
+    # Clean progression packs (AssassinClean settings) take priority
+    clean_rules = [
+        ('AssassinClean', 'assassin_clean'), ('KnightClean', 'knight_clean'),
+        ('WizardClean', 'wizard_clean'), ('HunterClean', 'hunter_clean'),
+        ('PriestClean', 'priest_clean'), ('BlacksmithClean', 'blacksmith_clean'),
+    ]
+    for prefix, pk in clean_rules:
+        if name == prefix or name.startswith(prefix):
+            return pk
     rules = [
         ('Blacksmith', 'blacksmith'), ('Assassin', 'assassin'), ('Hunter', 'hunter'),
         ('Knight', 'knight'), ('Priest', 'priest'), ('Wizard', 'wizard'),
