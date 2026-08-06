@@ -31,7 +31,8 @@ use Globals qw(%config $char $field $messageSender);
 use Log qw(message warning error debug);
 use Commands;
 use Utils qw(timeOut);
-use JSON::PP qw(encode_json decode_json);
+# OpenKore ships JSON::Tiny in src/deps (Windows-friendly; JSON::PP may be missing)
+use JSON::Tiny qw(encode_json decode_json);
 use Encode qw(encode decode find_encoding);
 
 Plugins::register('aiChat', 'AI chat replies (PM / public)', \&onUnload, \&onReload);
@@ -306,15 +307,20 @@ sub _callOpenAI {
 		messages => \@messages,
 	});
 
-	# Write payload to temp file to avoid shell quoting issues
-	my $tmpIn  = "/tmp/aichat-req-$$.json";
-	my $tmpOut = "/tmp/aichat-res-$$.json";
+	# Temp files — work on Windows and Linux
+	my $tmpdir = $ENV{TEMP} || $ENV{TMP} || $ENV{TMPDIR} || '/tmp';
+	$tmpdir =~ s/[\\\/]+$//;
+	my $tmpIn  = "$tmpdir/aichat-req-$$.json";
+	my $tmpOut = "$tmpdir/aichat-res-$$.json";
 	open my $fh, '>:raw', $tmpIn or die "cannot write $tmpIn: $!";
-	print {$fh} encode('UTF-8', $payload);
+	# JSON::Tiny encode_json already returns UTF-8 bytes
+	print {$fh} $payload;
 	close $fh;
 
+	# Prefer curl; on Windows also try curl.exe
+	my $curl = _findCurl() or die "curl not found in PATH (needed for AI API calls)";
 	my @cmd = (
-		'curl', '-sS', '-X', 'POST', $url,
+		$curl, '-sS', '-X', 'POST', $url,
 		'-H', "Authorization: Bearer $key",
 		'-H', 'Content-Type: application/json',
 		'--max-time', $timeout,
