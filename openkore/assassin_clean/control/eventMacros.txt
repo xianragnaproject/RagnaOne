@@ -1,8 +1,5 @@
-# AssassinClean — Lv1-13 macros only
-# 1) Prontera south Kafra save
-# 2) Sell at 20% weight (config itemsMaxWeight_sellOrStore)
-# 3) Buy potions when low (buyAuto in config)
-# Extra: equip refresh, return to lockMap, Job Master to Thief at Job 10
+# AssassinClean — Lv1-13: hunt / buy pots / sell loot
+# No equipment shopping while Novice
 
 automacro Ragna_SetSavePronteraSouth {
 	IsInMapAndCoordinate prontera
@@ -30,7 +27,7 @@ automacro Ragna_SetSavePronteraSouth {
 	}
 }
 
-# After death / in town with junk: sell if weight >= 10%
+# In town with junk: sell then buyAuto potions run after sell
 automacro Ragna_TownSell {
 	ConfigKeyNot lockMap none
 	IsInMapAndCoordinate prontera,prt_in
@@ -39,12 +36,11 @@ automacro Ragna_TownSell {
 	Eval (Misc::percent_weight($char) >= 10) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] In town with weight - selling
+			log [Ragna] In town with weight - selling loot
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do eval AI::queue("sellAuto");
 			pause 1
-			do eq
 		]
 	}
 }
@@ -60,7 +56,6 @@ automacro Ragna_TownResume {
 			log [Ragna] In town - resume hunt
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do eq
 		]
 	}
 }
@@ -76,17 +71,6 @@ automacro Ragna_ReturnToLock {
 			log [Ragna] Off lockMap - resume hunt
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-		]
-	}
-}
-
-automacro Ragna_EquipRefresh {
-	BaseLevel >= 1
-	timeout 120
-	exclusive 0
-	call {
-		[
-			do eq
 		]
 	}
 }
@@ -112,7 +96,7 @@ automacro Ragna_EscapeIzlude {
 	}
 }
 
-# Job change Novice -> Thief at Job Lv 10 via Prontera Job Master
+# Job change Novice -> Thief at Job Lv 10
 automacro Ragna_Job_ToThief {
 	JobID 0
 	JobLevel >= 10
@@ -134,7 +118,6 @@ automacro Ragna_Job_ToThief {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
-			do eq
 			log [Ragna] Now Thief - back to prt_fild08
 		]
 	}

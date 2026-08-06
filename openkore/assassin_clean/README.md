@@ -1,13 +1,14 @@
 # AssassinClean — Lv1–13 Prontera leveler
 
-Minimal OpenKore profile for a fresh Assassin-path character.
+Focus: **hunt / buy potions / sell loot** only.
 
 ## Behavior
-1. Sets save at **Prontera south Kafra** (`151,29`)
-2. Hunts `prt_fild08`
-3. **Sells at 20% weight** (`itemsMaxWeight_sellOrStore 20`) via Prontera tool dealer
-4. Uses Novice Potions; **buys Red Potions** when stock is low (after Base 2 + zeny)
-5. Job-changes Novice → Thief at Job 10 (Prontera Job Master)
+1. Save at Prontera south Kafra (`151,29`)
+2. Hunt `prt_fild08`
+3. Sell loot at **20%** weight (Prontera tool dealer)
+4. Buy **Red Potions** when low; use Novice Potions first
+5. **No equipment shopping while Novice** — uses starter novice weapon
+6. Job-change Novice → Thief at Job 10
 
-## Live test account
-Profile: `AssassinClean` in `~/openkore/profiles/` (credentials in ACCOUNT_MAP).
+## Not included (by design for 1–13)
+- Buying Knife / Cotton Shirt / other gear as Novice

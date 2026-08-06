@@ -1,4 +1,4 @@
-######## AssassinClean — Lv1-13 Prontera field leveler ########
+######## AssassinClean — Lv1-13: hunt / buy pots / sell loot ########
 
 master RagnaOne
 char 0
@@ -71,7 +71,7 @@ sitAuto_sp_upper 40
 sitAuto_idle 1
 sitAuto_idle_wait 8
 
-######## Weight / sell at 20% ########
+######## Sell loot at 20% weight ########
 itemsMaxWeight 35
 itemsMaxWeight_sellOrStore 20
 itemsMaxNum_sellOrStore 90
@@ -86,17 +86,15 @@ sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 
-######## Potions: use Novice stock first; buy Red when low after Lv2 ########
+######## Buy potions only (no equipment while Novice) ########
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
-	distance 3
-	price 0
+	distance 5
 	minAmount 5
 	maxAmount 40
-	minBase 1
-	zeny > 500
-	disabled  1
+	zeny > 300
+	disabled 0
 }
 
 useSelf_item Novice Potion {
@@ -112,52 +110,18 @@ useSelf_item Red Potion {
 	disabled 0
 }
 
-######## Gear buys after a bit of leveling / zeny ########
-buyAuto Knife [3] {
-	npc prt_in 172 130
-	standpoint prt_in 172 128
-	distance 3
-	minAmount 1
-	maxAmount 1
-	minBase 5
-	maxBase 39
-	zeny > 200
-	disabled  1
-}
-buyAuto Cotton Shirt {
-	npc prt_in 172 132
-	standpoint prt_in 172 134
-	distance 3
-	minAmount 1
-	maxAmount 1
-	minBase 5
-	maxBase 39
-	zeny > 100
-	disabled  1
-}
-
-######## Equip ########
-autoSwitch_default_rightHand Knife
+######## Equip starter novice gear only (no shop gear buys) ########
+autoSwitch_default_rightHand
 autoSwitch_default_leftHand
-equipAuto {
-	rightHand Knife [3]
-	maxBase 39
-	disabled 0
-}
-equipAuto {
-	rightHand Knife [3]
-	armor Cotton Shirt
-	maxBase 39
-	disabled 0
-}
+
 equipAuto {
 	rightHand Novice Main-Gauche
-	maxBase 11
-	disabled 1
+	JobID 0
+	disabled 0
 }
 equipAuto {
-	armor Cotton Shirt
-	maxBase 39
+	rightHand Knife [3]
+	JobIDNot 0
 	disabled 0
 }
 
