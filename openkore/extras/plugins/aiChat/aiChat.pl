@@ -1,11 +1,12 @@
 #############################################################################
 # aiChat — AI-powered chat replies for OpenKore
 #
-# PM / nearby public chat → OpenAI-compatible reply (or smart local fallback).
+# PM / nearby public chat → OpenAI-compatible reply ONLY.
+# No local/keyword fallback — if the API is missing or fails, it stays silent.
 #
 # Config:
 #   aiChat 1
-#   aiChat_apiKey sk-...          # REQUIRED for smart replies (or OPENAI_API_KEY)
+#   aiChat_apiKey sk-...          # REQUIRED (or OPENAI_API_KEY / AI_CHAT_API_KEY)
 #   aiChat_apiUrl https://api.openai.com/v1/chat/completions
 #   aiChat_model gpt-4o-mini
 #   aiChat_public 1
@@ -69,9 +70,9 @@ sub onStart {
 	_ensureDefaults();
 	my $key = apiKey();
 	if ($key eq '') {
-		warning "[aiChat] loaded — NO API KEY. Replies will be local/dumb. Set aiChat_apiKey!\n";
+		warning "[aiChat] loaded — NO API KEY. Will not reply until aiChat_apiKey is set.\n";
 	} else {
-		message "[aiChat] loaded — API ready (" . substr($key, 0, 7) . "…)\n", "system";
+		message "[aiChat] loaded — API-only mode (" . substr($key, 0, 7) . "…)\n", "system";
 	}
 }
 
@@ -173,9 +174,10 @@ sub cmdAiChat {
 		message "[aiChat] queued test reply to $user\n", "system";
 	} else {
 		my $key = apiKey();
-		my $keyHint = $key ? (substr($key, 0, 7) . '…') : '(NONE — local fallback only, replies will be dumb)';
+		my $keyHint = $key ? (substr($key, 0, 7) . '…') : '(NONE — will not reply)';
 		message "[aiChat] status\n"
 			. "  enabled   : " . (enabled() ? 'yes' : 'no') . "\n"
+			. "  mode      : API only (no local fallback)\n"
 			. "  api key   : $keyHint\n"
 			. "  model     : $config{aiChat_model}\n"
 			. "  last mode : $lastMode\n"
@@ -365,21 +367,24 @@ sub _sanitize {
 sub _generateReply {
 	my ($user, $msg, $type) = @_;
 	my $key = apiKey();
-	if ($key ne '') {
-		my $ai = eval { _callOpenAI($user, $msg, $key, $type) };
-		if ($@) {
-			warning "[aiChat] API failed: $@ — using local fallback\n";
-		} elsif (defined $ai && $ai ne '') {
-			$lastMode = 'api';
-			return $ai;
-		} else {
-			warning "[aiChat] API returned empty — using local fallback\n";
-		}
-	} else {
-		debug "[aiChat] no API key — local fallback\n", "aiChat";
+	if ($key eq '') {
+		warning "[aiChat] no API key — skipping reply to $user\n";
+		$lastMode = 'none';
+		return '';
 	}
-	$lastMode = 'local';
-	return _localFallback($user, $msg);
+	my $ai = eval { _callOpenAI($user, $msg, $key, $type) };
+	if ($@) {
+		warning "[aiChat] API failed: $@ — skipping reply (API-only mode)\n";
+		$lastMode = 'none';
+		return '';
+	}
+	if (!defined $ai || $ai eq '') {
+		warning "[aiChat] API returned empty — skipping reply\n";
+		$lastMode = 'none';
+		return '';
+	}
+	$lastMode = 'api';
+	return $ai;
 }
 
 sub _systemPrompt {
