@@ -114,7 +114,7 @@ automacro Ragna_ReturnToLock {
 	InLockMap 0
 	timeout 40
 	exclusive 1
-	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto")) && !($char->{jobID} == 0 && $char->{lv_job} >= 10 && !$config{ragnaJobThief})
 	call {
 		[
 			log Ragna Off lockMap - resume hunt
@@ -146,13 +146,34 @@ automacro Ragna_EscapeIzlude {
 }
 
 # Job change Novice -> Thief at Job Lv 10
-# Wait until Field Scout quest is finished (not active), then walk to Job Master and talk.
+# 1) Finish Field Scout if active (QuestInactive 60202)
+# 2) Spend Basic Skill to 9
+# 3) Walk to Job Master, talk: class menu r5 = Thief, then confirm
+automacro Ragna_Job_BasicSkill {
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 10
+	QuestInactive 60202
+	ConfigKeyNot ragnaJobThief 1
+	SkillLevel NV_BASIC < 9
+	timeout 20
+	exclusive 1
+	call {
+		[
+			log Ragna Spending skill points on Basic Skill
+			do skills add 1
+			pause 1
+		]
+	}
+}
+
 automacro Ragna_Job_ToThief_Go {
 	JobID 0
 	JobLevel >= 10
 	BaseLevel >= 10
 	QuestInactive 60202
 	ConfigKeyNot ragnaJobThief 1
+	SkillLevel NV_BASIC >= 9
 	NpcNotNear /Job Master/
 	timeout 35
 	exclusive 1
@@ -173,8 +194,9 @@ automacro Ragna_Job_ToThief_Talk {
 	BaseLevel >= 10
 	QuestInactive 60202
 	ConfigKeyNot ragnaJobThief 1
+	SkillLevel NV_BASIC >= 9
 	NpcNear /Job Master/
-	timeout 30
+	timeout 40
 	exclusive 1
 	call {
 		[
@@ -183,13 +205,26 @@ automacro Ragna_Job_ToThief_Talk {
 			do conf route_randomWalk 0
 			do conf lockMap none
 			pause 2
-			do talknpc 150 180 c c c r1 c r0
-			pause 12
+			do talknpc 150 180 c c c r5 c r0
+			pause 14
+		]
+	}
+}
+
+# Confirm Thief after jobID changes
+automacro Ragna_Job_ToThief_Done {
+	JobID 6
+	ConfigKeyNot ragnaJobThief 1
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log Ragna Now Thief - back to prt_fild08
 			do conf ragnaJobThief 1
+			do conf ragnaFieldScoutOff 1
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
-			log Ragna Now Thief - back to prt_fild08
 		]
 	}
 }
@@ -215,6 +250,7 @@ automacro Ragna_Job_ToThief_Talk {
 automacro Ragna_FieldScout_Accept_Go {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
@@ -234,6 +270,7 @@ automacro Ragna_FieldScout_Accept_Go {
 automacro Ragna_FieldScout_Accept_Talk {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
@@ -266,6 +303,7 @@ automacro Ragna_FieldScout_Accept_Talk {
 automacro Ragna_FieldScout_GoField {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
+	JobLevel < 10
 	BaseLevel <= 20
 	QuestInactive 60202
 	ConfigKeyNot lockMap prt_fild08

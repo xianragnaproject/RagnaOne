@@ -103,6 +103,16 @@ buyAuto Red Potion {
 	disabled 0
 }
 # Escape wing for prt_in portal loop (buy when Field Scout zeny allows)
+
+buyAuto Knife [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 0
+}
 buyAuto Butterfly Wing {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
@@ -127,13 +137,23 @@ useSelf_item Red Potion {
 	disabled 0
 }
 
-######## Equip starter novice gear only (no shop gear buys) ########
+######## Equip ########
 autoSwitch_default_rightHand
 autoSwitch_default_leftHand
 
 equipAuto {
 	rightHand Novice Main-Gauche
 	JobID 0
+	disabled 0
+}
+equipAuto {
+	rightHand Knife [3]
+	JobID 6
+	disabled 0
+}
+equipAuto {
+	rightHand Main Gauche
+	JobID 6
 	disabled 0
 }
 
@@ -143,6 +163,8 @@ saveMap_x 155
 saveMap_y 50
 ragnaSaveProntera 0
 ragnaShop 1
+ragnaFieldScoutOff 0
+ragnaJobThief 0
 
 ######## Misc ########
 follow 0
@@ -151,3 +173,5 @@ partyAuto 1
 guildAutoDeny 1
 verbose 1
 dcOnEmptyArrow 0
+ragnaFieldScoutOff 0
+ragnaJobThief 0
