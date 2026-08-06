@@ -79,22 +79,27 @@ itemsTakeAuto 1
 itemsGatherAuto 2
 
 storageAuto 0
-sellAuto 1
+# Shop disabled for now — focus on leveling (Prontera tool portal loops on this server)
+sellAuto 0
 sellAuto_npc prt_in 126 76
 sellAuto_standpoint prt_in 126 74
 sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 
-######## Buy potions only (no equipment while Novice) ########
+######## Client actor sight (required or NPCs drop past dist 2) ########
+clientSight 15
+
+######## Buy potions — disabled until shop route is fixed ########
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
 	distance 5
 	minAmount 5
 	maxAmount 40
+	price 50
 	zeny > 300
-	disabled 0
+	disabled 1
 }
 
 useSelf_item Novice Potion {

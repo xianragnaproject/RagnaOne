@@ -27,13 +27,14 @@ automacro Ragna_SetSavePronteraSouth {
 	}
 }
 
-# In town with junk: sell then buyAuto potions run after sell
+# Shop disabled — focus on leveling (re-enable with ragnaShop 1 later)
 automacro Ragna_TownSell {
+	ConfigKey ragnaShop 1
 	ConfigKeyNot lockMap none
 	IsInMapAndCoordinate prontera,prt_in
 	timeout 25
 	exclusive 1
-	Eval (Misc::percent_weight($char) >= 10) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	Eval (Misc::percent_weight($char) >= 20) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
 	call {
 		[
 			log [Ragna] In town with weight - selling loot
