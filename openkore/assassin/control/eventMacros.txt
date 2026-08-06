@@ -546,12 +546,14 @@ automacro Ragna_IdentifyLoot {
 # ============================================================
 
 # ============================================================
+
+# ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
 # Daily hunt quest (50x/day): kill 20 on prt_fild08
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
-# Accept sequence: talknpc 170 360 c c r0
-# Turn-in: talk again after 20/20 (sequence confirmed live)
+# Accept: talknpc 170 360 c c r0
+# Turn-in: talk again after 20/20 (same sequence)
 # Disable with: conf ragnaFieldScoutOff 1
 # ============================================================
 
@@ -573,13 +575,11 @@ automacro Ragna_FieldScout_Accept {
 			do talknpc 170 360 c c r0
 			pause 4
 			do conf lockMap prt_fild08
-			do conf lockMap_x 170
-			do conf lockMap_y 320
-			do conf lockMap_randX 35
-			do conf lockMap_randY 35
-			do conf route_randomWalk_maxRouteTime 45
+			do conf lockMap_x none
+			do conf lockMap_y none
 			do conf attackAuto 2
 			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 30
 			log [Ragna] Field Scout quest active — hunting prt_fild08
 		]
 	}
@@ -600,11 +600,10 @@ automacro Ragna_FieldScout_GoField {
 			log [Ragna] Field Scout — route novice to prt_fild08
 			do conf attackAuto 2
 			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 30
 			do conf lockMap prt_fild08
-			do conf lockMap_x 170
-			do conf lockMap_y 320
-			do conf lockMap_randX 35
-			do conf lockMap_randY 35
+			do conf lockMap_x none
+			do conf lockMap_y none
 		]
 	}
 }
@@ -626,9 +625,10 @@ automacro Ragna_FieldScout_TurnIn {
 			do eval my $d = (localtime)[3]; if (($config{ragnaFieldScoutDay} || 0) != $d) { Commands::run("conf ragnaFieldScoutDay $d"); Commands::run("conf ragnaFieldScoutCount 1"); } else { Commands::run("conf ragnaFieldScoutCount " . (($config{ragnaFieldScoutCount} || 0) + 1)); }
 			do conf attackAuto 2
 			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 30
 			do conf lockMap prt_fild08
-			do conf lockMap_x 170
-			do conf lockMap_y 320
+			do conf lockMap_x none
+			do conf lockMap_y none
 			log [Ragna] Field Scout turn-in done — runs today updated
 		]
 	}
