@@ -3,31 +3,31 @@
 # attack_auto: -1 avoid, 0 don't attack, 1 attack if attacked, 2 always attack
 
 # Early field
-Poring 2 0 0
-Drops 2 0 0
-Poporing 2 0 0
-Lunatic 2 0 0
-Fabre 2 0 0
-Pupa 2 0 0
-Condor 2 0 0
+Poring 2 0 1
+Drops 2 0 1
+Poporing 2 0 1
+Lunatic 2 0 1
+Fabre -1 # 1007
+Pupa 2 0 1
+Condor 2 0 1
 Picky 2 0 0
 Picky 2 1 0 0
-Willow 2 0 0
-Spore 2 0 0
-Chonchon 2 0 0
-Rocker 2 0 0
+Willow 2 0 1
+Spore 2 0 1
+Chonchon 2 0 1
+Rocker 2 0 1
 Thief 2 Egg 0 0 0
 Thief 2 2 0 1
 Female 2 Bug 2 0 1
 Male 2 Bug 2 0 1
-Familiar 2 0 0
-Zombie 2 0 0
-Skeleton 2 0 0
-Poporing 2 0 0
+Familiar 2 0 1
+Zombie 2 0 1
+Skeleton 2 0 1
+Poporing 2 0 1
 Roda 2 2 0 1
-Wormtail 2 0 0
-Wolf 2 0 0
-Snake 2 0 0
+Wormtail 2 0 1
+Wolf 2 0 1
+Snake 2 0 1
 Anaconda 2 0 0
 Yoyo 2 0 0
 Smokie 2 0 0
@@ -72,7 +72,7 @@ Savage 2 2 0 1
 Savage 2 1 0
 Elder 2 2 0 1
 Caramel 2 0 0
-Creamy 2 0 0
+Creamy -1 # 1
 Horn 2 0 0
 Steel 2 2 0 1
 Goblin 2 1 0 0
@@ -96,4 +96,5 @@ Maya -1 1 0
 Knight 2 Abyss -1 1 0
 
 # Default: attack if aggressive only
-all 2 0 0
+all 2 0 1
+Chonchon 2 0 1

@@ -29,6 +29,7 @@ attackAuto_notWhile_sellAuto 1
 attackDistance 1
 attackDistanceAuto 1
 attackMaxDistance 1
+attackRouteMaxPathDistance 50
 attackMaxRouteTime 45
 attackMinPlayerDistance 0
 attackMinPortalDistance 0

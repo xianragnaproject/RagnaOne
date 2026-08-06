@@ -142,8 +142,8 @@ attackSkillSlot Cart Revolution {
 itemsTakeAuto 2
 itemsTakeAuto_party 0
 itemsGatherAuto 2
-itemsMaxWeight 40
-itemsMaxWeight_sellOrStore 30
+itemsMaxWeight 35
+itemsMaxWeight_sellOrStore 18
 itemsMaxNum_sellOrStore 90
 itemsTakeGreed 0
 
@@ -224,7 +224,7 @@ buyAuto Axe [3] {
 	maxAmount 1
 	maxBase 39
 	disabled 0
-	zeny > 100
+	zeny > 50
 	standpoint prt_in 172 128
 }
 buyAuto Battle Axe {
@@ -251,7 +251,7 @@ buyAuto Cotton Shirt {
 	distance 3
 	minAmount 1
 	maxAmount 1
-	maxBase 20
+	maxBase 39
 	disabled 0
 	zeny > 10
 	standpoint prt_in 172 134
@@ -308,7 +308,7 @@ equipAuto {
 
 equipAuto {
 	armor Cotton Shirt
-	maxBase 20
+	maxBase 39
 	disabled 0
 }
 
@@ -388,6 +388,8 @@ macro_orphans terminate
 
 ragnaSavePayon 0
 ragnaShopsPayon 0
+ragnaGearRestock 0
+ragnaLockMapBackup pay_fild08
 ragnaSaveProntera 0
 
 attackRouteMaxPathDistance 30
