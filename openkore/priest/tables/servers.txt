@@ -1,0 +1,28 @@
+# RagnaOne OpenKore servers entry
+
+[RagnaOne]
+ip 173.208.138.84
+port 6900
+master_version 14
+version 55
+serverType kRO_RagexeRE_2018_06_20e
+serverEncoding Western
+charBlockSize 155
+addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
+addSize 0
+charNameFilter
+pinCode 0
+storageEncryptKey 0x050B6F79, 0x0202C179, 0x0E20120, 0x04EA75D2, 0x02562C65, 0x04089E4A, 0x0171F82E, 0x0C635F4
+sendCryptKeys 0x00000000, 0x00000000, 0x00000000
+gameGuard 0
+secureLogin 0
+secureLogin_type 0
+secureLogin_requestCode
+secureLogin_account 0
+OTP_ip
+OTP_port 0
+recvpackets recvpackets.txt
+private 1
+dead 0
+title RagnaOne Pre-RE
+

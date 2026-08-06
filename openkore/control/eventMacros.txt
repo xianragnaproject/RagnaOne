@@ -1,0 +1,285 @@
+# eventMacros.txt — Job Master + Assassin leveling route
+# Requires OpenKore eventMacro plugin (bundled in modern OpenKore).
+# Enable with: load eventMacro
+
+# ============================================================
+# Job Master @ Prontera 150,180 (stock Hercules Euphy Job Master)
+# Menu order may differ on custom scripts — tune r# if needed.
+# First jobs often: Swordman, Magician, Archer, Acolyte, Merchant, Thief
+#   → Thief = r5
+# Thief 2nd jobs often: Assassin, Rogue
+#   → Assassin = r0
+# ============================================================
+
+automacro Ragna_Job_ToThief {
+	JobID 0
+	JobLevel >= 10
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Novice Job10+ → Prontera Job Master → Thief
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 153 193
+		pause 2
+		do talknpc 150 180 c c c r5 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Thief requested
+	}
+}
+
+automacro Ragna_Job_ToAssassin {
+	JobID 6
+	JobLevel >= 40
+	BaseLevel >= 40
+	exclusive 1
+	run-once 1
+	timeout 60
+	call {
+		log [RagnaOne] Thief Job40+ → Prontera Job Master → Assassin
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do move prontera 153 193
+		pause 2
+		do talknpc 150 180 c c c r0 c r0
+		pause 3
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log [RagnaOne] Job change to Assassin requested
+	}
+}
+
+# Re-equip after job change / death
+automacro Ragna_EquipRefresh {
+	timeout 90
+	call {
+		do reload conf
+		log [RagnaOne] Refresh equipAuto rules
+	}
+}
+
+# ============================================================
+# Progressive lock maps
+# ============================================================
+
+automacro Ragna_Lv1_11 {
+	BaseLevel < 12
+	ConfigKeyNot lockMap prt_fild08
+	timeout 45
+	call {
+		do conf lockMap prt_fild08
+		do conf lockMap_randX 14
+		do conf lockMap_randY 14
+		log [RagnaOne] Lv1-11: Prontera Field 08 porings/drops
+	}
+}
+
+automacro Ragna_Lv12_20 {
+	BaseLevel 12..20
+	ConfigKeyNot lockMap pay_fild08
+	timeout 45
+	call {
+		do conf lockMap pay_fild08
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv12-20: Payon Field 08 (save→Payon Kafra)
+	}
+}
+
+# At Base 12+ set save point in Payon (respawn near pay_fild08 hunt)
+automacro Ragna_SetSavePayon {
+	BaseLevel >= 12
+	ConfigKeyNot ragnaSavePayon 1
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log [Ragna] Lv12+ — setting save point at Payon Kafra
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move payon 181 104
+			pause 12
+			do talknpc 181 104 c r0
+			pause 4
+			do conf ragnaSavePayon 1
+			do conf saveMap payon
+			do conf saveMap_x 181
+			do conf saveMap_y 104
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			log [Ragna] Save point set to Payon
+		]
+	}
+}
+
+# Apply Payon NPC coords to every buyAuto_* entry (called by Ragna_ShopsPayon)
+sub Ragna_ApplyPayonShops {
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		my ($npc, $stand);
+		if ($item =~ /Potion|Magnifier|Wing|^Arrow$/i) {
+			$npc = "payon_in01 5 49";
+			$stand = "payon_in01 7 49";
+		} elsif ($item =~ /Cotton Shirt|Jacket/) {
+			$npc = "payon_in01 7 119";
+			$stand = "payon_in01 10 119";
+		} else {
+			$npc = "payon_in01 15 119";
+			$stand = "payon_in01 15 117";
+		}
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand");
+	}
+	return 1;
+}
+
+# At Base 12+ switch sell/buy NPCs from Prontera to Payon
+automacro Ragna_ShopsPayon {
+	BaseLevel >= 12
+	ConfigKeyNot ragnaShopsPayon 1
+	timeout 60
+	exclusive 1
+	call {
+		[
+			log [Ragna] Lv12+ — switching sell/buy NPCs to Payon
+			do conf sellAuto_npc payon_in01 5 49
+			do conf sellAuto_standpoint payon_in01 7 49
+			do eval Ragna_ApplyPayonShops()
+			do conf ragnaShopsPayon 1
+			log [Ragna] Sell/buy now use Payon shops - tool armor weapon
+		]
+	}
+}
+
+
+
+automacro Ragna_Lv21_30 {
+	BaseLevel 21..30
+	ConfigKeyNot lockMap gef_fild00
+	timeout 45
+	call {
+		do conf lockMap gef_fild00
+		do conf lockMap_randX 12
+		do conf lockMap_randY 12
+		log [RagnaOne] Lv21-30: Geffen Field 00
+	}
+}
+
+automacro Ragna_Lv31_40 {
+	BaseLevel 31..40
+	ConfigKeyNot lockMap pay_dun00
+	timeout 45
+	call {
+		do conf lockMap pay_dun00
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv31-40 Assassin: Payon Cave 00 skeletons/zombies
+	}
+}
+
+automacro Ragna_Lv41_50 {
+	BaseLevel 41..50
+	ConfigKeyNot lockMap pay_dun01
+	timeout 45
+	call {
+		do conf lockMap pay_dun01
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv41-50 Assassin: Payon Cave 01
+	}
+}
+
+automacro Ragna_Lv51_60 {
+	BaseLevel 51..60
+	ConfigKeyNot lockMap moc_pryd02
+	timeout 45
+	call {
+		do conf lockMap moc_pryd02
+		do conf lockMap_randX 10
+		do conf lockMap_randY 10
+		log [RagnaOne] Lv51-60 Assassin: Pyramid 2F classic thief/assassin spot
+	}
+}
+
+automacro Ragna_Lv61_70 {
+	BaseLevel 61..70
+	ConfigKeyNot lockMap moc_pryd03
+	timeout 45
+	call {
+		do conf lockMap moc_pryd03
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv61-70 Assassin: Pyramid 3F
+	}
+}
+
+automacro Ragna_Lv71_80 {
+	BaseLevel 71..80
+	ConfigKeyNot lockMap in_sphinx2
+	timeout 45
+	call {
+		do conf lockMap in_sphinx2
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv71-80 Assassin: Sphinx 2F
+	}
+}
+
+automacro Ragna_Lv81_90 {
+	BaseLevel 81..90
+	ConfigKeyNot lockMap in_sphinx3
+	timeout 45
+	call {
+		do conf lockMap in_sphinx3
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv81-90 Assassin: Sphinx 3F
+	}
+}
+
+automacro Ragna_Lv91_99 {
+	BaseLevel 91..99
+	ConfigKeyNot lockMap in_sphinx4
+	timeout 45
+	call {
+		do conf lockMap in_sphinx4
+		do conf lockMap_randX 8
+		do conf lockMap_randY 8
+		log [RagnaOne] Lv91-99 Assassin: Sphinx 4F — finish to 99
+	}
+}
+
+# Occasional sit pause to look less robotic (idle heal already handles most)
+automacro Ragna_RandomIdle {
+	BaseLevel >= 1
+	timeout 420
+	call {
+		log [RagnaOne] Taking a short idle pause...
+		pause 12
+	}
+}
+
+# After death, restock feeling
+automacro Ragna_AfterDeath {
+	isAlive 0
+	delay 3
+	run-once 0
+	call {
+		log [RagnaOne] Died — recovering in town before returning
+		pause 8
+	}
+}
+
+# Identify loot — parked (eventMacro @eval keyword conflicts)
+automacro Ragna_IdentifyLoot {
+	exclusive 1
+	timeout 99999
+	BaseLevel >= 9999
+	InInventory "Magnifier" > 0
+	call {
+		log [Ragna] IdentifyLoot parked
+	}
+}
