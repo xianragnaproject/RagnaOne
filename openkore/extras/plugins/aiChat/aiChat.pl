@@ -95,13 +95,14 @@ sub _ensureDefaults {
 sub _defaultPersona {
 	return join(' ', (
 		'You are a real Ragnarok Online player chatting in-game.',
-		'Write like a casual RO player: short, natural, slightly slangy.',
-		'Answer the actual question using your character facts when relevant.',
+		'Be smart, aware, and natural — reply like a sharp casual RO player, not a script.',
+		'Read what they actually said and answer it directly; use humor when it fits.',
+		'Use your character facts (job, level, map) when relevant; invent nothing about being a bot.',
 		'Never say you are a bot, AI, macro, OpenKore, or script.',
 		'No OOC, no markdown, no links, no emoji spam.',
-		'One short line only. Match their language (English/Tagalog/etc).',
-		'If they greet you, greet back warmly. If they ask something you do not know, guess casually or deflect.',
-		'Do not offer to party/trade/buff unless they ask; if they ask, politely decline for now.',
+		'One short chat line only. Match their language (English/Tagalog/etc).',
+		'If they greet you, greet back. If unclear, ask a short clarifying question.',
+		'Do not offer party/trade/buff unless they ask; if they ask, politely decline for now.',
 	));
 }
 
@@ -473,116 +474,6 @@ sub _callOpenAI {
 	$content =~ s/^\s+|\s+$//g;
 	die "empty content" if $content eq '';
 	return $content;
-}
-
-# Smarter offline engine — answers with real char facts, not just "oh?"
-sub _localFallback {
-	my ($user, $msg) = @_;
-	my $m = lc($msg);
-	$m =~ s/[^\w\s\?\!\']+/ /g;
-	$m =~ s/\s+/ /g;
-	$m =~ s/^\s+|\s+$//g;
-
-	my $name = ($char && $char->{name}) ? $char->{name} : 'me';
-	my $job  = _charJob();
-	my $blvl = ($char && defined $char->{lv}) ? $char->{lv} : '?';
-	my $jlvl = ($char && defined $char->{lv_job}) ? $char->{lv_job} : '?';
-	my $map  = ($field && $field->baseName) ? $field->baseName : 'here';
-	my $short = sub { $_[0]->[ int(rand(@{$_[0]})) ] };
-
-	# Accusations
-	if ($m =~ /\b(bot|botter|macro|openkore|auto\s*bot|script)\b/) {
-		return $short->(["haha nah just grinding", "lol no just playing", "bro i'm just farming"]);
-	}
-
-	# Greetings
-	if ($m =~ /^(hi|hello|hey|yo|sup|good ?day|good ?morning|good ?evening|hola|oi)\b/
-		|| $m =~ /\b(hi|hello|hey|yo|sup)\s+$name\b/i
-		|| $m =~ /\b(hi|hello|hey)\b/) {
-		return $short->(["hey $user", "yo $user", "hey what's up", "hi!", "yo"]);
-	}
-
-	# How are you
-	if ($m =~ /\b(how are you|how's it going|how r u|hru|kamusta)\b/) {
-		return $short->(["pretty good, farming a bit", "all good you?", "chillin on $map", "tired but grinding"]);
-	}
-
-	# Level / job questions
-	if ($m =~ /\b(what('?s| is) your (base )?level|what lvl|what level|base lvl|base level)\b/
-		|| $m =~ /\b(lvl|level)\s*\??\s*$/
-		|| $m =~ /\byou(r)?\s*(lvl|level)\b/) {
-		return $short->(["base $blvl", "i'm $blvl", "base $blvl job $jlvl"]);
-	}
-	if ($m =~ /\b(what('?s| is) your job|what class|what job|are you (a |an )?\w+)\b/) {
-		return $short->(["$job", "i'm a $job", "$job base $blvl"]);
-	}
-	if ($m =~ /\b(who are you|what('?s| is) your name)\b/) {
-		return $short->(["i'm $name", "$name, $job"]);
-	}
-
-	# Where / map
-	if ($m =~ /\b(where (are )?you|what map|which map|where u at|saan)\b/
-		|| $m =~ /\b(where|map|spot)\b/) {
-		return $short->(["on $map", "just around $map", "here on $map grinding"]);
-	}
-
-	# What doing
-	if ($m =~ /\b(what('?s| are) you doing|wyd|ano ginagawa|farming\?)\b/) {
-		return $short->(["just grinding on $map", "farming a bit", "lvling my $job"]);
-	}
-
-	# Party
-	if ($m =~ /\b(party|pt|party pls|need pt)\b/) {
-		return $short->(["solo for now thanks", "maybe later finishing this run", "appreciate it but solo rn"]);
-	}
-
-	# Buffs / heal
-	if ($m =~ /\b(buff|bless|agi|heal|warp|warp portal)\b/) {
-		return $short->(["no buffs on me sorry", "can't help with that rn", "wish i could"]);
-	}
-
-	# Trade / zeny
-	if ($m =~ /\b(zeny|money|cheap|sell|buy|trade|vending|vender)\b/) {
-		return $short->(["not trading rn", "saving up actually", "broke as usual lol"]);
-	}
-
-	# Help
-	if ($m =~ /\b(help|can you help|pahelp|tulong)\b/) {
-		return $short->(["what's up?", "depends, what do you need?", "kinda busy grinding but what's wrong?"]);
-	}
-
-	# Thanks
-	if ($m =~ /\b(thanks|thank you|ty|thx|salamat)\b/) {
-		return $short->(["np", "anytime", "sure"]);
-	}
-
-	# Laugh
-	if ($m =~ /\b(lol|haha|lmao|xd|huhu|jeje)\b/ && length($m) < 20) {
-		return $short->(["lol", "haha", "xD"]);
-	}
-
-	# Questions we don't know — ask back instead of "oh?"
-	if ($m =~ /\?$/ || $m =~ /\b(what|why|how|when|who|which|can you|do you)\b/) {
-		return $short->([
-			"not sure tbh, why?",
-			"hmm good question",
-			"maybe? what do you mean",
-			"idk yet still figuring it out",
-			"could be, you tried already?",
-		]);
-	}
-
-	# Default: acknowledge + light context (not empty "oh?")
-	return $short->([
-		"haha yeah",
-		"true",
-		"nice",
-		"busy on $map a bit, what's up?",
-		"lol yeah",
-		"fair enough",
-		"oh for real?",
-		"gotcha",
-	]);
 }
 
 sub _findCurl {

@@ -1,14 +1,14 @@
-# aiChat — AI replies when players talk to the bot
+# aiChat — AI-only replies when players talk to the bot
 
 ## Critical
 
-**Smart replies need an API key.** Without `aiChat_apiKey`, you only get the local fallback (keyword replies). Check the console:
+**API only.** No local/keyword fallback. Without a working `aiChat_apiKey` + curl, the bot stays silent.
 
 ```
 aichat status
 ```
 
-Look for `api key` and `last mode` (`api` = smart, `local` = fallback).
+Look for `mode: API only` and `last mode: api` after a successful reply.
 
 ## Enable
 
@@ -35,15 +35,13 @@ aiChat_cooldown 6
 aiChat_maxLen 70
 ```
 
-Also needs `curl` on PATH (Windows: `curl.exe` is fine).
+Needs `curl` on PATH (Windows: `curl.exe`).
 
 ## Behavior
 
-- **PM**: always replies (after `aiChat_delay`)
-- **Public + name mention**: replies
-- **Public + nearby (≤ `aiChat_nearDist` cells)**: replies even without name
-- API replies use live char facts (job, level, map)
-- No key / API fail → smarter local fallback (still not as good as GPT)
+- **PM**: replies via AI only
+- **Public + name / nearby**: replies via AI only
+- No key / API fail → **no reply** (warning in console)
 
 ## Console
 

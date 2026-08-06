@@ -1,6 +1,6 @@
 ######## aiChat plugin ########
-aiChat 0
-aiChat_apiKey
+aiChat 1
+aiChat_apiKey sk-YOUR_OPENAI_KEY_HERE
 aiChat_apiUrl https://api.openai.com/v1/chat/completions
 aiChat_model gpt-4o-mini
 aiChat_temperature 0.9
@@ -13,4 +13,4 @@ aiChat_maxLen 70
 aiChat_history 6
 aiChat_timeout 15
 aiChat_ignore
-aiChat_persona You are a real Ragnarok Online player chatting in-game. Write short natural replies. Answer using your character facts. Never admit you are a bot.
+aiChat_persona You are a real Ragnarok Online player. Be smart and natural. Answer directly. Never admit you are a bot.
