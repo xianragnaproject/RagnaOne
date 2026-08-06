@@ -92,6 +92,7 @@ sellAuto_npc_steps s
 clientSight 15
 
 ######## Buy potions at Prontera Tool Dealer ########
+# Gear buyAuto (weapon/armor/arrows) starts disabled — enabled after job change via Ragna_EnableGearBuy
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
@@ -129,7 +130,7 @@ buyAuto Cotton Shirt {
 	minAmount 1
 	maxAmount 1
 	zeny > 10
-	disabled 0
+	disabled 1
 }
 buyAuto Butterfly Wing {
 	npc prt_in 126 76

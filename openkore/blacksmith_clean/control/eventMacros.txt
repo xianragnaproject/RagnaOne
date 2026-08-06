@@ -218,7 +218,7 @@ automacro Ragna_Job_ToMerchant_Done {
 			do conf ragnaJobThief 1
 			do conf ragnaJob1st 1
 			do conf ragnaFieldScoutOff 1
-			do eval Ragna_EnableWeaponBuy()
+			do eval Ragna_EnableGearBuy()
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -236,11 +236,12 @@ sub Ragna_ResumeHuntLock {
 }
 
 
-# Enable class-weapon buyAuto entries (disabled during Novice to avoid shop loops)
-sub Ragna_EnableWeaponBuy {
+# Enable gear buyAuto only after first job (weapons, armor, arrows).
+# Novices must NOT buy equipment — pots/wings only.
+sub Ragna_EnableGearBuy {
 	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
 		my $item = $config{"buyAuto_$i"} || "";
-		next if $item =~ /Potion|Wing|Shirt|Magnifier/i;
+		next if $item =~ /Potion|Wing|Magnifier/i;
 		Commands::run("conf buyAuto_${i}_disabled 0");
 	}
 	return 1;
