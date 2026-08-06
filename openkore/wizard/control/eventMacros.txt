@@ -531,34 +531,53 @@ automacro Ragna_IdentifyLoot {
 # ============================================================
 
 # ============================================================
-# Field Scout#prt08a @ prt_fild08 160,370  (also prt08b at 180,370)
-# Daily hunt quest (50x/day): kill 20 on prt_fild08 - Novice only
+# Field Scout on prt_fild08
+# Working NPCs: Field Scout#prt08a (160,370), Field Scout#prt08b (180,370)
+# Main Field Scout#prt08 (170,360) is often missing from the actor list.
+# TalkNPC requires the NPC already in sight - walk first, then talk.
+# Quest 60202 | mission 10363 | 50 runs/day
 # Reward: 500 Base / 500 Job / 1000 Zeny / 20 Red Potions
-# Quest ID 60202 | mission mob_id 10363 (map hunt counter)
-# Accept:  talknpc 160 370 c c r0
-# Turn-in: talknpc 160 370 c c
-# Note: main label Field Scout#prt08 at 170,360 is often missing;
-#       use prt08a. Must walk in range first or TalkNPC cannot see NPC.
-# Disable with: conf ragnaFieldScoutOff 1
+# Accept steps: c c r0 | Turn-in steps: c c
+# Disable: conf ragnaFieldScoutOff 1
 # ============================================================
 
-automacro Ragna_FieldScout_Accept {
+# --- Accept: walk toward scouts when no active quest ---
+automacro Ragna_FieldScout_Accept_Go {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
 	BaseLevel <= 25
 	QuestInactive 60202
 	IsInMapAndCoordinate prt_fild08
-	timeout 70
+	NpcNotNear /Field Scout#prt08/
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to accept
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_Accept_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 25
 	exclusive 1
 	call {
 		[
 			log Ragna Field Scout accept hunt 20 kills
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do move 160 368
-			pause 22
+			pause 2
 			do talknpc 160 370 c c r0
-			pause 14
+			pause 12
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
@@ -571,7 +590,9 @@ automacro Ragna_FieldScout_Accept {
 	}
 }
 
-# Pull novices on other maps toward the scout (early levels only)
+# Accept via prt08a only (Go walks to 160,368). prt08b accept removed to avoid talk races.
+
+# Pull novices on other maps toward the scout
 automacro Ragna_FieldScout_GoField {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
@@ -594,21 +615,41 @@ automacro Ragna_FieldScout_GoField {
 	}
 }
 
-automacro Ragna_FieldScout_TurnIn {
+# --- Turn-in: walk to scout when 20/20 ---
+automacro Ragna_FieldScout_TurnIn_Go {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
 	QuestHuntCompleted 60202 10363
-	timeout 70
+	IsInMapAndCoordinate prt_fild08
+	NpcNotNear /Field Scout#prt08/
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to turn in
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 20
 	exclusive 1
 	call {
 		[
 			log Ragna Field Scout turn in 20 of 20
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do move 160 368
-			pause 22
+			pause 2
 			do talknpc 160 370 c c
-			pause 14
+			pause 12
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
@@ -621,22 +662,22 @@ automacro Ragna_FieldScout_TurnIn {
 	}
 }
 
-# Fallback if prt08a is out of sight - try prt08b at 180,370
-automacro Ragna_FieldScout_TurnIn_B {
+automacro Ragna_FieldScout_TurnIn_TalkB {
 	ConfigKeyNot ragnaFieldScoutOff 1
 	JobID 0
 	QuestHuntCompleted 60202 10363
-	timeout 90
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08b/
+	timeout 55
 	exclusive 1
 	call {
 		[
 			log Ragna Field Scout turn in via prt08b
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do move 180 368
-			pause 22
+			pause 2
 			do talknpc 180 370 c c
-			pause 14
+			pause 12
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
