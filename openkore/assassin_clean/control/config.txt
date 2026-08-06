@@ -1,4 +1,4 @@
-######## AssassinClean — Lv1-13: hunt / buy pots / sell loot ########
+######## AssassinClean — Novice prt_fild08 → Thief gear → Payon / pay_fild08 ########
 
 master RagnaOne
 char 0
