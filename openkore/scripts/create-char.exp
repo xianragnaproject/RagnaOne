@@ -1,0 +1,164 @@
+#!/usr/bin/env expect
+# Create a character on an empty account via OpenKore profile.
+# Usage: create-char.exp <Profile> <CharName> <Sex:M|F>
+set timeout 180
+set profile [lindex $argv 0]
+set charname [lindex $argv 1]
+set sex [lindex $argv 2]
+if {$sex eq ""} { set sex "M" }
+if {$sex eq "F" || $sex eq "f" || $sex eq "female"} {
+  set sexflag "F"
+} else {
+  set sexflag "M"
+}
+
+cd $::env(HOME)/openkore
+log_file "/tmp/ok-create-$profile.log"
+
+spawn perl ./openkore.pl --profile=$profile --interface=Console --ai=manual
+
+expect {
+  -re {Compile portals} {
+    expect -re {Enter your answer:}
+    send "1\r"
+    exp_continue
+  }
+  -re {Account name .* doesn't exist|The account or password you entered is incorrect|Wrong password} {
+    puts "BAD_LOGIN"
+    catch {send "quit\r"}
+    exit 2
+  }
+  -re {permanently banned|Banned} {
+    puts "BANNED"
+    catch {send "quit\r"}
+    exit 3
+  }
+  -re {There are no characters on this account} {
+    puts "NO_CHARS"
+  }
+  -re "Slot 0: $charname" {
+    puts "ALREADY_HAS_TARGET"
+  }
+  -re {Character List|Slot 0:} {
+    puts "HAS_CHARS"
+  }
+  -re {Please choose a character or an action} {
+    puts "CHAR_MENU"
+  }
+  timeout {
+    puts "TIMEOUT_LOGIN"
+    catch {send "quit\r"}
+    exit 1
+  }
+  eof {
+    puts "EOF_LOGIN"
+    exit 1
+  }
+}
+
+expect {
+  -re {Enter your answer:} {}
+  -re {You are now in the game|Map loaded|Your Coordinates:} {
+    puts "AUTO_INGAME"
+    send "quit\r"
+    expect eof
+    puts "DONE_EXISTING"
+    exit 0
+  }
+  timeout { puts "TIMEOUT_MENU"; exit 1 }
+}
+
+# Decide: create vs select
+# If ALREADY_HAS_TARGET or HAS_CHARS with our name, select 0.
+# If NO_CHARS, create is 0.
+# Simplest robust path:
+# - If we saw NO_CHARS -> send 0 (create), then create form
+# - Else if we saw our char -> send 0 (select)
+# - Else send 0 and branch on whether we get create form or game
+
+send "0\r"
+
+expect {
+  -re {desired properties for your characters} {
+    expect -re {Enter your answer:}
+    send "0 \"$charname\" 1 1 novice $sexflag\r"
+    puts "SENT_CREATE $charname $sexflag"
+
+    expect {
+      -re {Character .* created|Character creation successful|created successfully} {
+        puts "CREATE_OK"
+      }
+      -re {Character name is already used|name is unavailable|Name already exists} {
+        puts "NAME_TAKEN"
+        expect -re {Enter your answer:}
+        send "0 \"${charname}x\" 1 1 novice $sexflag\r"
+        expect -re {created|Character List|Please choose}
+      }
+      -re {Unknown job or sex|Stats must be} {
+        puts "PARAM_RETRY"
+        expect -re {Enter your answer:}
+        send "0 \"$charname\" 1 1\r"
+        expect -re {created|Character List|Please choose|Unknown}
+      }
+      -re {Please choose a character or an action|Character List|Slot 0:} {
+        puts "BACK_TO_SELECT"
+      }
+      timeout { puts "TIMEOUT_CREATE"; exit 5 }
+    }
+
+    # Select slot 0 after create
+    expect {
+      -re {Enter your answer:} {
+        send "0\r"
+        puts "SELECT_AFTER_CREATE"
+      }
+      timeout { puts "TIMEOUT_SELECT"; exit 5 }
+    }
+  }
+  -re {Received character ID and Map IP|Connecting to Map Server} {
+    puts "SELECTED_EXISTING"
+  }
+  -re {You are now in the game|Map loaded|Your Coordinates:} {
+    puts "SELECTED_EXISTING_INGAME"
+  }
+  -re {is not a valid choice} {
+    puts "BAD_CHOICE"
+    exit 4
+  }
+  timeout { puts "TIMEOUT_AFTER_0"; exit 1 }
+}
+
+# Wait for map/game — ignore transient "disconnected" from char server switch
+expect {
+  -re {You are now in the game} { puts "IN_GAME" }
+  -re {Map loaded} { puts "IN_GAME" }
+  -re {Your Coordinates:} { puts "IN_GAME" }
+  -re {Map Change:} { puts "IN_GAME" }
+  -re {Connecting to Map Server} { exp_continue }
+  -re {connected} { exp_continue }
+  -re {Pausing for} { exp_continue }
+  -re {Disconnecting} { exp_continue }
+  -re {disconnected} { exp_continue }
+  -re {Closing connection} { exp_continue }
+  -re {Error|Unknown packet|Timeout on Map Server} {
+    puts "MAP_ERROR"
+    exp_continue
+  }
+  timeout { puts "TIMEOUT_MAP"; exit 6 }
+}
+
+sleep 2
+send "s\r"
+expect {
+  -re {----------- Status|HP:|Novice} { puts "STATUS_OK" }
+  timeout {}
+}
+
+send "quit\r"
+expect {
+  -re {Bye} {}
+  timeout {}
+  eof {}
+}
+puts "DONE"
+exit 0

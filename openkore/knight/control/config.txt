@@ -1,0 +1,398 @@
+######## RagnaOne — human-like leveler (edit username/password) ########
+
+master RagnaOne
+server 0
+username CHANGE_ME
+password CHANGE_ME
+loginPinCode
+char 0
+secureAdminPassword 1
+adminPassword youcibou
+commandPrefix ;
+
+pauseCharLogin 3
+pauseCharServer 2
+pauseMapServer 2
+ignoreInvalidLogin 0
+
+whenInGame_requestCashPoints 0
+
+######## Combat — play like a careful player ########
+
+attackAuto 2
+attackAuto_party 1
+attackAuto_onlyWhenSafe 0
+attackAuto_inLockOnly 1
+attackAuto_notInTown 1
+attackAuto_notWhile_storageAuto 1
+attackAuto_notWhile_buyAuto 1
+attackAuto_notWhile_sellAuto 1
+attackDistance 1
+attackDistanceAuto 1
+attackMaxDistance 18
+attackMaxRouteTime 45
+attackMinPlayerDistance 0
+attackMinPortalDistance 0
+attackUseWeapon 1
+attackNoGiveup 1
+attackCanSnipe 0
+attackCheckLOS 0
+attackChangeTarget 1
+aggressiveAntiKS 0
+attackAuto_allowKS 1
+ragna_unid 0
+######## Lock map — starter; eventMacros updates by level ########
+
+lockMap prt_fild08
+lockMap_x
+lockMap_y
+lockMap_randX 14
+lockMap_randY 14
+
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+route_randomWalk_maxRouteTime 10
+route_randomWalk_avoidMobDensity 0
+route_step 2
+route_escape_randomWalk 1
+route_teleportWhenClose 0
+
+######## Deaths / town recovery ########
+
+autoMoveOnDeath 1
+autoMoveOnDeath_map prontera
+autoMoveOnDeath_x 155
+autoMoveOnDeath_y 187
+
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnStorageFull 0
+dcOnLevel 99
+dcPause 1
+
+######## Sit / heal — human pacing ########
+
+sitAuto_hp_lower 40
+sitAuto_hp_upper 80
+sitAuto_sp_lower 20
+sitAuto_sp_upper 50
+sitAuto_over_50 0
+sitAuto_idle 1
+sitAuto_idle_wait 8
+sitTensionRelax 0
+
+useSelf_item Apple {
+	hp < 50%
+	timeout 1
+	disabled 0
+}
+useSelf_item Novice Potion {
+	hp < 45%
+	timeout 1
+	disabled 0
+}
+useSelf_item Red Potion {
+	hp < 35%
+	timeout 2
+	disabled 0
+}
+useSelf_item Orange Potion {
+	hp < 25%
+	timeout 2
+	disabled 0
+}
+useSelf_item Butterfly Wing {
+	hp < 15%
+	inLockOnly 1
+	timeout 30
+	disabled 0
+}
+
+# Swordman / Knight skills in combat
+attackSkillSlot Bash {
+	lvl 10
+	dist 1
+	sp > 15
+	inLockOnly 1
+	notInTown 1
+	timeout 1
+	disabled 0
+}
+attackSkillSlot Magnum Break {
+	lvl 10
+	dist 1
+	sp > 25
+	inLockOnly 1
+	notInTown 1
+	timeout 3
+	disabled 0
+}
+attackSkillSlot Bowling Bash {
+	lvl 10
+	dist 1
+	sp > 20
+	inLockOnly 1
+	notInTown 1
+	timeout 2
+	disabled 0
+}
+
+######## Weight / loot ########
+
+itemsTakeAuto 2
+itemsTakeAuto_party 0
+itemsGatherAuto 2
+itemsMaxWeight 35
+itemsMaxWeight_sellOrStore 18
+itemsMaxNum_sellOrStore 90
+itemsTakeGreed 0
+
+######## Storage / sell / buy — Prontera stock NPCs ########
+
+storageAuto 0
+storageAuto_npc prontera 151 29
+storageAuto_distance 5
+storageAuto_npc_type 1
+storageAuto_npc_steps c r1
+storageAuto_password
+storageAuto_keepOpen 0
+storageAuto_useChatCommand
+storageAuto_notInTown 0
+storageAuto_forceGetStorage 0
+
+sellAuto 1
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 126 74
+sellAuto_distance 5
+sellAuto_maxDistance 8
+sellAuto_npc_steps s
+
+# Potions — buy when low if zeny available (tool dealer + fruit vendor)
+buyAuto Red Potion {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	price 50
+	minAmount 5
+	maxAmount 40
+	zeny > 500
+	disabled 0
+}
+buyAuto Orange Potion {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	price 200
+	minAmount 0
+	maxAmount 15
+	minBase 20
+	zeny > 5000
+	disabled 0
+}
+buyAuto Magnifier {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	price 40
+	minAmount 2
+	maxAmount 15
+	zeny > 200
+	disabled 0
+}
+buyAuto Fly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	minAmount 2
+	maxAmount 20
+	disabled 1
+}
+buyAuto Butterfly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 3
+	minAmount 1
+	maxAmount 5
+	disabled 1
+}
+
+# Starter / Knight weapons — Prontera weapon dealer
+buyAuto Sword [3] {
+	npc prt_in 172 130
+	distance 3
+	minAmount 1
+	maxAmount 1
+	maxBase 39
+	disabled 0
+	zeny > 50
+	standpoint prt_in 172 128
+}
+buyAuto Falchion [3] {
+	npc prt_in 172 130
+	distance 3
+	minAmount 1
+	maxAmount 1
+	minBase 12
+	maxBase 39
+	disabled 0
+	zeny > 500
+	standpoint prt_in 172 128
+}
+buyAuto Blade [3] {
+	npc prt_in 172 130
+	distance 3
+	minAmount 1
+	maxAmount 1
+	minBase 40
+	disabled 0
+	zeny > 2900
+	standpoint prt_in 172 128
+}
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	distance 3
+	minAmount 1
+	maxAmount 1
+	maxBase 39
+	disabled 0
+	zeny > 10
+	standpoint prt_in 172 134
+}
+buyAuto Jacket {
+	npc prt_in 172 132
+	distance 3
+	minAmount 1
+	maxAmount 1
+	minBase 21
+	maxBase 50
+	disabled 0
+	zeny > 200
+	standpoint prt_in 172 134
+}
+
+######## Equips — wear best Knight-friendly gear in inventory ########
+# Prefer swords; Blade once leveled.
+
+autoSwitch_default_rightHand Sword
+autoSwitch_default_leftHand
+
+equipAuto {
+	rightHand Sword [3]
+	maxBase 39
+	disabled 0
+}
+
+equipAuto {
+	rightHand Sword
+	minBase 1
+	maxBase 11
+	disabled 0
+}
+
+equipAuto {
+	rightHand Falchion
+	minBase 12
+	disabled 0
+}
+
+equipAuto {
+	rightHand Blade
+	minBase 40
+	JobID 1
+	disabled 0
+}
+
+equipAuto {
+	rightHand Blade
+	minBase 40
+	JobID 7
+	disabled 0
+}
+
+equipAuto {
+	armor Cotton Shirt
+	maxBase 39
+	disabled 0
+}
+
+equipAuto {
+	armor Jacket
+	minBase 21
+	disabled 0
+}
+
+equipAuto {
+	rightHand Club [4]
+	maxBase 20
+	disabled 1
+}
+equipAuto {
+	rightHand Knife [4]
+	maxBase 40
+	disabled 1
+}
+
+######## Jobs / skills — Knight path (Novice → Swordman → Knight) ########
+# Create character as Novice, jobchange to Swordman then Knight on your server.
+# Double Strafe / Sonic Blow focused AGI-ASPD build for pre-RE.
+
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Increase HP Recovery 5, Two-Handed Sword Mastery 10, Two-Hand Quicken 10, Bowling Bash 10, Auto Counter 5, Pierce 5, Brandish Spear 5, Riding 1, Cavalry Mastery 5
+
+statsAddAuto 1
+statsAddAuto_list 10 str, 10 vit, 10 dex, 5 agi, 5 luk, 40 str, 30 vit, 30 dex, 20 agi, 10 luk, 80 str, 50 vit, 40 dex, 30 agi, 20 luk, 99 str, 60 vit, 50 dex, 40 agi, 30 luk
+statsAdd_over_99 1
+
+######## Human-like breaks (needs breakTime plugin if available) ########
+
+autoBreakTime {
+	startTime 04:00
+	stopTime 05:00
+}
+autoBreakTime {
+	startTime 12:30
+	stopTime 13:00
+}
+
+autoRestart 0
+autoRestartSleep 1
+autoSleepMin 600
+autoSleepSeed 400
+
+######## Chat / look less botty ########
+
+autoResponse 0
+dealAuto 3
+partyAuto 0
+guildAutoDeny 1
+follow 0
+
+ignoreAll 0
+verbose 1
+showDomain 0
+showDomain_chatChat 1
+
+######## Misc ########
+
+clientSight 25
+route_avoidWalls 1
+route_removeMissingPortals_irrational 0
+gameGuard 0
+
+# Save point / respawn feel natural
+saveMap prontera
+saveMap_x 155
+saveMap_y 187
+saveMap_warpChatCommand
+
+######## Optional: disconnect when done leveling ########
+# dcOnLevel 99 already set above
+macro_orphans terminate
+
+ragnaSavePayon 0
+ragnaShopsPayon 0
+ragnaGearRestock 0
+ragnaLockMapBackup pay_fild08
+ragnaSaveProntera 0
+
+attackRouteMaxPathDistance 30
