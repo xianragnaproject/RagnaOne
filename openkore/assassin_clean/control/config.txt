@@ -74,14 +74,14 @@ sitAuto_idle_wait 8
 
 ######## Sell loot at 20% weight ########
 itemsMaxWeight 35
-itemsMaxWeight_sellOrStore 20
+itemsMaxWeight_sellOrStore 18
 itemsMaxNum_sellOrStore 90
 itemsTakeAuto 1
 itemsGatherAuto 2
 
 storageAuto 0
-# Shop disabled for now — focus on leveling (Prontera tool portal loops on this server)
-sellAuto 0
+# Sell junk at Prontera Tool Dealer when weight hits threshold
+sellAuto 1
 sellAuto_npc prt_in 126 76
 sellAuto_standpoint prt_in 126 74
 sellAuto_distance 5
@@ -91,16 +91,27 @@ sellAuto_npc_steps s
 ######## Client actor sight (required or NPCs drop past dist 2) ########
 clientSight 15
 
-######## Buy potions — disabled until shop route is fixed ########
+######## Buy potions at Prontera Tool Dealer ########
 buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 126 74
 	distance 5
-	minAmount 5
-	maxAmount 40
+	minAmount 3
+	maxAmount 15
 	price 50
-	zeny > 300
-	disabled 1
+	zeny > 200
+	disabled 0
+}
+# Escape wing for prt_in portal loop (buy when Field Scout zeny allows)
+buyAuto Butterfly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 5
+	minAmount 1
+	maxAmount 2
+	price 300
+	zeny > 1500
+	disabled 0
 }
 
 useSelf_item Novice Potion {
@@ -131,6 +142,7 @@ saveMap prontera
 saveMap_x 155
 saveMap_y 50
 ragnaSaveProntera 0
+ragnaShop 1
 
 ######## Misc ########
 follow 0

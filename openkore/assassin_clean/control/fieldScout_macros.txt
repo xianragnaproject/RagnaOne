@@ -1,6 +1,6 @@
 # ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
-# Daily hunt quest (50x/day): kill 20 on prt_fild08 — Novice only
+# Daily hunt quest (50x/day): kill 20 on prt_fild08 - Novice only
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
 # Accept:  talknpc 170 360 c c r0
@@ -18,7 +18,7 @@ automacro Ragna_FieldScout_Accept {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — accept hunt quest (20 kills)
+			log Ragna Field Scout accept hunt 20 kills
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -32,7 +32,7 @@ automacro Ragna_FieldScout_Accept {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 60
-			log [Ragna] Field Scout quest active — hunting prt_fild08
+			log Ragna Field Scout active hunting prt_fild08
 		]
 	}
 }
@@ -48,7 +48,7 @@ automacro Ragna_FieldScout_GoField {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — route novice to prt_fild08
+			log Ragna Field Scout route novice to prt_fild08
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
@@ -68,7 +68,7 @@ automacro Ragna_FieldScout_TurnIn {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — turn in 20/20
+			log Ragna Field Scout turn in 20 of 20
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -82,7 +82,7 @@ automacro Ragna_FieldScout_TurnIn {
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
-			log [Ragna] Field Scout turn-in done — resume hunt
+			log Ragna Field Scout turn-in done resume hunt
 		]
 	}
 }

@@ -1,4 +1,4 @@
-# eventMacros.txt — Job Master + Blacksmith leveling route
+# eventMacros.txt - Job Master + Blacksmith leveling route
 # Novice → Merchant → Blacksmith  |  same map progression
 
 # Job Master @ Prontera 150,180 (Job Master#ep2)
@@ -182,7 +182,7 @@ automacro Ragna_RandomIdle {
 	BaseLevel >= 9999
 	timeout 99999
 	call {
-		log [Ragna] idle disabled
+		log Ragna idle disabled
 	}
 }
 
@@ -195,7 +195,7 @@ automacro Ragna_EquipIfEmpty {
 	Eval (!$char->{equipment}{rightHand} || !$char->{equipment}{armor})
 	call {
 		[
-			log [Ragna] Empty gear slot - equipping best from inventory
+			log Ragna Empty gear slot - equipping best from inventory
 			do eq
 			pause 0.5
 		]
@@ -208,7 +208,7 @@ automacro Ragna_EquipRefresh {
 	exclusive 0
 	call {
 		[
-			log [Ragna] Refreshing equipment slots
+			log Ragna Refreshing equipment slots
 			do eq
 			do eq
 		]
@@ -221,7 +221,7 @@ automacro Ragna_AfterDeath {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Dead - no pause to avoid orphan macros
+			log Ragna Dead - no pause to avoid orphan macros
 		]
 	}
 }
@@ -242,7 +242,7 @@ automacro Ragna_UnequippedRestock {
 	Eval ((!$char->{equipment}{rightHand}) || (!$char->{equipment}{armor})) && (Misc::percent_weight($char) >= 8) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] Empty gear + junk - Prontera sell/buy restock
+			log Ragna Empty gear + junk - Prontera sell/buy restock
 			do conf ragnaGearRestock 1
 			do conf ragnaLockMapBackup @config(lockMap)
 			do conf ragnaShopsPayon 0
@@ -263,7 +263,7 @@ automacro Ragna_GearRestockDone {
 	Eval ($char->{equipment}{rightHand} && $char->{equipment}{armor})
 	call {
 		[
-			log [Ragna] Gear restocked - resume hunt
+			log Ragna Gear restocked - resume hunt
 			do conf ragnaGearRestock 0
 			do conf lockMap @config(ragnaLockMapBackup)
 			do conf attackAuto 2
@@ -282,7 +282,7 @@ automacro Ragna_GearRestockRetry {
 	Eval ((!$char->{equipment}{rightHand}) || (!$char->{equipment}{armor})) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] Gear restock retry - queue sellAuto again
+			log Ragna Gear restock retry - queue sellAuto again
 			do conf lockMap none
 			do conf attackAuto 0
 			do conf route_randomWalk 0
@@ -300,7 +300,7 @@ automacro Ragna_TownSell {
 	Eval (Misc::percent_weight($char) >= 10) && !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] Town weight >= 10% - selling junk
+			log Ragna Town weight >= 10% - selling junk
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do eval AI::queue("sellAuto");
@@ -319,7 +319,7 @@ automacro Ragna_TownAfterDeath {
 	Eval !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] In town - resume hunt + equip check
+			log Ragna In town - resume hunt + equip check
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			pause 1
@@ -337,7 +337,7 @@ automacro Ragna_ReturnToLock {
 	Eval !(AI::inQueue("sellAuto") || AI::inQueue("storageAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","storageAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] Not on lockMap - resume hunt route
+			log Ragna Not on lockMap - resume hunt route
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			pause 2
@@ -353,7 +353,7 @@ automacro Ragna_SetSaveProntera {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Setting save point at Prontera Kafra
+			log Ragna Setting save point at Prontera Kafra
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 151 29
@@ -380,7 +380,7 @@ automacro Ragna_SetSavePayon {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Lv12+ — setting save point at Payon Kafra
+			log Ragna Lv12+ - setting save point at Payon Kafra
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move payon 181 104
@@ -393,7 +393,7 @@ automacro Ragna_SetSavePayon {
 			do conf saveMap_y 104
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			log [Ragna] Save point set to Payon
+			log Ragna Save point set to Payon
 		]
 	}
 }
@@ -450,12 +450,12 @@ automacro Ragna_ShopsPayon {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Lv12+ — switching sell/buy NPCs to Payon
+			log Ragna Lv12+ - switching sell/buy NPCs to Payon
 			do conf sellAuto_npc payon_in01 5 49
 			do conf sellAuto_standpoint payon_in01 7 49
 			do eval Ragna_ApplyPayonShops()
 			do conf ragnaShopsPayon 1
-			log [Ragna] Sell/buy now use Payon shops - tool armor weapon
+			log Ragna Sell/buy now use Payon shops - tool armor weapon
 		]
 	}
 }
@@ -470,7 +470,7 @@ automacro Ragna_EscapeIzlude {
 }
 
 macro EscapeIzlude {
-	log [Ragna] Escaping Izlude via west portal to prt_fild08
+	log Ragna Escaping Izlude via west portal to prt_fild08
 	do conf attackAuto 0
 	do conf route_randomWalk 0
 	do conf lockMap none
@@ -489,7 +489,7 @@ automacro Ragna_EscapeIzludeSailor {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Still in Izlude - Sailor to Alberta
+			log Ragna Still in Izlude - Sailor to Alberta
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -510,7 +510,7 @@ automacro Ragna_EscapeIzludeIn {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Leaving izlude_in to outdoor Izlude
+			log Ragna Leaving izlude_in to outdoor Izlude
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 116 46
@@ -519,14 +519,14 @@ automacro Ragna_EscapeIzludeIn {
 	}
 }
 
-# Identify loot — parked (eventMacro @eval keyword conflicts)
+# Identify loot - parked (eventMacro @eval keyword conflicts)
 automacro Ragna_IdentifyLoot {
 	exclusive 1
 	timeout 99999
 	BaseLevel >= 9999
 	InInventory "Magnifier" > 0
 	call {
-		log [Ragna] IdentifyLoot parked
+		log Ragna IdentifyLoot parked
 	}
 }
 
@@ -538,7 +538,7 @@ automacro Ragna_IdentifyLoot {
 
 # ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
-# Daily hunt quest (50x/day): kill 20 on prt_fild08 — Novice only
+# Daily hunt quest (50x/day): kill 20 on prt_fild08 - Novice only
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
 # Accept:  talknpc 170 360 c c r0
@@ -556,7 +556,7 @@ automacro Ragna_FieldScout_Accept {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — accept hunt quest (20 kills)
+			log Ragna Field Scout accept hunt 20 kills
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -570,7 +570,7 @@ automacro Ragna_FieldScout_Accept {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 60
-			log [Ragna] Field Scout quest active — hunting prt_fild08
+			log Ragna Field Scout active hunting prt_fild08
 		]
 	}
 }
@@ -586,7 +586,7 @@ automacro Ragna_FieldScout_GoField {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — route novice to prt_fild08
+			log Ragna Field Scout route novice to prt_fild08
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
@@ -606,7 +606,7 @@ automacro Ragna_FieldScout_TurnIn {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — turn in 20/20
+			log Ragna Field Scout turn in complete
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -620,7 +620,7 @@ automacro Ragna_FieldScout_TurnIn {
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
-			log [Ragna] Field Scout turn-in done — resume hunt
+			log Ragna Field Scout turn-in done resume hunt
 		]
 	}
 }

@@ -1,4 +1,4 @@
-# AssassinClean — Lv1-13: hunt / buy pots / sell loot
+# AssassinClean - Lv1-13: hunt / buy pots / sell loot
 # No equipment shopping while Novice
 
 automacro Ragna_SetSavePronteraSouth {
@@ -8,7 +8,7 @@ automacro Ragna_SetSavePronteraSouth {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Setting save at Prontera south Kafra
+			log Ragna Setting save at Prontera south Kafra
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 151 29
@@ -22,22 +22,22 @@ automacro Ragna_SetSavePronteraSouth {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
-			log [Ragna] Save set Prontera south - hunting prt_fild08
+			log Ragna Save set Prontera south - hunting prt_fild08
 		]
 	}
 }
 
-# Shop disabled — focus on leveling (re-enable with ragnaShop 1 later)
+# Sell loot in town when overweight (sellAuto also triggers via itemsMaxWeight_sellOrStore)
 automacro Ragna_TownSell {
 	ConfigKey ragnaShop 1
 	ConfigKeyNot lockMap none
 	IsInMapAndCoordinate prontera,prt_in
 	timeout 25
 	exclusive 1
-	Eval (Misc::percent_weight($char) >= 20) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
+	Eval (Misc::percent_weight($char) >= 18) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] In town with weight - selling loot
+			log Ragna In town with weight - selling loot
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do eval AI::queue("sellAuto");
@@ -46,15 +46,63 @@ automacro Ragna_TownSell {
 	}
 }
 
+# After buy/sell finishes, leave prt_in before portal loop traps the bot
+automacro Ragna_EscapePrtShop {
+	ConfigKey ragnaShop 1
+	IsInMapAndCoordinate prt_in
+	InInventoryID 501 >= 3
+	timeout 50
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call {
+		[
+			log Ragna Leaving Prontera tool shop avoid portal loop
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 1
+			do move 126 70
+			pause 3
+			do move prontera 160 70
+			pause 14
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+# If still stuck in prt_in after escape attempt, Butterfly Wing out
+automacro Ragna_WingOutPrtIn {
+	ConfigKey ragnaShop 1
+	IsInMapAndCoordinate prt_in
+	InInventoryID 602 > 0
+	timeout 90
+	exclusive 1
+	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call {
+		[
+			log Ragna Stuck in prt_in Butterfly Wing escape
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 1
+			do is Butterfly Wing
+			pause 4
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
 automacro Ragna_TownResume {
 	ConfigKeyNot lockMap none
-	IsInMapAndCoordinate prontera,prt_in
+	IsInMapAndCoordinate prontera
 	timeout 30
 	exclusive 1
 	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] In town - resume hunt
+			log Ragna In town - resume hunt
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
@@ -69,7 +117,7 @@ automacro Ragna_ReturnToLock {
 	Eval !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto"))
 	call {
 		[
-			log [Ragna] Off lockMap - resume hunt
+			log Ragna Off lockMap - resume hunt
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
@@ -83,7 +131,7 @@ automacro Ragna_EscapeIzlude {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Leaving Izlude west to prt_fild08
+			log Ragna Leaving Izlude west to prt_fild08
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -107,7 +155,7 @@ automacro Ragna_Job_ToThief {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Job change to Thief at Prontera Job Master
+			log Ragna Job change to Thief at Prontera Job Master
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -119,7 +167,7 @@ automacro Ragna_Job_ToThief {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
-			log [Ragna] Now Thief - back to prt_fild08
+			log Ragna Now Thief - back to prt_fild08
 		]
 	}
 }
@@ -132,7 +180,7 @@ automacro Ragna_Job_ToThief {
 
 # ============================================================
 # Field Scout#prt08 @ prt_fild08 170,360
-# Daily hunt quest (50x/day): kill 20 on prt_fild08 — Novice only
+# Daily hunt quest (50x/day): kill 20 on prt_fild08 - Novice only
 # Reward: 500 Base / 500 Job / 1000 Zeny
 # Quest ID 60202 | mission mob_id 10363 (map hunt counter)
 # Accept:  talknpc 170 360 c c r0
@@ -150,7 +198,7 @@ automacro Ragna_FieldScout_Accept {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — accept hunt quest (20 kills)
+			log Ragna Field Scout accept hunt 20 kills
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -164,7 +212,7 @@ automacro Ragna_FieldScout_Accept {
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf route_randomWalk_maxRouteTime 60
-			log [Ragna] Field Scout quest active — hunting prt_fild08
+			log Ragna Field Scout active hunting prt_fild08
 		]
 	}
 }
@@ -180,7 +228,7 @@ automacro Ragna_FieldScout_GoField {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — route novice to prt_fild08
+			log Ragna Field Scout route novice to prt_fild08
 			do conf attackRouteMaxPathDistance 50
 			do conf attackAuto 2
 			do conf route_randomWalk 1
@@ -200,7 +248,7 @@ automacro Ragna_FieldScout_TurnIn {
 	exclusive 1
 	call {
 		[
-			log [Ragna] Field Scout — turn in 20/20
+			log Ragna Field Scout turn in 20 of 20
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do move 170 360
@@ -214,7 +262,7 @@ automacro Ragna_FieldScout_TurnIn {
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
-			log [Ragna] Field Scout turn-in done — resume hunt
+			log Ragna Field Scout turn-in done resume hunt
 		]
 	}
 }

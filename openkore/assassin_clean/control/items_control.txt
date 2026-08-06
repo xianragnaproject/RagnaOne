@@ -3,7 +3,7 @@
 # sell=1 required for sellAuto; storage=1 for storageAuto
 
 # Keep consumables (do not sell/store)
-Red Potion 20 0 0
+Red Potion 15 0 0
 Orange Potion 10 0 0
 Yellow Potion 5 0 0
 White Potion 5 0 0
@@ -63,9 +63,28 @@ Novice Main-Gauche 0 0 0
 Novice Guard 0 0 0
 Novice False Eggshell 0 0 0
 Novice Armlet 0 0 0
+Novice Armlet [1] 0 0 0
 Novice Breastplate 0 0 0
+Novice Breastplate [1] 0 0 0
 Novice Manteau 0 0 0
+Novice Manteau [1] 0 0 0
 Novice Shoes 0 0 0
+Novice Shoes [1] 0 0 0
+Rod [4] 0 0 0
+Knife [3] 0 0 0
+Knife [4] 0 0 0
+Main Gauche [3] 0 0 0
+Main Gauche [4] 0 0 0
+Club [4] 0 0 0
+Cotton Shirt [1] 0 0 0
+Jacket [1] 0 0 0
+Sandals [1] 0 0 0
+Hood [1] 0 0 0
+Shoes [1] 0 0 0
+Muffler [1] 0 0 0
+Mantle [1] 0 0 0
+Coat [1] 0 0 0
+Boots [1] 0 0 0
 
 # Cards / rares — keep until storage enabled
 Poring Card 0 0 0
