@@ -104,14 +104,14 @@ buyAuto Red Potion {
 }
 # Escape wing for prt_in portal loop (buy when Field Scout zeny allows)
 
-buyAuto Mace {
+buyAuto Club {
 	npc prt_in 172 130
 	standpoint prt_in 172 128
 	distance 5
 	minAmount 1
 	maxAmount 1
 	zeny > 50
-	disabled 0
+	disabled 1
 }
 buyAuto Cotton Shirt {
 	npc prt_in 172 132
@@ -156,7 +156,7 @@ equipAuto {
 	disabled 1
 }
 equipAuto {
-	rightHand Mace
+	rightHand Club
 	armor Cotton Shirt
 	JobID 4
 	disabled 0

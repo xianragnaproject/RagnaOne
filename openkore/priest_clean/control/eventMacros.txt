@@ -218,6 +218,7 @@ automacro Ragna_Job_ToAcolyte_Done {
 			do conf ragnaJobThief 1
 			do conf ragnaJob1st 1
 			do conf ragnaFieldScoutOff 1
+			do eval Ragna_EnableWeaponBuy()
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -231,6 +232,17 @@ sub Ragna_ResumeHuntLock {
 	Commands::run("conf lockMap $map");
 	Commands::run("conf attackAuto 2");
 	Commands::run("conf route_randomWalk 1");
+	return 1;
+}
+
+
+# Enable class-weapon buyAuto entries (disabled during Novice to avoid shop loops)
+sub Ragna_EnableWeaponBuy {
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		next if $item =~ /Potion|Wing|Shirt|Magnifier/i;
+		Commands::run("conf buyAuto_${i}_disabled 0");
+	}
 	return 1;
 }
 
@@ -261,13 +273,13 @@ automacro Ragna_Acolyte_BuyWeapon {
 	JobID 4
 	ConfigKey ragnaJob1st 1
 	ConfigKeyNot ragnaThiefGear 1
-	InInventory "Mace" < 1
+	InInventory "Club" < 1
 	timeout 50
 	exclusive 1
 	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
 	call {
 		[
-			log Ragna Acolyte buy Mace at Prontera weapon dealer
+			log Ragna Acolyte buy Club at Prontera weapon dealer
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -281,7 +293,7 @@ automacro Ragna_Acolyte_BuyShirt {
 	JobID 4
 	ConfigKey ragnaJob1st 1
 	ConfigKeyNot ragnaThiefGear 1
-	InInventory "Mace" > 0
+	InInventory "Club" > 0
 	InInventory "Cotton Shirt" < 1
 	timeout 50
 	exclusive 1
@@ -298,19 +310,19 @@ automacro Ragna_Acolyte_BuyShirt {
 	}
 }
 
-# Mark gear done once Mace + Cotton Shirt are in inventory
+# Mark gear done once Club + Cotton Shirt are in inventory
 automacro Ragna_Acolyte_GearDone {
 	JobID 4
 	ConfigKey ragnaJob1st 1
 	ConfigKeyNot ragnaThiefGear 1
-	InInventory "Mace" > 0
+	InInventory "Club" > 0
 	InInventory "Cotton Shirt" > 0
 	timeout 20
 	exclusive 1
 	call {
 		[
 			log Ragna Acolyte gear acquired - equip then Payon
-			do eq Mace
+			do eq Club
 			pause 1
 			do eq Cotton Shirt
 			pause 1

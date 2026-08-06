@@ -218,6 +218,7 @@ automacro Ragna_Job_ToSwordman_Done {
 			do conf ragnaJobThief 1
 			do conf ragnaJob1st 1
 			do conf ragnaFieldScoutOff 1
+			do eval Ragna_EnableWeaponBuy()
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -231,6 +232,17 @@ sub Ragna_ResumeHuntLock {
 	Commands::run("conf lockMap $map");
 	Commands::run("conf attackAuto 2");
 	Commands::run("conf route_randomWalk 1");
+	return 1;
+}
+
+
+# Enable class-weapon buyAuto entries (disabled during Novice to avoid shop loops)
+sub Ragna_EnableWeaponBuy {
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		next if $item =~ /Potion|Wing|Shirt|Magnifier/i;
+		Commands::run("conf buyAuto_${i}_disabled 0");
+	}
 	return 1;
 }
 
