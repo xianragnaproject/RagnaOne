@@ -1,11 +1,16 @@
 ###############################################################################
-# Fresh grind macros — NO previous AssassinClean / quest / job progression
+# Fresh grind macros
 #
-# A) Exit training → Prontera → lockMap prt_fild08, kill until base 15
-# B) Once in a while: Prontera fountain AFK for random 1–20 minutes
+# 1) prt_fild08 until Novice base 15 + job 10
+# 2) -> Prontera Job Master (config grindTargetJob)
+# 3) After 1st job -> buy class gear (weapon/shield/arrows)
+# 4) Keep grinding prt_fild08 until base 25
+# 5) Sell @ 40% OW + occasional fountain AFK
+#
+# grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief
 ###############################################################################
 
-# ---- Leave novice training: new_1-1 → new_1-2 ----
+# ---- Leave novice training: new_1-1 -> new_1-2 ----
 automacro Grind_Leave_new11 {
 	exclusive 1
 	timeout 25
@@ -13,6 +18,7 @@ automacro Grind_Leave_new11 {
 	InMap new_1-1
 	ConfigKeyNot grindLeftTraining 1
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
 	call {
 		[
 			log Grind: leaving new_1-1 toward new_1-2
@@ -25,7 +31,6 @@ automacro Grind_Leave_new11 {
 	}
 }
 
-# ---- new_1-2: warp NPC to Prontera ----
 automacro Grind_Leave_new12 {
 	exclusive 1
 	timeout 40
@@ -33,6 +38,7 @@ automacro Grind_Leave_new12 {
 	InMap new_1-2
 	ConfigKeyNot grindLeftTraining 1
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
 	call {
 		[
 			log Grind: talking warp NPC to Prontera
@@ -47,7 +53,6 @@ automacro Grind_Leave_new12 {
 	}
 }
 
-# ---- Arrived Prontera (or already in town): start field farm ----
 automacro Grind_StartFarm {
 	exclusive 1
 	timeout 20
@@ -55,30 +60,37 @@ automacro Grind_StartFarm {
 	InMap prontera
 	ConfigKeyNot grindLeftTraining 1
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	JobID 0
 	BaseLevel < 15
 	call {
 		[
-			log Grind: training done — lockMap prt_fild08 aggressive farm
+			log Grind: start aggressive farm prt_fild08
 			do conf grindLeftTraining 1
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
-			do conf lockMap_y none
 		]
 	}
 }
 
-# ---- If already on field but lockMap empty (reconnect / manual) ----
-automacro Grind_EnsureLock {
+###############################################################################
+# prt_fild08 hunt lock - all phases, base < 25
+###############################################################################
+automacro Grind_EnsureLock08 {
 	exclusive 1
 	timeout 30
 	priority 5
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone25 1
 	ConfigKeyNot lockMap prt_fild08
-	BaseLevel < 15
+	BaseLevel < 25
+	Eval !($char->{jobID} == 0 && $char->{lv} >= 15 && $char->{lv_job} >= 10)
+	Eval !($config{grindJob1st} && !$config{grindGearDone})
 	call {
 		[
 			log Grind: restore lockMap prt_fild08
@@ -90,19 +102,21 @@ automacro Grind_EnsureLock {
 	}
 }
 
-# ---- Keep aggression on while farming ----
-automacro Grind_KeepAggressive {
+automacro Grind_KeepAggressive08 {
 	exclusive 1
 	timeout 45
 	priority 8
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone25 1
 	ConfigKeyNot attackAuto 2
-	BaseLevel < 15
+	BaseLevel < 25
+	Eval !($char->{jobID} == 0 && $char->{lv} >= 15 && $char->{lv_job} >= 10)
+	Eval !($config{grindJob1st} && !$config{grindGearDone})
 	call {
 		[
-			log Grind: re-enable attackAuto 2
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
@@ -110,23 +124,350 @@ automacro Grind_KeepAggressive {
 }
 
 ###############################################################################
-# Novice only: if overweight >= 40%, sell loot at Prontera Tool Dealer
+# Base 15 + Job 10 Novice -> change job at Prontera Job Master (center)
 ###############################################################################
-automacro Grind_NoviceSell {
+automacro Grind_JobChange_Go {
+	exclusive 1
+	timeout 45
+	priority 0
+	JobID 0
+	BaseLevel >= 15
+	JobLevel >= 10
+	ConfigKeyNot grindJob1st 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	Eval !($field && $field->baseName eq 'prontera' && abs($char->{pos}{x}-155) <= 4 && abs($char->{pos}{y}-180) <= 4)
+	call {
+		[
+			log Grind: Base15/Job10 - walk to Job Master [$config{grindTargetJob}]
+			do conf grindJobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			pause 1
+			do move prontera 155 180
+			pause 50
+			do conf grindJobbing 0
+		]
+	}
+}
+
+automacro Grind_JobChange_Talk {
+	exclusive 1
+	timeout 25
+	priority 0
+	JobID 0
+	BaseLevel >= 15
+	JobLevel >= 10
+	InMap prontera
+	ConfigKeyNot grindJob1st 1
+	ConfigKeyNot grindAfk 1
+	Eval abs($char->{pos}{x}-155) <= 6 && abs($char->{pos}{y}-180) <= 6
+	call {
+		[
+			log Grind: talking Job Master for $config{grindTargetJob}
+			do conf grindJobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			pause 2
+			do eval Grind_TalkJobMaster()
+			pause 20
+			do conf grindJobbing 0
+		]
+	}
+}
+
+# After jobID leaves Novice - enable class buyAuto only
+automacro Grind_JobDone {
+	exclusive 1
+	timeout 20
+	priority 0
+	JobIDNot 0
+	ConfigKeyNot grindJob1st 1
+	call {
+		[
+			log Grind: 1st job acquired - enable class gear buy
+			do conf grindJob1st 1
+			do conf grindJobbing 0
+			do conf grindDone15 1
+			do eval Grind_EnableGearBuy()
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+		]
+	}
+}
+
+###############################################################################
+# After 1st job only: walk shops so buyAuto gets class gear
+###############################################################################
+automacro Grind_BuyWeapon {
+	exclusive 1
+	timeout 35
+	priority 2
+	JobIDNot 0
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log Grind: buy class weapon at Prontera weapon dealer
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prt_in 172 128
+			pause 28
+			do eval AI::queue("buyAuto")
+			pause 18
+		]
+	}
+}
+
+automacro Grind_BuyArmor {
+	exclusive 1
+	timeout 35
+	priority 3
+	JobIDNot 0
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log Grind: buy armor / arrows at Prontera shops
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prt_in 172 134
+			pause 22
+			do eval AI::queue("buyAuto")
+			pause 14
+			do move prt_in 126 74
+			pause 18
+			do eval AI::queue("buyAuto")
+			pause 14
+		]
+	}
+}
+
+# Fallback: if shopping stalls, still resume hunting
+automacro Grind_GearTimeout {
+	exclusive 1
+	timeout 180
+	priority 4
+	JobIDNot 0
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	ConfigKeyNot grindAfk 1
+	call {
+		[
+			log Grind: gear timeout - resume prt_fild08
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+###############################################################################
+# Gear complete checks per job -> equip -> back to prt_fild08
+###############################################################################
+automacro Grind_GearDone_Swordman {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 1
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Sword [3]" > 0
+	InInventory "Guard" > 0
+	call {
+		[
+			log Grind: Swordman sword+shield ready - resume prt_fild08
+			do eq Sword [3]
+			pause 1
+			do eq Guard
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_GearDone_Mage {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 2
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Rod [3]" > 0
+	call {
+		[
+			log Grind: Magician rod ready - resume prt_fild08
+			do eq Rod [3]
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_GearDone_Archer {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 3
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Bow [3]" > 0
+	InInventory "Arrow" > 0
+	call {
+		[
+			log Grind: Archer bow+arrow ready - resume prt_fild08
+			do eq Bow [3]
+			pause 1
+			do eq Arrow
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_GearDone_Acolyte {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 4
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Club" > 0
+	call {
+		[
+			log Grind: Acolyte club ready - resume prt_fild08
+			do eq Club
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_GearDone_Merchant {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 5
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Axe [3]" > 0
+	call {
+		[
+			log Grind: Merchant axe ready - resume prt_fild08
+			do eq Axe [3]
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_GearDone_Thief {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 6
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	InInventory "Knife [3]" > 0
+	call {
+		[
+			log Grind: Thief dagger ready - resume prt_fild08
+			do eq Knife [3]
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+###############################################################################
+# After gear: keep hunting prt_fild08 until base 25
+###############################################################################
+automacro Grind_ResumeField08 {
+	exclusive 1
+	timeout 25
+	priority 1
+	ConfigKey grindGearDone 1
+	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot lockMap prt_fild08
+	BaseLevel < 25
+	call {
+		[
+			log Grind: lock prt_fild08 until base 25
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+automacro Grind_Done25 {
+	exclusive 1
+	timeout 60
+	priority 0
+	BaseLevel >= 25
+	ConfigKey grindGearDone 1
+	ConfigKeyNot grindDone25 1
+	call {
+		[
+			log Grind: BASE 25 reached - idle Prontera fountain
+			do conf grindDone25 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 156 191
+			pause 8
+			do sit
+		]
+	}
+}
+
+###############################################################################
+# Sell @ 40% OW - resume prt_fild08
+###############################################################################
+automacro Grind_SellLoot {
 	exclusive 1
 	timeout 45
 	priority 2
-	JobID 0
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindDone15 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone25 1
 	Eval (Misc::percent_weight($char) >= 40) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
-	call grind_novice_sell
+	call grind_sell_loot
 }
 
-macro grind_novice_sell {
+macro grind_sell_loot {
 	[
-		log Grind: Novice OW>=40% — selling at Prontera tool dealer
+		log Grind: OW>=40% - sell at Prontera tool dealer
 		do conf grindSelling 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -140,42 +481,14 @@ macro grind_novice_sell {
 		pause 5
 		do move prontera 160 70
 		pause 12
-		do conf lockMap prt_fild08
-		do conf lockMap_x none
-		do conf lockMap_y none
-		do conf attackAuto 2
-		do conf route_randomWalk 1
+		do eval Grind_ResumeHuntLock()
 		do conf grindSelling 0
-		log Grind: sell done — resume prt_fild08
+		log Grind: sell done - resume hunt
 	]
 }
 
-# ---- Stop farm at base 15 ----
-automacro Grind_Done15 {
-	exclusive 1
-	timeout 60
-	priority 0
-	BaseLevel >= 15
-	ConfigKeyNot grindDone15 1
-	call {
-		[
-			log Grind: BASE 15 reached — stopping farm lock
-			do conf grindDone15 1
-			do conf grindAfk 0
-			do conf attackAuto 0
-			do conf route_randomWalk 0
-			do conf lockMap none
-			do move prontera 156 191
-			pause 5
-			do sit
-			log Grind: idle at Prontera fountain — waiting for next phase
-		]
-	}
-}
-
 ###############################################################################
-# B) Fountain AFK break — random 1–20 minutes, then back to prt_fild08
-# timeout 720 = at least ~12 minutes between breaks
+# Fountain AFK - resume prt_fild08
 ###############################################################################
 automacro Grind_FountainAFK {
 	exclusive 1
@@ -184,8 +497,8 @@ automacro Grind_FountainAFK {
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindDone15 1
-	BaseLevel < 15
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone25 1
 	call grind_fountain_afk
 }
 
@@ -194,7 +507,7 @@ macro grind_fountain_afk {
 	$fy = &rand(183, 199)
 	$secs = &rand(60, 1200)
 	[
-		log Grind: AFK break — Prontera fountain at $fx $fy for $secs sec
+		log Grind: AFK break - Prontera fountain at $fx $fy for $secs sec
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -204,12 +517,88 @@ macro grind_fountain_afk {
 		do sit
 		pause $secs
 		do stand
-		log Grind: AFK done — resume prt_fild08
-		do conf lockMap prt_fild08
-		do conf lockMap_x none
-		do conf lockMap_y none
-		do conf attackAuto 2
-		do conf route_randomWalk 1
+		log Grind: AFK done - resume hunt
+		do eval Grind_ResumeHuntLock()
 		do conf grindAfk 0
 	]
+}
+
+###############################################################################
+# Perl helpers
+###############################################################################
+sub Grind_TalkJobMaster {
+	my $job = lc($config{grindTargetJob} || 'Thief');
+	my %menu = (
+		swordman => 'r0',
+		swordsman => 'r0',
+		knight => 'r0',
+		magician => 'r1',
+		mage => 'r1',
+		wizard => 'r1',
+		archer => 'r2',
+		hunter => 'r2',
+		acolyte => 'r3',
+		priest => 'r3',
+		merchant => 'r4',
+		blacksmith => 'r4',
+		thief => 'r5',
+		assassin => 'r5',
+	);
+	my $r = $menu{$job} || 'r5';
+	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
+	Commands::run("talknpc 155 180 c c c $r c r0");
+	return 1;
+}
+
+# Enable only this job's gear buyAuto blocks (potions/wings stay as-is)
+sub Grind_EnableGearBuy {
+	my $jid = $char->{jobID};
+	my %want = (
+		1 => { 'Sword [3]' => 1, 'Guard' => 1, 'Cotton Shirt' => 1 },
+		2 => { 'Rod [3]' => 1, 'Cotton Shirt' => 1 },
+		3 => { 'Bow [3]' => 1, 'Arrow' => 1, 'Cotton Shirt' => 1 },
+		4 => { 'Club' => 1, 'Cotton Shirt' => 1 },
+		5 => { 'Axe [3]' => 1, 'Cotton Shirt' => 1 },
+		6 => { 'Knife [3]' => 1, 'Cotton Shirt' => 1 },
+	);
+	my $map = $want{$jid} || {};
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || '';
+		next if $item =~ /Potion|Wing|Magnifier/i;
+		my $disabled = $map->{$item} ? 0 : 1;
+		Commands::run("conf buyAuto_${i}_disabled $disabled");
+	}
+	Log::message("[Grind] Enabled gear buyAuto for jobID=$jid\n", "success");
+	return 1;
+}
+
+sub Grind_StartHunt {
+	Commands::run("conf lockMap prt_fild08");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf route_randomWalk 1");
+	Commands::run("conf runFromTarget 0");
+	Commands::run("conf teleportAuto_hp 0");
+	Commands::run("conf sitAuto_hp_lower 35");
+	Log::message("[Grind] Hunting prt_fild08 until base 25\n", "success");
+	return 1;
+}
+
+sub Grind_ResumeHuntLock {
+	if ($char && $char->{jobID} == 0 && $char->{lv} >= 15 && $char->{lv_job} >= 10) {
+		# Novice ready for job change - stay put, job macros take over
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
+	if ($config{grindJob1st} && !$config{grindGearDone}) {
+		# Still shopping for class gear
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
+	Grind_StartHunt();
+	return 1;
 }

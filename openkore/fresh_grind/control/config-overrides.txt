@@ -25,6 +25,8 @@ lockMap prt_fild08
 itemsTakeAuto 2
 itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
+itemsGatherAutoMinPlayerDistance 3
+itemsGatherAutoMinPortalDistance 2
 itemsMaxWeight_sellOrStore 40
 sellAuto 1
 sellAuto_npc prt_in 126 76
@@ -33,26 +35,187 @@ sellAuto_distance 5
 sellAuto_maxDistance 8
 sellAuto_npc_steps s
 dcOnDeath 0
+aiChat 0
+
+# Job change target (Swordman|Magician|Archer|Acolyte|Merchant|Thief)
+grindTargetJob Thief
 grindLeftTraining 1
 grindAfk 0
 grindSelling 0
+grindJobbing 0
+grindJob1st 0
+grindGearDone 0
 grindDone15 0
-aiChat 0
+grindDone25 0
 
-buyAuto_RedPotion Red Potion
-buyAuto_RedPotion_minAmount 0
-buyAuto_RedPotion_maxAmount 50
-buyAuto_RedPotion_npc prontera 59 54
-buyAuto_RedPotion_npc_steps c r0 w1 c
-buyAuto_RedPotion_disabled 1
+######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
+# Index order matters for Grind_EnableGearBuy (buyAuto_0..)
+buyAuto Fly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 5
+	minAmount 5
+	maxAmount 30
+	zeny > 100
+	disabled 0
+}
+buyAuto Red Potion {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 5
+	minAmount 3
+	maxAmount 20
+	price 50
+	zeny > 200
+	disabled 0
+}
+# Thief dagger
+buyAuto Knife [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman sword
+buyAuto Sword [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman / tank shield
+buyAuto Guard {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 500
+	disabled 1
+}
+# Magician
+buyAuto Rod [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer bow
+buyAuto Bow [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer arrows (tool dealer)
+buyAuto Arrow {
+	npc prt_in 126 76
+	standpoint prt_in 126 74
+	distance 5
+	minAmount 50
+	maxAmount 300
+	zeny > 50
+	disabled 1
+}
+# Acolyte
+buyAuto Club {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Merchant
+buyAuto Axe [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Shared armor
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 10
+	disabled 1
+}
 
-itemsGatherAuto 2
-itemsGatherAuto_notInTown 1
-itemsGatherAutoMinPlayerDistance 3
-itemsGatherAutoMinPortalDistance 2
+######## Equip after 1st job (JobID-gated) ########
+equipAuto {
+	rightHand Knife [3]
+	armor Cotton Shirt
+	JobID 6
+	disabled 1
+}
+equipAuto {
+	rightHand Sword [3]
+	leftHand Guard
+	armor Cotton Shirt
+	JobID 1
+	disabled 1
+}
+equipAuto {
+	rightHand Rod [3]
+	armor Cotton Shirt
+	JobID 2
+	disabled 1
+}
+equipAuto {
+	rightHand Bow [3]
+	armor Cotton Shirt
+	JobID 3
+	disabled 1
+}
+equipAuto {
+	rightHand Club
+	armor Cotton Shirt
+	JobID 4
+	disabled 1
+}
+equipAuto {
+	rightHand Axe [3]
+	armor Cotton Shirt
+	JobID 5
+	disabled 1
+}
+
 statsAddAuto 1
 statsAddAuto_list 10 str, 10 vit, 10 dex, 10 agi, 20 str, 20 vit, 20 dex, 15 agi, 30 str, 30 vit, 25 dex, 20 agi, 40 str, 40 vit, 30 dex, 25 agi, 50 str, 50 vit, 40 dex, 30 agi
 statsAddAuto_dontUseBonus 0
 statsAdd_over_99 1
 skillsAddAuto 1
 skillsAddAuto_list Basic Skill 9
+
+######## Heal items (always keep HP conditions or the bot spams potions) ########
+useSelf_item Red Potion {
+	hp < 55%
+	inInventory Red Potion > 0
+	timeout 2
+	dcOnEmpty 0
+}
+useSelf_item Green Potion {
+	hp < 40%
+	inInventory Green Potion > 0
+	timeout 3
+	dcOnEmpty 0
+}
