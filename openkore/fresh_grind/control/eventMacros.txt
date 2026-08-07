@@ -358,7 +358,6 @@ automacro Grind_MerchantMammoniteLowZeny {
 	JobID 5
 	ConfigKeyNot grindAfk 1
 	Eval ($char->{zeny} // 0) < 1500
-	Eval !($config{attackSkillSlot_1_disabled} && $config{attackSkillSlot_1} && $config{attackSkillSlot_1} eq 'Mammonite' ? $config{attackSkillSlot_1_disabled} == 1 : 0)
 	call {
 		[
 			log Grind: Merchant low zeny - disable Mammonite (basic attack)
@@ -381,6 +380,8 @@ automacro Grind_MerchantMammoniteFunded {
 		]
 	}
 }
+
+# Archer: restock arrows when empty/low (pauses follow until bought)
 automacro Grind_ArcherNeedArrows {
 	exclusive 1
 	timeout 45
