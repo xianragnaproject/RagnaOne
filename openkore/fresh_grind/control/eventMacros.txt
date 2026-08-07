@@ -133,13 +133,13 @@ macro grind_novice_sell {
 		do conf lockMap none
 		do conf sellAuto 1
 		do move prt_in 126 74
-		pause 6
+		pause 40
 		do eval AI::queue("sellAuto")
-		pause 25
+		pause 30
 		do move 126 70
-		pause 3
+		pause 5
 		do move prontera 160 70
-		pause 6
+		pause 12
 		do conf lockMap prt_fild08
 		do conf lockMap_x none
 		do conf lockMap_y none
@@ -192,16 +192,15 @@ automacro Grind_FountainAFK {
 macro grind_fountain_afk {
 	$fx = &rand(148, 164)
 	$fy = &rand(183, 199)
-	$mins = &rand(1, 20)
-	$secs = @eval($mins * 60)
+	$secs = &rand(60, 1200)
 	[
-		log Grind: AFK break — Prontera fountain at $fx $fy for $mins min
+		log Grind: AFK break — Prontera fountain at $fx $fy for $secs sec
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
 		do conf lockMap none
 		do move prontera $fx $fy
-		pause 8
+		pause 50
 		do sit
 		pause $secs
 		do stand
