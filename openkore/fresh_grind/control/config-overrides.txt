@@ -49,6 +49,11 @@ grindJob1st 0
 grindGearDone 0
 grindDone15 0
 grindDone25 0
+# Party: Cedric (Swordsman) leads; other classes follow + support
+grindPartyMode 1
+grindPartyLeader Cedric
+partyAuto 2
+partyAutoShare 1
 
 ######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
 # Index order matters for Grind_EnableGearBuy (buyAuto_0..)
@@ -208,6 +213,18 @@ statsAddAuto_dontUseBonus 0
 statsAdd_over_99 1
 skillsAddAuto 1
 skillsAddAuto_list Basic Skill 9
+
+# Party Heal support (Acolyte); harmless on other jobs if skill missing
+partySkill Heal {
+	lvl 5
+	dist 1
+	maxDist 8
+	sp > 20
+	target_hp < 80%
+	notPartyOnly 0
+	isSelfSkill 0
+	timeout 1
+}
 
 ######## Heal items (always keep HP conditions or the bot spams potions) ########
 useSelf_item Red Potion {

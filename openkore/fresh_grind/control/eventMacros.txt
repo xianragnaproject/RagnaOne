@@ -83,6 +83,7 @@ automacro Grind_EnsureLock08 {
 	timeout 30
 	priority 5
 	InMap prt_fild08
+	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -107,6 +108,7 @@ automacro Grind_KeepAggressive08 {
 	timeout 45
 	priority 8
 	InMap prt_fild08
+	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -440,6 +442,7 @@ automacro Grind_ResumeField08 {
 	ConfigKeyNot grindDone25 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap prt_fild08
 	BaseLevel < 25
 	call {
@@ -451,12 +454,14 @@ automacro Grind_ResumeField08 {
 }
 
 automacro Grind_Done25 {
+	disabled 1
 	exclusive 1
 	timeout 60
 	priority 0
 	BaseLevel >= 25
 	ConfigKey grindGearDone 1
 	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindPartyMode 1
 	call {
 		[
 			log Grind: BASE 25 reached - idle Prontera fountain
@@ -590,10 +595,13 @@ automacro Grind_ResumeAfterSell {
 # Fountain AFK - resume prt_fild08
 ###############################################################################
 automacro Grind_FountainAFK {
+	disabled 1
 	exclusive 1
 	timeout 720
 	priority 3
 	InMap prt_fild08
+	ConfigKeyNot follow 1
+	ConfigKeyNot grindPartyMode 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
