@@ -22,7 +22,7 @@ sitAuto_hp_upper 70
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
 lockMap prt_fild08
-itemsTakeAuto 1
+itemsTakeAuto 2
 dcOnDeath 0
 grindLeftTraining 1
 grindAfk 0
@@ -35,3 +35,8 @@ buyAuto_RedPotion_maxAmount 50
 buyAuto_RedPotion_npc prontera 59 54
 buyAuto_RedPotion_npc_steps c r0 w1 c
 buyAuto_RedPotion_disabled 1
+
+itemsGatherAuto 2
+itemsGatherAuto_notInTown 1
+itemsGatherAutoMinPlayerDistance 3
+itemsGatherAutoMinPortalDistance 2
