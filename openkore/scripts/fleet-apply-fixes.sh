@@ -49,11 +49,20 @@ send_all 'conf itemsTakeAuto 2'
 send_all 'conf itemsGatherAuto 2'
 send_all 'conf attackAuto_allowKS 1'
 send_all 'conf dealAuto 3'
+send_all 'conf sellAuto 1'
+send_all 'conf sellAuto_standpoint prt_in 130 72'
+send_all 'conf sellAuto_npc prt_in 126 76'
+send_all 'conf sellAuto_distance 10'
+send_all 'conf sellAuto_maxDistance 14'
+send_all 'conf itemsMaxWeight_sellOrStore 40'
+send_all 'conf grindSelling 0'
 send_all 'ai auto'
 sleep 1
 send_all 'reload portals'
 sleep 1
 send_all 'reload eventMacro'
+sleep 1
+send_all 'reload items_control.txt'
 sleep 2
 
 echo "== Done. All ${#SESSIONS[@]} bots received patches + sync + reload. =="

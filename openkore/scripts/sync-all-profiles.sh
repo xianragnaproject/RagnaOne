@@ -18,6 +18,7 @@ pack_for() {
     HunterClean*) echo hunter_clean ;;
     PriestClean*) echo priest_clean ;;
     BlacksmithClean*) echo blacksmith_clean ;;
+    Grind*|FreshGrind) echo fresh_grind ;;
     Black|Blacksmith*) echo blacksmith ;;
     Night|Nemo|Assassin*) echo assassin ;;
     Hunter*) echo hunter ;;
@@ -54,6 +55,9 @@ def pack_for(name):
     for prefix, pk in clean_rules:
         if name == prefix or name.startswith(prefix):
             return pk
+    # Fresh grind fleet (prt_fild08 novice → 1st job → base 25)
+    if name.startswith('Grind') or name == 'FreshGrind':
+        return 'fresh_grind'
     rules = [
         ('Blacksmith', 'blacksmith'), ('Assassin', 'assassin'), ('Hunter', 'hunter'),
         ('Knight', 'knight'), ('Priest', 'priest'), ('Wizard', 'wizard'),
@@ -95,7 +99,54 @@ def set_key(text, key, value):
 
 accounts = parse_map(account_map.read_text()) if account_map.exists() else {}
 preserve_keys = ('username', 'password', 'loginPinCode', 'char')
-full_files = ('eventMacros.txt', 'items_control.txt', 'mon_control.txt')
+full_files = ('eventMacros.txt', 'items_control.txt', 'mon_control.txt', 'pickupitems.txt')
+
+def patch_config_overrides(cfg: str, overrides_path: Path) -> str:
+    """Merge flat sell keys + fix tool-dealer/buyAuto standpoints for grind packs."""
+    if not overrides_path.exists():
+        return cfg
+    # Old stuck tile -> walkable tile (tool dealer only; weapon shops stay 172,*)
+    cfg = cfg.replace('standpoint prt_in 126 74', 'standpoint prt_in 130 72')
+    cfg = re.sub(r'^sellAuto_standpoint\s+.*$', 'sellAuto_standpoint prt_in 130 72', cfg, flags=re.M)
+    # Apply selected flat overrides from config-overrides.txt
+    flat_keys = (
+        'itemsMaxWeight', 'itemsMaxWeight_sellOrStore', 'sellAuto',
+        'sellAuto_npc', 'sellAuto_standpoint', 'sellAuto_distance',
+        'sellAuto_maxDistance', 'sellAuto_npc_steps',
+    )
+    text = overrides_path.read_text()
+    for key in flat_keys:
+        m = re.search(rf'^{re.escape(key)}\s+(.*)$', text, re.M)
+        if not m:
+            continue
+        val = m.group(1).strip()
+        if re.search(rf'^{re.escape(key)}\s+', cfg, re.M):
+            cfg = re.sub(rf'^{re.escape(key)}\s+.*$', f'{key} {val}', cfg, count=1, flags=re.M)
+        else:
+            cfg += f'\n{key} {val}\n'
+    # Re-apply named buyAuto standpoints from pack overrides (prevents drift)
+    want = {}
+    for m in re.finditer(r'^buyAuto\s+([^\n{]+)\s*\{(.*?)^\}', text, re.M | re.S):
+        item = m.group(1).strip()
+        sm = re.search(r'standpoint\s+(\S+\s+\d+\s+\d+)', m.group(2))
+        if item and sm:
+            want[item] = sm.group(1)
+
+    def _fix_buy(m):
+        item = m.group(1).strip()
+        body = m.group(2)
+        if item in want and re.search(r'standpoint\s+\S+\s+\d+\s+\d+', body):
+            body = re.sub(
+                r'(standpoint\s+)\S+\s+\d+\s+\d+',
+                rf'\g<1>{want[item]}',
+                body,
+                count=1,
+            )
+        return f'buyAuto {item} {{{body}}}'
+
+    if want:
+        cfg = re.sub(r'^buyAuto\s+([^\n{]+)\s*\{(.*?)^\}', _fix_buy, cfg, flags=re.M | re.S)
+    return cfg
 
 synced = skipped = 0
 for prof in sorted(profiles_root.iterdir()):
@@ -135,6 +186,13 @@ for prof in sorted(profiles_root.iterdir()):
         # Never leave template credentials
         if get_key(new_cfg, 'username') in (None, 'CHANGE_ME'):
             raise SystemExit(f'REFUSING to write {prof.name}: username missing/CHANGE_ME')
+        (prof / 'config.txt').write_text(new_cfg)
+    elif pack == 'fresh_grind' and (prof / 'config.txt').exists():
+        # Grind fleet uses config-overrides.txt + live profile config (no full pack config)
+        new_cfg = patch_config_overrides(old_cfg, src / 'config-overrides.txt')
+        for k, v in saved.items():
+            if v is not None and v != '':
+                new_cfg = set_key(new_cfg, k, v)
         (prof / 'config.txt').write_text(new_cfg)
 
     print(f'OK    {prof.name} <- {pack} (user={saved.get("username")})')

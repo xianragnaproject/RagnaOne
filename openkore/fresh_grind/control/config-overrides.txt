@@ -27,12 +27,14 @@ itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
 itemsGatherAutoMinPlayerDistance 3
 itemsGatherAutoMinPortalDistance 2
+itemsMaxWeight 89
 itemsMaxWeight_sellOrStore 40
 sellAuto 1
 sellAuto_npc prt_in 126 76
-sellAuto_standpoint prt_in 126 74
-sellAuto_distance 5
-sellAuto_maxDistance 8
+# 130,72 is walkable; 126,74 often causes Stuck during route loops
+sellAuto_standpoint prt_in 130 72
+sellAuto_distance 10
+sellAuto_maxDistance 14
 sellAuto_npc_steps s
 dcOnDeath 0
 aiChat 0
@@ -52,7 +54,7 @@ grindDone25 0
 # Index order matters for Grind_EnableGearBuy (buyAuto_0..)
 buyAuto Fly Wing {
 	npc prt_in 126 76
-	standpoint prt_in 126 74
+	standpoint prt_in 130 72
 	distance 5
 	minAmount 5
 	maxAmount 30
@@ -61,7 +63,7 @@ buyAuto Fly Wing {
 }
 buyAuto Red Potion {
 	npc prt_in 126 76
-	standpoint prt_in 126 74
+	standpoint prt_in 130 72
 	distance 5
 	minAmount 3
 	maxAmount 20
@@ -122,7 +124,7 @@ buyAuto Bow [3] {
 # Archer arrows (tool dealer)
 buyAuto Arrow {
 	npc prt_in 126 76
-	standpoint prt_in 126 74
+	standpoint prt_in 130 72
 	distance 5
 	minAmount 50
 	maxAmount 300

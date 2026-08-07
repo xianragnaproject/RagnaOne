@@ -136,6 +136,7 @@ automacro Grind_JobChange_Go {
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
 	Eval !($field && $field->baseName eq 'prontera' && abs($char->{pos}{x}-155) <= 4 && abs($char->{pos}{y}-180) <= 4)
 	call {
 		[
@@ -147,7 +148,9 @@ automacro Grind_JobChange_Go {
 			do stand
 			pause 1
 			do move prontera 155 180
-			pause 50
+			pause 55
+			do eval Grind_TalkJobMaster()
+			pause 12
 			do conf grindJobbing 0
 		]
 	}
@@ -247,7 +250,7 @@ automacro Grind_BuyArmor {
 			pause 22
 			do eval AI::queue("buyAuto")
 			pause 14
-			do move prt_in 126 74
+			do move prt_in 130 72
 			pause 18
 			do eval AI::queue("buyAuto")
 			pause 14
@@ -451,11 +454,12 @@ automacro Grind_Done25 {
 }
 
 ###############################################################################
-# Sell @ 40% OW - resume prt_fild08
+# Sell @ 40% OW via built-in sellAuto (items_control must autoSell junk)
+# Standpoint 130,72 is walkable; NPC talk uses distance (do NOT stand on 126,74)
 ###############################################################################
 automacro Grind_SellLoot {
 	exclusive 1
-	timeout 45
+	timeout 60
 	priority 2
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
@@ -473,18 +477,95 @@ macro grind_sell_loot {
 		do conf route_randomWalk 0
 		do conf lockMap none
 		do conf sellAuto 1
-		do move prt_in 126 74
-		pause 40
+		do conf sellAuto_standpoint prt_in 130 72
+		do conf sellAuto_npc prt_in 126 76
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do move prt_in 130 72
+		pause 35
 		do eval AI::queue("sellAuto")
-		pause 30
-		do move 126 70
-		pause 5
+		pause 35
+		do move 135 71
+		pause 6
 		do move prontera 160 70
 		pause 12
 		do eval Grind_ResumeHuntLock()
 		do conf grindSelling 0
 		log Grind: sell done - resume hunt
 	]
+}
+
+# If pathfinding loops near tool dealer, abort sell and force talk from a safe tile
+automacro Grind_UnstickShop {
+	exclusive 1
+	timeout 18
+	priority 0
+	InMap prt_in
+	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindJobbing 1
+	Eval (AI::inQueue("sellAuto") || AI::is("sellAuto") || $config{grindSelling}) && (abs(($char->{pos}{x}//0)-126) <= 10) && (abs(($char->{pos}{y}//0)-74) <= 10)
+	call grind_unstick_shop
+}
+
+# Console stuck near tool-dealer tiles (covers live bots still using old 126,74 standpoint)
+automacro Grind_UnstickShopConsole {
+	exclusive 1
+	timeout 18
+	priority 0
+	InMap prt_in
+	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindJobbing 1
+	Console /Stuck at prt_in \(12[0-9],7[0-9]\)/
+	call grind_unstick_shop
+}
+
+automacro Grind_UnstickShopSellRoute {
+	exclusive 1
+	timeout 18
+	priority 0
+	InMap prt_in
+	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindJobbing 1
+	Console /Calculating auto-sell route to:.*126, 74/
+	call grind_unstick_shop
+}
+
+macro grind_unstick_shop {
+	[
+		log Grind: unstick shop - clear route and talk from 130 72
+		do ai clear
+		do conf sellAuto_standpoint prt_in 130 72
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do conf sellAuto_npc prt_in 126 76
+		do move 130 72
+		pause 8
+		do talknpc 126 76 s
+		pause 18
+		do move 135 71
+		pause 5
+		do conf grindSelling 0
+		do eval Grind_ResumeHuntLock()
+	]
+}
+
+# After OW drops in town, always resume hunt (covers built-in sellAuto too)
+automacro Grind_ResumeAfterSell {
+	exclusive 1
+	timeout 40
+	priority 4
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindGearDone 0
+	Eval (Misc::percent_weight($char) < 35) && $field && ($field->baseName eq 'prt_in' || $field->baseName eq 'prontera') && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call {
+		[
+			log Grind: OW low in town - resume prt_fild08
+			do conf grindSelling 0
+			do eval Grind_ResumeHuntLock()
+		]
+	}
 }
 
 ###############################################################################
@@ -499,6 +580,8 @@ automacro Grind_FountainAFK {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindDone25 1
+	# Never AFK while Novice is ready for job change
+	Eval !($char && $char->{jobID} == 0 && $char->{lv} >= 15 && $char->{lv_job} >= 10)
 	call grind_fountain_afk
 }
 
