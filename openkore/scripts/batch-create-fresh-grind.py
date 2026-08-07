@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Create 5 fresh-grind OpenKore accounts (one per 1st job except Thief).
+"""Create 6 fresh-grind OpenKore accounts (all 1st jobs) with player-like names.
 
-Clones the live GrindPrt08 profile, auto-registers via username_M login,
+Clones /tmp/grind-template (or live GrindPrt08), auto-registers via username_M,
 creates a novice char, sets grindTargetJob, and appends ACCOUNT_MAP.txt.
 
 Usage:
@@ -21,17 +21,23 @@ from pathlib import Path
 HOME = Path.home()
 OK = HOME / "openkore"
 PROFILES = OK / "profiles"
-SRC = PROFILES / "GrindPrt08"
+TEMPLATE_CANDIDATES = [
+    Path("/tmp/grind-template"),
+    PROFILES / "GrindPrt08",
+]
 CREATE_EXP = OK / "scripts" / "create-char.exp"
 ACCOUNT_MAP = PROFILES / "ACCOUNT_MAP.txt"
-RESULTS = Path("/tmp/fresh-grind-5class-results.txt")
+RESULTS = Path("/tmp/fresh-grind-6class-results.txt")
+PACK = Path(__file__).resolve().parents[1] / "fresh_grind" / "control"
 
+# profile, job, login user (no sex suffix), character name
 ACCOUNTS = [
-    ("GrindSword", "Swordman", "GrdSw"),
-    ("GrindMage", "Magician", "GrdMg"),
-    ("GrindArcher", "Archer", "GrdAr"),
-    ("GrindAco", "Acolyte", "GrdAc"),
-    ("GrindMerch", "Merchant", "GrdMe"),
+    ("GrindPrt08", "Thief", "kaelvoss", "Kael"),
+    ("GrindSword", "Swordman", "cedriclane", "Cedric"),
+    ("GrindMage", "Magician", "lyramoon", "Lyra"),
+    ("GrindArcher", "Archer", "finnarrow", "Finn"),
+    ("GrindAco", "Acolyte", "elisegrace", "Elise"),
+    ("GrindMerch", "Merchant", "tobincrane", "Tobin"),
 ]
 
 RESET_FLAGS = {
@@ -47,13 +53,13 @@ RESET_FLAGS = {
     "route_randomWalk": "1",
     "lockMap": "prt_fild08",
     "itemsMaxWeight_sellOrStore": "40",
+    "sellAuto": "1",
+    "sellAuto_standpoint": "prt_in 130 72",
+    "sellAuto_npc": "prt_in 126 76",
+    "sellAuto_distance": "10",
+    "sellAuto_maxDistance": "14",
     "aiChat": "0",
 }
-
-
-def rand_alnum(n: int) -> str:
-    alphabet = string.ascii_lowercase + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(n))
 
 
 def set_key(text: str, key: str, value: str) -> str:
@@ -63,9 +69,24 @@ def set_key(text: str, key: str, value: str) -> str:
     return text + f"\n{key} {value}\n"
 
 
+def pick_template() -> Path:
+    for p in TEMPLATE_CANDIDATES:
+        if (p / "config.txt").exists():
+            return p
+    raise SystemExit("Missing grind template (/tmp/grind-template or GrindPrt08)")
+
+
+def overlay_pack(dst: Path) -> None:
+    if not PACK.is_dir():
+        return
+    for f in ("eventMacros.txt", "items_control.txt", "mon_control.txt", "pickupitems.txt"):
+        src = PACK / f
+        if src.exists():
+            shutil.copy2(src, dst / f)
+
+
 def main() -> None:
-    if not SRC.exists():
-        raise SystemExit(f"Missing template profile: {SRC}")
+    src = pick_template()
     if not CREATE_EXP.exists():
         raise SystemExit(f"Missing create-char.exp: {CREATE_EXP}")
 
@@ -79,22 +100,19 @@ def main() -> None:
                 used_users.add(parts[3].replace("_M", "").replace("_F", ""))
 
     rows = []
-    for profile, job, prefix in ACCOUNTS:
+    for profile, job, user, char in ACCOUNTS:
         if (PROFILES / profile).exists():
-            print(f"SKIP exists {profile}")
-            rows.append((profile, job, "EXISTS", "", "", ""))
+            print(f"SKIP exists {profile}", flush=True)
+            rows.append((profile, job, "EXISTS", "", "", char))
             continue
 
-        while True:
-            user = f"g{job[:3].lower()}{rand_alnum(6)}"
-            if user not in used_users:
-                used_users.add(user)
-                break
-        while True:
-            char = f"{prefix}{rand_alnum(4)}"
-            if char not in used_chars and len(char) <= 23:
-                used_chars.add(char)
-                break
+        if user in used_users:
+            raise SystemExit(f"Username already in ACCOUNT_MAP: {user}")
+        if char in used_chars:
+            raise SystemExit(f"Char name already in ACCOUNT_MAP: {char}")
+        used_users.add(user)
+        used_chars.add(char)
+
         passwd = secrets.token_urlsafe(9)[:12]
         sex = "M"
         login_user = f"{user}_{sex}"
@@ -108,7 +126,8 @@ def main() -> None:
             "mon_control.txt",
             "pickupitems.txt",
         ):
-            shutil.copy2(SRC / f, dst / f)
+            shutil.copy2(src / f, dst / f)
+        overlay_pack(dst)
 
         cfg = (dst / "config.txt").read_text()
         cfg = set_key(cfg, "username", login_user)
@@ -124,7 +143,10 @@ def main() -> None:
             f"label={job}\nchar_name={char}\nsex={sex}\naccount={login_user}\npack=fresh_grind\n"
         )
 
-        print(f"=== CREATE {profile} job={job} user={login_user} char={char} ===", flush=True)
+        print(
+            f"=== CREATE {profile} job={job} user={login_user} char={char} ===",
+            flush=True,
+        )
         log = Path(f"/tmp/ok-create-{profile}.log")
         if log.exists():
             log.unlink()
@@ -138,11 +160,13 @@ def main() -> None:
         )
         out = (proc.stdout or "") + "\n" + (proc.stderr or "")
         if log.exists():
-            out += "\n" + log.read_text(errors="replace")[-3000:]
+            out += "\n" + log.read_text(errors="replace")[-4000:]
         ok = proc.returncode == 0 and any(
             t in out for t in ("IN_GAME", "CREATE_OK", "DONE", "STATUS_OK")
         )
         print(f"rc={proc.returncode} ok={ok}", flush=True)
+        if not ok:
+            print(out[-2000:], flush=True)
 
         cfg = (dst / "config.txt").read_text()
         cfg = set_key(cfg, "username", user)
@@ -150,10 +174,13 @@ def main() -> None:
         for k, v in RESET_FLAGS.items():
             cfg = set_key(cfg, k, v)
         (dst / "config.txt").write_text(cfg)
+        overlay_pack(dst)
 
         with ACCOUNT_MAP.open("a") as f:
             f.write(f"FreshGrind-{job}\t{profile}\t{char}\t{user}\t{passwd}\t{sex}\n")
-        rows.append((profile, job, "OK" if ok else f"FAIL:{proc.returncode}", user, passwd, char))
+        rows.append(
+            (profile, job, "OK" if ok else f"FAIL:{proc.returncode}", user, passwd, char)
+        )
         time.sleep(2)
 
     RESULTS.write_text(
