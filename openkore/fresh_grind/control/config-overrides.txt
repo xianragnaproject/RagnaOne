@@ -24,6 +24,7 @@ sitAuto_hp_upper 70
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
 # Hunt map: prt_fild08 (<25) then pay_fild03 (25-35). Party leader uses this lockMap.
+# attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
 lockMap pay_fild03
 grindHuntMap pay_fild03
 itemsTakeAuto 2
@@ -144,13 +145,13 @@ buyAuto Bow [3] {
 	zeny > 50
 	disabled 1
 }
-# Archer arrows (tool dealer)
+# Archer arrows (tool dealer) — kept disabled for non-Archers; Archer macros enable when low
 buyAuto Arrow {
 	npc prt_in 126 76
 	standpoint prt_in 130 72
 	distance 5
-	minAmount 50
-	maxAmount 300
+	minAmount 30
+	maxAmount 500
 	zeny > 50
 	disabled 1
 }

@@ -16,7 +16,7 @@ FOLLOW_KEYS = {
     "followLostStep": "12",
     "lockMap": "",
     "route_randomWalk": "0",
-    "attackAuto": "1",
+    "attackAuto": "2",
     "attackAuto_inLockOnly": "0",
     "attackAuto_followTarget": "1",
     "attackAuto_party": "1",

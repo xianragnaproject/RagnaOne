@@ -342,8 +342,65 @@ automacro Grind_GearDone_Archer {
 			pause 1
 			do eq Cotton Shirt
 			pause 1
+			do conf attackEquip_arrow Arrow
+			do eval Grind_EnableBuyItem("Arrow")
 			do conf grindGearDone 1
 			do eval Grind_StartHunt()
+		]
+	}
+}
+
+# Archer: restock arrows when empty/low (works in party follow too)
+automacro Grind_ArcherNeedArrows {
+	exclusive 1
+	timeout 90
+	priority 0
+	JobID 3
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
+	ConfigKeyNot grindJobbing 1
+	InInventory "Arrow" < 20
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC","sellAuto"))
+	call {
+		[
+			log Grind: Archer low/no arrows - buy at Prontera tool dealer
+			do conf -f grindBuyingArrows 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf follow 0
+			do conf lockMap none
+			do conf attackEquip_arrow Arrow
+			do eval Grind_EnableArrowBuyOnly()
+			do move prt_in 130 72
+			pause 40
+			do eval AI::queue("buyAuto")
+			pause 40
+			do eq Arrow
+			pause 1
+			do conf attackEquip_arrow Arrow
+			do conf -f grindBuyingArrows 0
+			do eval Grind_ResumeAfterArrowBuy()
+			log Grind: Archer arrows restocked - resume
+		]
+	}
+}
+
+# Has arrows but none equipped
+automacro Grind_ArcherEquipArrow {
+	exclusive 1
+	timeout 20
+	priority 1
+	JobID 3
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindBuyingArrows 1
+	InInventory "Arrow" > 0
+	Eval !$char->{equipment}{arrow}
+	call {
+		[
+			log Grind: equip Arrow
+			do conf attackEquip_arrow Arrow
+			do eq Arrow
 		]
 	}
 }
@@ -640,6 +697,7 @@ automacro Grind_PartyFollowerNoLock {
 	ConfigKey follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	Eval defined $config{lockMap} && $config{lockMap} ne '' && $config{lockMap} ne 'none'
 	call {
 		[
@@ -660,6 +718,7 @@ automacro Grind_PartyFollowerRestore {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindBuyingArrows 1
 	Eval !$config{follow} || !$config{followTarget}
 	call {
 		[
@@ -671,7 +730,7 @@ automacro Grind_PartyFollowerRestore {
 	}
 }
 
-# Re-assert follower follow settings (attackAuto 1 so idle partyfollow can rejoin)
+# Re-assert follower follow settings (attackAuto 2 = kill all mobs near Cedric)
 automacro Grind_PartyFollowerAssist {
 	exclusive 1
 	timeout 45
@@ -680,10 +739,11 @@ automacro Grind_PartyFollowerAssist {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	Eval !($config{attackAuto} == 1 && ($timeout{ai_follow_lost_end}{timeout}//0) >= 120)
+	ConfigKeyNot grindBuyingArrows 1
+	Eval !($config{attackAuto} == 2 && ($timeout{ai_follow_lost_end}{timeout}//0) >= 120)
 	call {
 		[
-			log Grind: follower assist mode (stick to Cedric)
+			log Grind: follower assist mode (stick to Cedric, kill all)
 			do eval Grind_ApplyFollowerFollow()
 		]
 	}
@@ -698,6 +758,7 @@ automacro Grind_PartyFollowerRejoin {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindBuyingArrows 1
 	Eval Grind_FollowerFarFromLeader()
 	call {
 		[
@@ -990,6 +1051,43 @@ sub Grind_DisableBuyItem {
 	return 1;
 }
 
+sub Grind_EnableBuyItem {
+	my ($name) = @_;
+	return 0 unless defined $name && $name ne '';
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || '';
+		next unless $item eq $name;
+		Commands::run("conf buyAuto_${i}_disabled 0");
+	}
+	return 1;
+}
+
+# Enable only Arrow buyAuto; disable other gear buys so restock does not shop for bows/etc.
+sub Grind_EnableArrowBuyOnly {
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || '';
+		next if $item =~ /Potion|Wing|Magnifier/i;
+		my $disabled = ($item eq 'Arrow') ? 0 : 1;
+		Commands::run("conf buyAuto_${i}_disabled $disabled");
+	}
+	Commands::run("conf attackEquip_arrow Arrow");
+	return 1;
+}
+
+sub Grind_ResumeAfterArrowBuy {
+	Commands::run("conf -f grindBuyingArrows 0");
+	Commands::run("conf attackEquip_arrow Arrow");
+	if ($config{followTarget} || ($config{grindPartyMode} && $config{grindPartyLeader})) {
+		my $leader = $config{followTarget} || $config{grindPartyLeader} || 'Cedric';
+		Commands::run("conf follow 1");
+		Commands::run("conf followTarget $leader");
+		Grind_ApplyFollowerFollow();
+	} else {
+		Grind_StartHunt();
+	}
+	return 1;
+}
+
 sub Grind_GoPay03Safe {
 	# Prontera kafra Teleport -> Alberta (NOT Orc Dungeon). Menu on RagnaOne:
 	# r2 = Use Teleport Service, r5 = Alberta
@@ -1005,8 +1103,8 @@ sub Grind_GoPay03Safe {
 }
 
 sub Grind_ApplyFollowerFollow {
-	# Stick to leader: no lockMap, no solo hunt, no scatter teleports.
-	# attackAuto 1 (not 2) so bots go idle and ai_partyfollow can rejoin Cedric.
+	# Stick to leader: no lockMap, no scatter teleports.
+	# attackAuto 2 = kill all monsters (mon_control all 2); partyfollow + rejoin keep them with Cedric.
 	Commands::run("conf follow 1");
 	Commands::run("conf followTarget Cedric") unless ($config{followTarget} && $config{followTarget} ne '');
 	Commands::run("conf followBot 1");
@@ -1014,7 +1112,7 @@ sub Grind_ApplyFollowerFollow {
 	Commands::run("conf followDistanceMax 10");
 	Commands::run("conf lockMap none");
 	Commands::run("conf route_randomWalk 0");
-	Commands::run("conf attackAuto 1");
+	Commands::run("conf attackAuto 2");
 	Commands::run("conf attackAuto_inLockOnly 0");
 	Commands::run("conf attackAuto_followTarget 1");
 	Commands::run("conf attackAuto_party 1");
@@ -1053,6 +1151,7 @@ sub Grind_FollowerFarFromLeader {
 }
 
 sub Grind_StartHunt {
+	return 1 if $config{grindBuyingArrows};
 	# Party followers stick to the leader instead of locking the field
 	if ($config{follow} && $config{followTarget}) {
 		Grind_ApplyFollowerFollow();
