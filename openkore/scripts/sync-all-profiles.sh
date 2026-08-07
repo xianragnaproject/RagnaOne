@@ -99,7 +99,7 @@ def set_key(text, key, value):
 
 accounts = parse_map(account_map.read_text()) if account_map.exists() else {}
 preserve_keys = ('username', 'password', 'loginPinCode', 'char')
-full_files = ('eventMacros.txt', 'items_control.txt', 'mon_control.txt', 'pickupitems.txt')
+full_files = ('eventMacros.txt', 'items_control.txt', 'mon_control.txt', 'pickupitems.txt', 'routeweights.txt')
 
 def patch_config_overrides(cfg: str, overrides_path: Path) -> str:
     """Merge flat sell keys + fix tool-dealer/buyAuto standpoints for grind packs."""

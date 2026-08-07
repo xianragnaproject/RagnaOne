@@ -70,7 +70,7 @@ ama_dun01 229 7 ama_in02 119 181 0 c r0 n
 #prontera 35 208 geffen 120 39 2000 1 c r2 c r1
 #prontera 35 208 payon 161 58 2000 1 c r2 c r2
 #prontera 35 208 morocc 156 47 2000 1 c r2 c r3
-#prontera 35 208 alberta 117 56 2000 1 c r2 c r4
+#prontera 35 208 alberta 117 56 2000 1 c r2 c r5
 #prontera 35 208 aldebaran 168 112 2000 1 c r2 c r5
 #prontera 35 208 comodo 209 143 3000 1 c r2 c r6
 #prontera 35 208 umbala 100 154 3000 1 c r2 c r7
@@ -97,7 +97,7 @@ prontera 146 89 izlude 94 103 2000 1 c r2 c r0
 prontera 146 89 geffen 120 39 2000 1 c r2 c r1
 prontera 146 89 payon 161 58 2000 1 c r2 c r2
 prontera 146 89 morocc 156 47 2000 1 c r2 c r3
-prontera 146 89 alberta 117 56 2000 1 c r2 c r4
+prontera 146 89 alberta 117 56 2000 1 c r2 c r5
 prontera 146 89 aldebaran 168 112 2000 1 c r2 c r5
 prontera 146 89 comodo 209 143 3000 1 c r2 c r6
 prontera 146 89 umbala 100 154 3000 1 c r2 c r7
@@ -105,7 +105,7 @@ prontera 151 29 izlude 94 103 2000 1 c r2 c r0
 prontera 151 29 geffen 120 39 2000 1 c r2 c r1
 prontera 151 29 payon 161 58 2000 1 c r2 c r2
 prontera 151 29 morocc 156 47 2000 1 c r2 c r3
-prontera 151 29 alberta 117 56 2000 1 c r2 c r4
+prontera 151 29 alberta 117 56 2000 1 c r2 c r5
 prontera 151 29 aldebaran 168 112 2000 1 c r2 c r5
 prontera 151 29 comodo 209 143 3000 1 c r2 c r6
 prontera 151 29 umbala 100 154 3000 1 c r2 c r7
@@ -113,7 +113,7 @@ prontera 282 200 izlude 94 103 2000 1 c r2 c r0
 prontera 282 200 geffen 120 39 2000 1 c r2 c r1
 prontera 282 200 payon 161 58 2000 1 c r2 c r2
 prontera 282 200 morocc 156 47 2000 1 c r2 c r3
-prontera 282 200 alberta 117 56 2000 1 c r2 c r4
+prontera 282 200 alberta 117 56 2000 1 c r2 c r5
 prontera 282 200 aldebaran 168 112 2000 1 c r2 c r5
 prontera 282 200 comodo 209 143 3000 1 c r2 c r6
 prontera 282 200 umbala 100 154 3000 1 c r2 c r7
@@ -121,7 +121,7 @@ prontera 35 208 izlude 94 103 2000 1 c r2 c r0
 prontera 35 208 geffen 120 39 2000 1 c r2 c r1
 prontera 35 208 payon 161 58 2000 1 c r2 c r2
 prontera 35 208 morocc 156 47 2000 1 c r2 c r3
-prontera 35 208 alberta 117 56 2000 1 c r2 c r4
+prontera 35 208 alberta 117 56 2000 1 c r2 c r5
 prontera 35 208 aldebaran 168 112 2000 1 c r2 c r5
 prontera 35 208 comodo 209 143 3000 1 c r2 c r6
 prontera 35 208 umbala 100 154 3000 1 c r2 c r7

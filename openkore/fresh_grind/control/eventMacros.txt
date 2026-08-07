@@ -5,9 +5,11 @@
 # 2) -> Prontera Job Master (config grindTargetJob)
 # 3) After 1st job -> buy class gear (weapon/shield/arrows)
 # 4) Keep grinding prt_fild08 until base 25
-# 5) Sell @ 40% OW + occasional fountain AFK
+# 5) Base 25-35: party hunt pay_fild03 (leader lockMap; others follow)
+# 6) Sell @ 40% OW (Prontera tool dealer)
 #
 # grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief
+# grindHuntMap: prt_fild08 | pay_fild03
 ###############################################################################
 
 # ---- Leave novice training: new_1-1 -> new_1-2 ----
@@ -432,7 +434,7 @@ automacro Grind_GearDone_Thief {
 }
 
 ###############################################################################
-# After gear: keep hunting prt_fild08 until base 25
+# After gear: hunt prt_fild08 until base 25, then pay_fild03 until 35
 ###############################################################################
 automacro Grind_ResumeField08 {
 	exclusive 1
@@ -448,11 +450,211 @@ automacro Grind_ResumeField08 {
 	call {
 		[
 			log Grind: lock prt_fild08 until base 25
+			do conf -f grindHuntMap prt_fild08
 			do eval Grind_StartHunt()
 		]
 	}
 }
 
+# Base 25+: switch party leader hunt to pay_fild03 (25-35)
+# Route via Alberta (avoid kafra→gef_fild10 orc misroutes)
+automacro Grind_PhasePay03 {
+	exclusive 1
+	timeout 45
+	priority 0
+	BaseLevel >= 25
+	BaseLevel < 35
+	ConfigKey grindGearDone 1
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot follow 1
+	ConfigKeyNot grindHuntMap pay_fild03
+	call {
+		[
+			log Grind: BASE 25+ - hunt pay_fild03 until base 35 (via Alberta)
+			do conf grindDone25 1
+			do conf -f grindHuntMap pay_fild03
+			do conf grindAfk 0
+			do conf attackAuto_routeToLock 0
+			do conf attackAuto_outOfLock 0
+			do conf teleportAuto_deadly 1
+			do eval Grind_GoPay03Safe()
+		]
+	}
+}
+
+automacro Grind_ResumeFieldPay03 {
+	exclusive 1
+	timeout 25
+	priority 1
+	InMap pay_fild03
+	BaseLevel >= 25
+	BaseLevel < 35
+	ConfigKey grindGearDone 1
+	ConfigKey grindHuntMap pay_fild03
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot follow 1
+	ConfigKeyNot lockMap pay_fild03
+	call {
+		[
+			log Grind: restore lockMap pay_fild03
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
+# If stuck in Prontera with pay hunt set, stage via Alberta (never kafra→orc fields)
+automacro Grind_StagePay03FromTown {
+	exclusive 1
+	timeout 40
+	priority 0
+	InMap /prontera|prt_in|prt_fild08|prt_fild09|izlude/
+	BaseLevel >= 25
+	BaseLevel < 35
+	ConfigKey grindHuntMap pay_fild03
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot follow 1
+	call {
+		[
+			log Grind: stage to pay_fild03 via Alberta
+			do conf attackAuto_routeToLock 0
+			do conf attackAuto_outOfLock 0
+			do conf teleportAuto_deadly 1
+			do eval Grind_GoPay03Safe()
+		]
+	}
+}
+
+automacro Grind_EnsureLockPay03 {
+	exclusive 1
+	timeout 30
+	priority 5
+	InMap pay_fild03
+	ConfigKeyNot follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot lockMap pay_fild03
+	BaseLevel >= 25
+	BaseLevel < 35
+	call {
+		[
+			log Grind: restore lockMap pay_fild03
+			do conf -f grindHuntMap pay_fild03
+			do conf lockMap pay_fild03
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+# After arriving at Prontera kafra for pay staging, warp Alberta (r2 teleport, r5 Alberta)
+automacro Grind_KafraAlbertaForPay {
+	exclusive 1
+	timeout 25
+	priority 0
+	InMap prontera
+	BaseLevel >= 25
+	BaseLevel < 35
+	ConfigKey grindHuntMap pay_fild03
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot follow 1
+	ConfigKeyNot lockMap pay_fild03
+	Eval abs(($char->{pos}{x}//0)-146) <= 8 && abs(($char->{pos}{y}//0)-89) <= 8
+	call {
+		[
+			log Grind: kafra warp Alberta (avoid Orc Dungeon option)
+			do conf attackAuto 0
+			do talknpc 146 89 c r2 c r5
+			pause 8
+		]
+	}
+}
+
+# After safe Alberta staging, lock pay_fild03 (west gate from alberta 15,234)
+automacro Grind_AlbertaToPay03 {
+	exclusive 1
+	timeout 20
+	priority 0
+	InMap alberta
+	BaseLevel >= 25
+	BaseLevel < 35
+	ConfigKey grindHuntMap pay_fild03
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot follow 1
+	ConfigKeyNot lockMap pay_fild03
+	call {
+		[
+			log Grind: Alberta reached - enter pay_fild03 via west gate
+			do conf attackAuto_routeToLock 0
+			do conf attackAuto_outOfLock 0
+			do conf teleportAuto_deadly 0
+			do conf lockMap pay_fild03
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do move 15 234
+			pause 20
+			do move pay_fild03 350 80
+		]
+	}
+}
+
+automacro Grind_KeepAggressivePay03 {
+	exclusive 1
+	timeout 45
+	priority 8
+	InMap pay_fild03
+	ConfigKeyNot follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindDone35 1
+	ConfigKeyNot attackAuto 2
+	BaseLevel >= 25
+	BaseLevel < 35
+	call {
+		[
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+automacro Grind_Done35 {
+	disabled 1
+	exclusive 1
+	timeout 60
+	priority 0
+	BaseLevel >= 35
+	ConfigKey grindGearDone 1
+	ConfigKeyNot grindDone35 1
+	call {
+		[
+			log Grind: BASE 35 reached - idle Prontera fountain
+			do conf -f grindDone35 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 156 191
+			pause 8
+			do sit
+		]
+	}
+}
+
+# Legacy idle-at-25 (disabled — party continues to pay_fild03)
 automacro Grind_Done25 {
 	disabled 1
 	exclusive 1
@@ -487,7 +689,7 @@ automacro Grind_SellLoot {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	Eval (Misc::percent_weight($char) >= 40) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
 	call grind_sell_loot
 }
@@ -524,7 +726,7 @@ automacro Grind_UnstickShop {
 	timeout 18
 	priority 0
 	InMap prt_in
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindJobbing 1
 	Eval (AI::inQueue("sellAuto") || AI::is("sellAuto") || $config{grindSelling}) && (abs(($char->{pos}{x}//0)-126) <= 10) && (abs(($char->{pos}{y}//0)-74) <= 10)
 	call grind_unstick_shop
@@ -536,7 +738,7 @@ automacro Grind_UnstickShopConsole {
 	timeout 18
 	priority 0
 	InMap prt_in
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindJobbing 1
 	Console /Stuck at prt_in \(12[0-9],7[0-9]\)/
 	call grind_unstick_shop
@@ -547,7 +749,7 @@ automacro Grind_UnstickShopSellRoute {
 	timeout 18
 	priority 0
 	InMap prt_in
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindJobbing 1
 	Console /Calculating auto-sell route to:.*126, 74/
 	call grind_unstick_shop
@@ -579,12 +781,12 @@ automacro Grind_ResumeAfterSell {
 	priority 4
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindGearDone 0
-	Eval (Misc::percent_weight($char) < 35) && $field && ($field->baseName eq 'prt_in' || $field->baseName eq 'prontera') && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	Eval (Misc::percent_weight($char) < 35) && $field && ($field->baseName eq 'prt_in' || $field->baseName eq 'prontera' || $field->baseName eq 'alberta' || $field->baseName eq 'payon') && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
 	call {
 		[
-			log Grind: OW low in town - resume prt_fild08
+			log Grind: OW low in town - resume hunt lock
 			do conf grindSelling 0
 			do eval Grind_ResumeHuntLock()
 		]
@@ -592,7 +794,7 @@ automacro Grind_ResumeAfterSell {
 }
 
 ###############################################################################
-# Fountain AFK - resume prt_fild08
+# Fountain AFK (disabled during party pay_fild03 grind)
 ###############################################################################
 automacro Grind_FountainAFK {
 	disabled 1
@@ -605,7 +807,7 @@ automacro Grind_FountainAFK {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindDone25 1
+	ConfigKeyNot grindDone35 1
 	# Never AFK while Novice is ready for job change
 	Eval !($char && $char->{jobID} == 0 && $char->{lv} >= 15 && $char->{lv_job} >= 10)
 	call grind_fountain_afk
@@ -709,6 +911,20 @@ sub Grind_DisableBuyItem {
 	return 1;
 }
 
+sub Grind_GoPay03Safe {
+	# Prontera kafra Teleport -> Alberta (NOT Orc Dungeon). Menu on RagnaOne:
+	# r2 = Use Teleport Service, r5 = Alberta
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("conf lockMap none");
+	Commands::run("conf attackAuto_routeToLock 0");
+	Commands::run("conf attackAuto_outOfLock 0");
+	Commands::run("conf teleportAuto_deadly 0");
+	Commands::run("move prontera 146 89");
+	Log::message("[Grind] Safe route: Prontera kafra -> Alberta -> pay_fild03\n", "success");
+	return 1;
+}
+
 sub Grind_StartHunt {
 	# Party followers stick to the leader instead of locking the field
 	if ($config{follow} && $config{followTarget}) {
@@ -721,14 +937,24 @@ sub Grind_StartHunt {
 		Log::message("[Grind] Following ".$config{followTarget}." (party support)\n", "success");
 		return 1;
 	}
-	Commands::run("conf lockMap prt_fild08");
+	my $map = $config{grindHuntMap};
+	if (!$map || $map eq '' || $map eq 'none') {
+		$map = ($char && $char->{lv} >= 25) ? 'pay_fild03' : 'prt_fild08';
+		Commands::run("conf -f grindHuntMap $map");
+	}
+	Commands::run("conf lockMap $map");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf attackAuto 2");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_hp_lower 35");
-	Log::message("[Grind] Hunting prt_fild08 (party leader)\n", "success");
+	if ($map eq 'pay_fild03') {
+		Commands::run("conf attackAuto_routeToLock 0");
+		Commands::run("conf attackAuto_outOfLock 0");
+		Commands::run("conf teleportAuto_deadly 1");
+	}
+	Log::message("[Grind] Hunting $map (party leader)\n", "success");
 	return 1;
 }
 

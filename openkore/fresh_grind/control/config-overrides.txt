@@ -5,11 +5,13 @@ attackAuto 2
 attackAuto_party 1
 attackAuto_onlyWhenSafe 0
 attackAuto_notInTown 1
-attackAuto_outOfLock 1
-attackAuto_routeToLock 1
+attackAuto_outOfLock 0
+# Don't fight while walking to lockMap (orc kafra misroutes are lethal at ~25)
+attackAuto_routeToLock 0
 attackAuto_followTarget 0
 attackAuto_allowKS 1
 attackAuto_inLockOnly 1
+teleportAuto_deadly 1
 attackChangeTarget 0
 attackCheckLOS 1
 attackMinPlayerDistance 0
@@ -21,7 +23,9 @@ sitAuto_hp_lower 35
 sitAuto_hp_upper 70
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
-lockMap prt_fild08
+# Hunt map: prt_fild08 (<25) then pay_fild03 (25-35). Party leader uses this lockMap.
+lockMap pay_fild03
+grindHuntMap pay_fild03
 itemsTakeAuto 2
 itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
@@ -48,7 +52,8 @@ grindJobbing 0
 grindJob1st 0
 grindGearDone 0
 grindDone15 0
-grindDone25 0
+grindDone25 1
+grindDone35 0
 # Party: Cedric (Swordsman) leads; other classes follow + support
 grindPartyMode 1
 grindPartyLeader Cedric
