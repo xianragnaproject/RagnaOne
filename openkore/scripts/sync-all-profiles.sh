@@ -205,3 +205,34 @@ PY
 if [[ -f "$SCRIPT_DIR/apply-class-skills.py" ]]; then
   python3 "$SCRIPT_DIR/apply-class-skills.py" "$PROFILES_ROOT" || true
 fi
+
+# Merge fresh_grind timeout overrides into live OpenKore control/timeouts.txt
+TIMEOUTS_OVR="$PACKS_ROOT/fresh_grind/control/timeouts-overrides.txt"
+TIMEOUTS_DST="${OPENKORE_HOME:-$HOME/openkore}/control/timeouts.txt"
+if [[ -f "$TIMEOUTS_OVR" && -f "$TIMEOUTS_DST" ]]; then
+  python3 - "$TIMEOUTS_OVR" "$TIMEOUTS_DST" <<'PY'
+import re, sys
+from pathlib import Path
+ovr, dst = map(Path, sys.argv[1:3])
+text = dst.read_text()
+for line in ovr.read_text().splitlines():
+    line = line.strip()
+    if not line or line.startswith('#'):
+        continue
+    parts = line.split(None, 1)
+    if len(parts) != 2:
+        continue
+    key, val = parts
+    if re.search(rf'^{re.escape(key)}\s+', text, re.M):
+        text = re.sub(rf'^{re.escape(key)}\s+.*$', f'{key} {val}', text, count=1, flags=re.M)
+    else:
+        text += f'\n{key} {val}\n'
+dst.write_text(text)
+print(f'Merged timeouts overrides -> {dst}')
+PY
+fi
+
+# Party followers: lockMap off, follow Cedric, assist-only combat (not solo hunt)
+if [[ -f "$SCRIPT_DIR/apply-party-follow.py" ]]; then
+  python3 "$SCRIPT_DIR/apply-party-follow.py" "$PROFILES_ROOT" || true
+fi

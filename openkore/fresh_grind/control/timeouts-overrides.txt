@@ -1,0 +1,3 @@
+# Merged into OpenKore control/timeouts.txt by sync-all-profiles.sh
+# Default is 10s — followers give up and solo-hunt before partyfollow can rejoin
+ai_follow_lost_end 180

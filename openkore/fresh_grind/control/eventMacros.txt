@@ -632,6 +632,84 @@ automacro Grind_KeepAggressivePay03 {
 	}
 }
 
+# Party followers must never keep a lockMap — it overrides follow and they wander alone
+automacro Grind_PartyFollowerNoLock {
+	exclusive 1
+	timeout 15
+	priority 0
+	ConfigKey follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	Eval defined $config{lockMap} && $config{lockMap} ne '' && $config{lockMap} ne 'none'
+	call {
+		[
+			log Grind: follower clear lockMap - stay on Cedric
+			do eval Grind_ApplyFollowerFollow()
+		]
+	}
+}
+
+# If follow drops while party mode, restore it
+automacro Grind_PartyFollowerRestore {
+	exclusive 1
+	timeout 20
+	priority 1
+	ConfigKey grindPartyMode 1
+	ConfigKey grindPartyLeader Cedric
+	ConfigKeyNot follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	Eval !$config{follow} || !$config{followTarget}
+	call {
+		[
+			log Grind: restore follow Cedric (party support)
+			do conf follow 1
+			do conf followTarget Cedric
+			do eval Grind_ApplyFollowerFollow()
+		]
+	}
+}
+
+# Re-assert follower follow settings (attackAuto 1 so idle partyfollow can rejoin)
+automacro Grind_PartyFollowerAssist {
+	exclusive 1
+	timeout 45
+	priority 2
+	ConfigKey follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	Eval !($config{attackAuto} == 1 && ($timeout{ai_follow_lost_end}{timeout}//0) >= 120)
+	call {
+		[
+			log Grind: follower assist mode (stick to Cedric)
+			do eval Grind_ApplyFollowerFollow()
+		]
+	}
+}
+
+# If far from Cedric / wrong map, clear combat AI so partyfollow can rejoin
+automacro Grind_PartyFollowerRejoin {
+	exclusive 1
+	timeout 25
+	priority 0
+	ConfigKey follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	Eval Grind_FollowerFarFromLeader()
+	call {
+		[
+			log Grind: far from Cedric - clear AI and rejoin
+			do ai clear
+			do conf follow 1
+			do conf followTarget Cedric
+			do eval Grind_ApplyFollowerFollow()
+		]
+	}
+}
+
 automacro Grind_Done35 {
 	disabled 1
 	exclusive 1
@@ -686,6 +764,7 @@ automacro Grind_SellLoot {
 	exclusive 1
 	timeout 60
 	priority 2
+	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -925,15 +1004,58 @@ sub Grind_GoPay03Safe {
 	return 1;
 }
 
+sub Grind_ApplyFollowerFollow {
+	# Stick to leader: no lockMap, no solo hunt, no scatter teleports.
+	# attackAuto 1 (not 2) so bots go idle and ai_partyfollow can rejoin Cedric.
+	Commands::run("conf follow 1");
+	Commands::run("conf followTarget Cedric") unless ($config{followTarget} && $config{followTarget} ne '');
+	Commands::run("conf followBot 1");
+	Commands::run("conf followDistanceMin 1");
+	Commands::run("conf followDistanceMax 10");
+	Commands::run("conf lockMap none");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("conf attackAuto 1");
+	Commands::run("conf attackAuto_inLockOnly 0");
+	Commands::run("conf attackAuto_followTarget 1");
+	Commands::run("conf attackAuto_party 1");
+	Commands::run("conf runFromTarget 0");
+	Commands::run("conf sellAuto 0");
+	Commands::run("conf teleportAuto_deadly 0");
+	Commands::run("conf teleportAuto_maxDmg 0");
+	Commands::run("conf teleportAuto_atkMiss 0");
+	Commands::run("conf teleportAuto_useSkill 0");
+	Commands::run("conf teleportAuto_dropTargetEngaged 0");
+	Commands::run("timeout ai_follow_lost_end 180");
+	return 1;
+}
+
+sub Grind_FollowerFarFromLeader {
+	return 0 unless $config{follow} && $config{followTarget} && $char && $char->{party};
+	my $id = main::findPartyUserID($config{followTarget});
+	return 0 if !defined $id || $id eq '';
+	my $u = $char->{party}{users}{$id};
+	return 0 unless $u;
+	my $mmap = '';
+	if ($u->{map}) {
+		($mmap) = $u->{map} =~ /([\s\S]*)\.gat/;
+		$mmap = $u->{map} unless defined $mmap && $mmap ne '';
+		$mmap =~ s/\.gat$//;
+	}
+	my $fmap = ($field && $field->baseName) ? $field->baseName : '';
+	return 1 if $mmap && $fmap && $mmap ne $fmap;
+	my $mx = $u->{pos}{x};
+	my $my = $u->{pos}{y};
+	return 0 unless defined $mx && defined $my && $mx ne '' && $my ne '';
+	my $cx = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $cy = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+	my $dist = abs($cx - $mx) + abs($cy - $my);
+	return $dist > 22;
+}
+
 sub Grind_StartHunt {
 	# Party followers stick to the leader instead of locking the field
 	if ($config{follow} && $config{followTarget}) {
-		Commands::run("conf lockMap none");
-		Commands::run("conf route_randomWalk 0");
-		Commands::run("conf attackAuto 2");
-		Commands::run("conf attackAuto_inLockOnly 0");
-		Commands::run("conf attackAuto_followTarget 1");
-		Commands::run("conf runFromTarget 0");
+		Grind_ApplyFollowerFollow();
 		Log::message("[Grind] Following ".$config{followTarget}." (party support)\n", "success");
 		return 1;
 	}
