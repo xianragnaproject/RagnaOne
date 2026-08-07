@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Run OpenKore profile; auto-skip portal compile prompts.
-set -euo pipefail
-PROFILE="$1"
-cd ~/openkore
+# Run OpenKore profile forever: auto-answer portal compile + char select, restart on exit.
+set -uo pipefail
+PROFILE="${1:-}"
+[[ -n "$PROFILE" ]] || { echo "Usage: $0 <ProfileName>"; exit 1; }
+cd "${HOME}/openkore"
 export PERL5LIB="${HOME}/perl5/lib/perl5:${PERL5LIB:-}"
-exec expect <<EXP
+
+attempt=0
+while true; do
+  attempt=$((attempt + 1))
+  echo "[run-profile] $(date -u +%Y-%m-%dT%H:%M:%SZ) starting $PROFILE (attempt $attempt)"
+  # Don't use set -e: expect exit codes vary; we always restart.
+  expect <<EXP || true
 set timeout -1
 spawn perl ./openkore.pl --profile=$PROFILE --interface=Console
 expect {
@@ -13,6 +20,20 @@ expect {
     send "1\r"
     exp_continue
   }
+  -re {Please choose a character} {
+    expect -re {Enter your answer:}
+    send "0\r"
+    exp_continue
+  }
+  -re {Please choose a server} {
+    expect -re {Enter your answer:}
+    send "0\r"
+    exp_continue
+  }
   eof
 }
 EXP
+  code=$?
+  echo "[run-profile] $(date -u +%Y-%m-%dT%H:%M:%SZ) $PROFILE exited code=$code — restarting in 8s"
+  sleep 8
+done

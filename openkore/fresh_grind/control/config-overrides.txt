@@ -41,6 +41,14 @@ sellAuto_distance 10
 sellAuto_maxDistance 14
 sellAuto_npc_steps s
 dcOnDeath 0
+dcOnDisconnect 0
+dcOnDualLogin 0
+dcOnMaxReconnections 0
+dcOnServerShutDown 0
+dcOnServerClose 0
+dcOnStorageFull 0
+# Auto-pick slot 0 after reconnect (missing char hangs at "Enter your answer")
+char 0
 aiChat 0
 
 # Job change target (Swordman|Magician|Archer|Acolyte|Merchant|Thief)

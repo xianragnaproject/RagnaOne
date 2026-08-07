@@ -101,6 +101,13 @@ accounts = parse_map(account_map.read_text()) if account_map.exists() else {}
 preserve_keys = ('username', 'password', 'loginPinCode', 'char')
 full_files = ('eventMacros.txt', 'items_control.txt', 'mon_control.txt', 'pickupitems.txt', 'routeweights.txt')
 
+def ensure_char(cfg: str) -> str:
+    """Always auto-select slot 0 unless a slot is already configured."""
+    if re.search(r'^char\s+\S+', cfg, re.M):
+        return cfg
+    return set_key(cfg, 'char', '0')
+
+
 def patch_config_overrides(cfg: str, overrides_path: Path) -> str:
     """Merge flat sell keys + fix tool-dealer/buyAuto standpoints for grind packs."""
     if not overrides_path.exists():
@@ -183,6 +190,7 @@ for prof in sorted(profiles_root.iterdir()):
         for k, v in saved.items():
             if v is not None and v != '':
                 new_cfg = set_key(new_cfg, k, v)
+        new_cfg = ensure_char(new_cfg)
         # Never leave template credentials
         if get_key(new_cfg, 'username') in (None, 'CHANGE_ME'):
             raise SystemExit(f'REFUSING to write {prof.name}: username missing/CHANGE_ME')
@@ -193,6 +201,7 @@ for prof in sorted(profiles_root.iterdir()):
         for k, v in saved.items():
             if v is not None and v != '':
                 new_cfg = set_key(new_cfg, k, v)
+        new_cfg = ensure_char(new_cfg)
         (prof / 'config.txt').write_text(new_cfg)
 
     print(f'OK    {prof.name} <- {pack} (user={saved.get("username")})')
@@ -235,4 +244,9 @@ fi
 # Party followers: lockMap off, follow Cedric, assist-only combat (not solo hunt)
 if [[ -f "$SCRIPT_DIR/apply-party-follow.py" ]]; then
   python3 "$SCRIPT_DIR/apply-party-follow.py" "$PROFILES_ROOT" || true
+fi
+
+# 24/7: ensure char slot + never permanent DC on storage/full reconnects
+if [[ -f "$SCRIPT_DIR/apply-uptime.py" ]]; then
+  python3 "$SCRIPT_DIR/apply-uptime.py" "$PROFILES_ROOT" || true
 fi
