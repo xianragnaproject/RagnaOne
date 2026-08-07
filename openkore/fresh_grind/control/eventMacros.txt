@@ -350,22 +350,22 @@ automacro Grind_GearDone_Archer {
 	}
 }
 
-# Archer: restock arrows when empty/low (works in party follow too)
+# Archer: restock arrows when empty/low (pauses follow until bought)
 automacro Grind_ArcherNeedArrows {
 	exclusive 1
-	timeout 90
+	timeout 45
 	priority 0
 	JobID 3
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
-	InInventory "Arrow" < 20
+	Eval !($char && $char->inventory && ($char->inventory->sumByName("Arrow") || 0) >= 20)
 	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC","sellAuto"))
 	call {
 		[
 			log Grind: Archer low/no arrows - buy at Prontera tool dealer
-			do conf -f grindBuyingArrows 1
+			do conf grindBuyingArrows 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf follow 0
@@ -373,15 +373,29 @@ automacro Grind_ArcherNeedArrows {
 			do conf attackEquip_arrow Arrow
 			do eval Grind_EnableArrowBuyOnly()
 			do move prt_in 130 72
-			pause 40
+			pause 55
 			do eval AI::queue("buyAuto")
-			pause 40
+			pause 30
+		]
+	}
+}
+
+# After arrows arrive, equip and resume follow/hunt
+automacro Grind_ArcherArrowsBought {
+	exclusive 1
+	timeout 10
+	priority 0
+	JobID 3
+	ConfigKey grindBuyingArrows 1
+	Eval ($char && $char->inventory && ($char->inventory->sumByName("Arrow") || 0) >= 20)
+	call {
+		[
+			log Grind: Archer arrows bought - equip and resume
 			do eq Arrow
 			pause 1
 			do conf attackEquip_arrow Arrow
-			do conf -f grindBuyingArrows 0
+			do conf grindBuyingArrows 0
 			do eval Grind_ResumeAfterArrowBuy()
-			log Grind: Archer arrows restocked - resume
 		]
 	}
 }
@@ -394,8 +408,7 @@ automacro Grind_ArcherEquipArrow {
 	JobID 3
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindBuyingArrows 1
-	InInventory "Arrow" > 0
-	Eval !$char->{equipment}{arrow}
+	Eval ($char && $char->inventory && ($char->inventory->sumByName("Arrow") || 0) > 0) && !$char->{equipment}{arrow}
 	call {
 		[
 			log Grind: equip Arrow
@@ -525,6 +538,7 @@ automacro Grind_PhasePay03 {
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot follow 1
 	ConfigKeyNot grindHuntMap pay_fild03
@@ -554,6 +568,7 @@ automacro Grind_ResumeFieldPay03 {
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	call {
@@ -576,6 +591,7 @@ automacro Grind_StagePay03FromTown {
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot follow 1
 	call {
@@ -597,6 +613,7 @@ automacro Grind_EnsureLockPay03 {
 	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot lockMap pay_fild03
@@ -625,6 +642,7 @@ automacro Grind_KafraAlbertaForPay {
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	Eval abs(($char->{pos}{x}//0)-146) <= 8 && abs(($char->{pos}{y}//0)-89) <= 8
@@ -650,6 +668,7 @@ automacro Grind_AlbertaToPay03 {
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	call {
@@ -676,6 +695,7 @@ automacro Grind_KeepAggressivePay03 {
 	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindDone35 1
 	ConfigKeyNot attackAuto 2
@@ -1075,7 +1095,7 @@ sub Grind_EnableArrowBuyOnly {
 }
 
 sub Grind_ResumeAfterArrowBuy {
-	Commands::run("conf -f grindBuyingArrows 0");
+	Commands::run("conf grindBuyingArrows 0");
 	Commands::run("conf attackEquip_arrow Arrow");
 	if ($config{followTarget} || ($config{grindPartyMode} && $config{grindPartyLeader})) {
 		my $leader = $config{followTarget} || $config{grindPartyLeader} || 'Cedric';
