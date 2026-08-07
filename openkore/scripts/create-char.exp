@@ -18,6 +18,11 @@ log_file "/tmp/ok-create-$profile.log"
 spawn perl ./openkore.pl --profile=$profile --interface=Console --ai=manual
 
 expect {
+  -re {Please select your login server|Select Login Server} {
+    expect -re {Enter your answer:}
+    send "0\r"
+    exp_continue
+  }
   -re {Compile portals} {
     expect -re {Enter your answer:}
     send "1\r"

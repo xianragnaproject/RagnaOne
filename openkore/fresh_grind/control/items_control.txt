@@ -1,0 +1,14 @@
+# items_control — keep it light for early grind
+# <item> <minKeep> <autoStore> <autoSell>
+
+all 0 0 0
+Red Potion 20 0 0
+Butterfly Wing 5 0 0
+Apple 0 0 1
+Jellopy 0 0 1
+Fluff 0 0 1
+Feather 0 0 1
+Sticky Mucus 0 0 1
+Shell 0 0 1
+Chrysalis 0 0 1
+Empty Bottle 0 0 1

@@ -1,0 +1,37 @@
+######## Fresh grind overrides (merge into profile config) ########
+master RagnaOne
+server 0
+attackAuto 2
+attackAuto_party 1
+attackAuto_onlyWhenSafe 0
+attackAuto_notInTown 1
+attackAuto_outOfLock 1
+attackAuto_routeToLock 1
+attackAuto_followTarget 0
+attackAuto_allowKS 1
+attackAuto_inLockOnly 1
+attackChangeTarget 0
+attackCheckLOS 1
+attackMinPlayerDistance 0
+attackMinPortalDistance 0
+aggressiveAntiKS 0
+teleportAuto_deadly 0
+teleportAuto_hp 0
+sitAuto_hp_lower 35
+sitAuto_hp_upper 70
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+lockMap prt_fild08
+itemsTakeAuto 1
+dcOnDeath 0
+grindLeftTraining 1
+grindAfk 0
+grindDone15 0
+aiChat 0
+
+buyAuto_RedPotion Red Potion
+buyAuto_RedPotion_minAmount 0
+buyAuto_RedPotion_maxAmount 50
+buyAuto_RedPotion_npc prontera 59 54
+buyAuto_RedPotion_npc_steps c r0 w1 c
+buyAuto_RedPotion_disabled 1

@@ -1,0 +1,172 @@
+###############################################################################
+# Fresh grind macros — NO previous AssassinClean / quest / job progression
+#
+# A) Exit training → Prontera → lockMap prt_fild08, kill until base 15
+# B) Once in a while: Prontera fountain AFK for random 1–20 minutes
+###############################################################################
+
+# ---- Leave novice training: new_1-1 → new_1-2 ----
+automacro Grind_Leave_new11 {
+	exclusive 1
+	timeout 25
+	priority 1
+	InMap new_1-1
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	call {
+		[
+			log Grind: leaving new_1-1 toward new_1-2
+			do conf attackAuto -1
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move 148 112
+			pause 10
+		]
+	}
+}
+
+# ---- new_1-2: warp NPC to Prontera ----
+automacro Grind_Leave_new12 {
+	exclusive 1
+	timeout 40
+	priority 1
+	InMap new_1-2
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	call {
+		[
+			log Grind: talking warp NPC to Prontera
+			do conf attackAuto -1
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move 118 108
+			pause 3
+			do talknpc 118 108 c c c r0 c c c r0 c
+			pause 8
+		]
+	}
+}
+
+# ---- Arrived Prontera (or already in town): start field farm ----
+automacro Grind_StartFarm {
+	exclusive 1
+	timeout 20
+	priority 2
+	InMap prontera
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	BaseLevel < 15
+	call {
+		[
+			log Grind: training done — lockMap prt_fild08 aggressive farm
+			do conf grindLeftTraining 1
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+		]
+	}
+}
+
+# ---- If already on field but lockMap empty (reconnect / manual) ----
+automacro Grind_EnsureLock {
+	exclusive 1
+	timeout 30
+	priority 5
+	InMap prt_fild08
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot lockMap prt_fild08
+	BaseLevel < 15
+	call {
+		[
+			log Grind: restore lockMap prt_fild08
+			do conf grindLeftTraining 1
+			do conf lockMap prt_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+# ---- Keep aggression on while farming ----
+automacro Grind_KeepAggressive {
+	exclusive 1
+	timeout 45
+	priority 8
+	InMap prt_fild08
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot attackAuto 2
+	BaseLevel < 15
+	call {
+		[
+			log Grind: re-enable attackAuto 2
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+# ---- Stop farm at base 15 ----
+automacro Grind_Done15 {
+	exclusive 1
+	timeout 60
+	priority 0
+	BaseLevel >= 15
+	ConfigKeyNot grindDone15 1
+	call {
+		[
+			log Grind: BASE 15 reached — stopping farm lock
+			do conf grindDone15 1
+			do conf grindAfk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move prontera 156 191
+			pause 5
+			do sit
+			log Grind: idle at Prontera fountain — waiting for next phase
+		]
+	}
+}
+
+###############################################################################
+# B) Fountain AFK break — random 1–20 minutes, then back to prt_fild08
+# timeout 720 = at least ~12 minutes between breaks
+###############################################################################
+automacro Grind_FountainAFK {
+	exclusive 1
+	timeout 720
+	priority 3
+	InMap prt_fild08
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindDone15 1
+	BaseLevel < 15
+	call grind_fountain_afk
+}
+
+macro grind_fountain_afk {
+	$fx = &rand(148, 164)
+	$fy = &rand(183, 199)
+	$mins = &rand(1, 20)
+	$secs = @eval($mins * 60)
+	[
+		log Grind: AFK break — Prontera fountain ($fx,$fy) for $mins min
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do move prontera $fx $fy
+		pause 8
+		do sit
+		pause $secs
+		do stand
+		log Grind: AFK done — resume prt_fild08
+		do conf lockMap prt_fild08
+		do conf lockMap_x none
+		do conf lockMap_y none
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf grindAfk 0
+	]
+}
