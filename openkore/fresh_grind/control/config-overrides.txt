@@ -50,3 +50,9 @@ itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
 itemsGatherAutoMinPlayerDistance 3
 itemsGatherAutoMinPortalDistance 2
+statsAddAuto 1
+statsAddAuto_list 10 str, 10 vit, 10 dex, 10 agi, 20 str, 20 vit, 20 dex, 15 agi, 30 str, 30 vit, 25 dex, 20 agi, 40 str, 40 vit, 30 dex, 25 agi, 50 str, 50 vit, 40 dex, 30 agi
+statsAddAuto_dontUseBonus 0
+statsAdd_over_99 1
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9
