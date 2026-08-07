@@ -365,6 +365,28 @@ automacro Grind_GearDone_Acolyte {
 	}
 }
 
+# If Club buy keeps failing, don't softlock — hunt with whatever weapon we have
+automacro Grind_GearTimeout_Acolyte {
+	exclusive 1
+	timeout 120
+	priority 4
+	JobID 4
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindGearDone 1
+	call {
+		[
+			log Grind: Acolyte gear timeout - disable Club buy and resume hunt
+			do eval Grind_DisableBuyItem('Club')
+			do eq Knife [3]
+			pause 1
+			do eq Cotton Shirt
+			pause 1
+			do conf grindGearDone 1
+			do eval Grind_StartHunt()
+		]
+	}
+}
+
 automacro Grind_GearDone_Merchant {
 	exclusive 1
 	timeout 15
@@ -630,7 +652,7 @@ sub Grind_TalkJobMaster {
 	return 1;
 }
 
-# Enable only this job's gear buyAuto blocks (potions/wings stay as-is)
+# Enable only this job's gear buyAuto + equipAuto blocks (potions/wings stay as-is)
 sub Grind_EnableGearBuy {
 	my $jid = $char->{jobID};
 	my %want = (
@@ -641,6 +663,14 @@ sub Grind_EnableGearBuy {
 		5 => { 'Axe [3]' => 1, 'Cotton Shirt' => 1 },
 		6 => { 'Knife [3]' => 1, 'Cotton Shirt' => 1 },
 	);
+	my %wantEquip = (
+		1 => 'Sword [3]',
+		2 => 'Rod [3]',
+		3 => 'Bow [3]',
+		4 => 'Club',
+		5 => 'Axe [3]',
+		6 => 'Knife [3]',
+	);
 	my $map = $want{$jid} || {};
 	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
 		my $item = $config{"buyAuto_$i"} || '';
@@ -648,7 +678,26 @@ sub Grind_EnableGearBuy {
 		my $disabled = $map->{$item} ? 0 : 1;
 		Commands::run("conf buyAuto_${i}_disabled $disabled");
 	}
-	Log::message("[Grind] Enabled gear buyAuto for jobID=$jid\n", "success");
+	# JobID is ignored by equipAuto — gate with disabled + isJob in config
+	my $wantRh = $wantEquip{$jid} || '';
+	for (my $i = 0; exists $config{"equipAuto_$i"} || defined $config{"equipAuto_${i}_rightHand"}; $i++) {
+		my $rh = $config{"equipAuto_${i}_rightHand"} || '';
+		next unless $rh =~ /\S/;
+		my $disabled = ($wantRh ne '' && $rh eq $wantRh) ? 0 : 1;
+		Commands::run("conf equipAuto_${i}_disabled $disabled");
+	}
+	Log::message("[Grind] Enabled gear buy/equip for jobID=$jid ($wantRh)\n", "success");
+	return 1;
+}
+
+sub Grind_DisableBuyItem {
+	my ($name) = @_;
+	return 0 unless defined $name && $name ne '';
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || '';
+		next unless $item eq $name;
+		Commands::run("conf buyAuto_${i}_disabled 1");
+	}
 	return 1;
 }
 

@@ -131,10 +131,10 @@ buyAuto Arrow {
 	zeny > 50
 	disabled 1
 }
-# Acolyte
+# Acolyte club (sold at Prontera Church, NOT weapon shop 172,130)
 buyAuto Club {
-	npc prt_in 172 130
-	standpoint prt_in 172 128
+	npc prt_church 108 124
+	standpoint prt_church 108 122
 	distance 5
 	minAmount 1
 	maxAmount 1
@@ -162,42 +162,43 @@ buyAuto Cotton Shirt {
 	disabled 1
 }
 
-######## Equip after 1st job (JobID-gated) ########
+######## Equip after 1st job (use isJob — JobID is NOT checked by equipAuto) ########
 equipAuto {
 	rightHand Knife [3]
 	armor Cotton Shirt
-	JobID 6
+	isJob Thief
 	disabled 1
 }
 equipAuto {
 	rightHand Sword [3]
 	leftHand Guard
 	armor Cotton Shirt
-	JobID 1
+	isJob Swordsman
 	disabled 1
 }
 equipAuto {
 	rightHand Rod [3]
 	armor Cotton Shirt
-	JobID 2
+	isJob Mage
 	disabled 1
 }
 equipAuto {
 	rightHand Bow [3]
+	arrow Arrow
 	armor Cotton Shirt
-	JobID 3
+	isJob Archer
 	disabled 1
 }
 equipAuto {
 	rightHand Club
 	armor Cotton Shirt
-	JobID 4
+	isJob Acolyte
 	disabled 1
 }
 equipAuto {
 	rightHand Axe [3]
 	armor Cotton Shirt
-	JobID 5
+	isJob Merchant
 	disabled 1
 }
 
