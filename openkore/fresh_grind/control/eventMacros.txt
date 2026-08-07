@@ -710,6 +710,17 @@ sub Grind_DisableBuyItem {
 }
 
 sub Grind_StartHunt {
+	# Party followers stick to the leader instead of locking the field
+	if ($config{follow} && $config{followTarget}) {
+		Commands::run("conf lockMap none");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf attackAuto 2");
+		Commands::run("conf attackAuto_inLockOnly 0");
+		Commands::run("conf attackAuto_followTarget 1");
+		Commands::run("conf runFromTarget 0");
+		Log::message("[Grind] Following ".$config{followTarget}." (party support)\n", "success");
+		return 1;
+	}
 	Commands::run("conf lockMap prt_fild08");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf attackAuto 2");
@@ -717,7 +728,7 @@ sub Grind_StartHunt {
 	Commands::run("conf runFromTarget 0");
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_hp_lower 35");
-	Log::message("[Grind] Hunting prt_fild08 until base 25\n", "success");
+	Log::message("[Grind] Hunting prt_fild08 (party leader)\n", "success");
 	return 1;
 }
 
