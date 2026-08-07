@@ -217,14 +217,15 @@ statsAddAuto_list 10 str, 10 vit, 10 dex, 10 agi, 20 str, 20 vit, 20 dex, 15 agi
 statsAddAuto_dontUseBonus 0
 statsAdd_over_99 1
 skillsAddAuto 1
+# Per-class lists applied by scripts/apply-class-skills.py (do not rely on Basic-only)
 skillsAddAuto_list Basic Skill 9
 
-# Party Heal support (Acolyte); harmless on other jobs if skill missing
+# Party Heal support (Acolyte); apply-class-skills adds full Acolyte party/self set
 partySkill Heal {
-	lvl 5
+	lvl 10
 	dist 1
 	maxDist 8
-	sp > 20
+	sp > 15
 	target_hp < 80%
 	notPartyOnly 0
 	isSelfSkill 0

@@ -200,3 +200,8 @@ for prof in sorted(profiles_root.iterdir()):
 
 print(f'Synced {synced} profiles, skipped {skipped}')
 PY
+
+# Apply per-class skillsAddAuto + attack/party/self skill blocks for grind fleet
+if [[ -f "$SCRIPT_DIR/apply-class-skills.py" ]]; then
+  python3 "$SCRIPT_DIR/apply-class-skills.py" "$PROFILES_ROOT" || true
+fi
