@@ -350,7 +350,37 @@ automacro Grind_GearDone_Archer {
 	}
 }
 
-# Archer: restock arrows when empty/low (pauses follow until bought)
+# Merchant: Mammonite costs zeny — only use when funded; otherwise basic attack
+automacro Grind_MerchantMammoniteLowZeny {
+	exclusive 1
+	timeout 20
+	priority 2
+	JobID 5
+	ConfigKeyNot grindAfk 1
+	Eval ($char->{zeny} // 0) < 1500
+	Eval !($config{attackSkillSlot_1_disabled} && $config{attackSkillSlot_1} && $config{attackSkillSlot_1} eq 'Mammonite' ? $config{attackSkillSlot_1_disabled} == 1 : 0)
+	call {
+		[
+			log Grind: Merchant low zeny - disable Mammonite (basic attack)
+			do eval Grind_SetMammoniteDisabled(1)
+		]
+	}
+}
+
+automacro Grind_MerchantMammoniteFunded {
+	exclusive 1
+	timeout 30
+	priority 2
+	JobID 5
+	ConfigKeyNot grindAfk 1
+	Eval ($char->{zeny} // 0) >= 1500
+	call {
+		[
+			log Grind: Merchant has zeny - enable Mammonite
+			do eval Grind_SetMammoniteDisabled(0)
+		]
+	}
+}
 automacro Grind_ArcherNeedArrows {
 	exclusive 1
 	timeout 45
@@ -1057,6 +1087,19 @@ sub Grind_EnableGearBuy {
 		Commands::run("conf equipAuto_${i}_disabled $disabled");
 	}
 	Log::message("[Grind] Enabled gear buy/equip for jobID=$jid ($wantRh)\n", "success");
+	return 1;
+}
+
+sub Grind_SetMammoniteDisabled {
+	my ($disabled) = @_;
+	$disabled = 1 unless defined $disabled;
+	for (my $i = 0; exists $config{"attackSkillSlot_$i"} || ($i == 0 && exists $config{attackSkillSlot}); $i++) {
+		my $name = $config{"attackSkillSlot_$i"} || '';
+		next unless $name eq 'Mammonite';
+		Commands::run("conf attackSkillSlot_${i}_disabled $disabled");
+		Commands::run("conf -f attackSkillSlot_${i}_zeny > 1500") if !$disabled;
+		last;
+	}
 	return 1;
 }
 

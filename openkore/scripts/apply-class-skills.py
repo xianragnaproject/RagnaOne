@@ -222,6 +222,7 @@ attackSkillSlot Mammonite {
 	dist 1
 	maxDist 2
 	sp > 8
+	zeny > 1500
 	notInTown 1
 	timeout 1
 	disabled 0
