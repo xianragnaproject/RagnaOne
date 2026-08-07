@@ -76,6 +76,7 @@ automacro Grind_EnsureLock {
 	priority 5
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
 	ConfigKeyNot lockMap prt_fild08
 	BaseLevel < 15
 	call {
@@ -96,6 +97,7 @@ automacro Grind_KeepAggressive {
 	priority 8
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
 	ConfigKeyNot attackAuto 2
 	BaseLevel < 15
 	call {
@@ -105,6 +107,47 @@ automacro Grind_KeepAggressive {
 			do conf route_randomWalk 1
 		]
 	}
+}
+
+###############################################################################
+# Novice only: if overweight >= 40%, sell loot at Prontera Tool Dealer
+###############################################################################
+automacro Grind_NoviceSell {
+	exclusive 1
+	timeout 45
+	priority 2
+	JobID 0
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindDone15 1
+	Eval (Misc::percent_weight($char) >= 40) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call grind_novice_sell
+}
+
+macro grind_novice_sell {
+	[
+		log Grind: Novice OW>=40% — selling at Prontera tool dealer
+		do conf grindSelling 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 1
+		do move prt_in 126 74
+		pause 6
+		do eval AI::queue("sellAuto")
+		pause 25
+		do move 126 70
+		pause 3
+		do move prontera 160 70
+		pause 6
+		do conf lockMap prt_fild08
+		do conf lockMap_x none
+		do conf lockMap_y none
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf grindSelling 0
+		log Grind: sell done — resume prt_fild08
+	]
 }
 
 # ---- Stop farm at base 15 ----
@@ -140,6 +183,7 @@ automacro Grind_FountainAFK {
 	priority 3
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindDone15 1
 	BaseLevel < 15
 	call grind_fountain_afk

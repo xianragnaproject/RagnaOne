@@ -23,9 +23,19 @@ route_randomWalk 1
 route_randomWalk_inLockOnly 1
 lockMap prt_fild08
 itemsTakeAuto 2
+itemsGatherAuto 2
+itemsGatherAuto_notInTown 1
+itemsMaxWeight_sellOrStore 40
+sellAuto 1
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 126 74
+sellAuto_distance 5
+sellAuto_maxDistance 8
+sellAuto_npc_steps s
 dcOnDeath 0
 grindLeftTraining 1
 grindAfk 0
+grindSelling 0
 grindDone15 0
 aiChat 0
 
