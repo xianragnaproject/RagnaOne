@@ -195,7 +195,7 @@ macro grind_fountain_afk {
 	$mins = &rand(1, 20)
 	$secs = @eval($mins * 60)
 	[
-		log Grind: AFK break — Prontera fountain ($fx,$fy) for $mins min
+		log Grind: AFK break — Prontera fountain at $fx $fy for $mins min
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
