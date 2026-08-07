@@ -124,23 +124,24 @@ automacro Grind_KeepAggressive08 {
 }
 
 ###############################################################################
-# Base 15 + Job 10 Novice -> change job at Prontera Job Master (center)
+# Base 15 + Job 10 Novice -> Prontera Job Master
+# Pattern matches working assassin/blacksmith_clean packs:
+#   JobID + Base/JobLevel + NpcNotNear/NpcNear (no fragile Eval mix)
 ###############################################################################
 automacro Grind_JobChange_Go {
 	exclusive 1
-	timeout 45
+	timeout 40
 	priority 0
 	JobID 0
 	BaseLevel >= 15
 	JobLevel >= 10
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
-	Eval !($field && $field->baseName eq 'prontera' && abs($char->{pos}{x}-155) <= 4 && abs($char->{pos}{y}-180) <= 4)
+	NpcNotNear /Job Master/
 	call {
 		[
-			log Grind: Base15/Job10 - walk to Job Master [$config{grindTargetJob}]
+			log Grind: Base15/Job10 - walk to Job Master
 			do conf grindJobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
@@ -148,36 +149,31 @@ automacro Grind_JobChange_Go {
 			do stand
 			pause 1
 			do move prontera 155 180
-			pause 55
-			do eval Grind_TalkJobMaster()
-			pause 12
-			do conf grindJobbing 0
 		]
 	}
 }
 
 automacro Grind_JobChange_Talk {
 	exclusive 1
-	timeout 25
+	timeout 30
 	priority 0
 	JobID 0
 	BaseLevel >= 15
 	JobLevel >= 10
-	InMap prontera
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindAfk 1
-	Eval abs($char->{pos}{x}-155) <= 6 && abs($char->{pos}{y}-180) <= 6
+	NpcNear /Job Master/
 	call {
 		[
-			log Grind: talking Job Master for $config{grindTargetJob}
+			log Grind: talking Job Master
 			do conf grindJobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
+			do stand
 			pause 2
 			do eval Grind_TalkJobMaster()
-			pause 20
-			do conf grindJobbing 0
+			pause 18
 		]
 	}
 }
@@ -629,6 +625,7 @@ sub Grind_TalkJobMaster {
 	);
 	my $r = $menu{$job} || 'r5';
 	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
+	Commands::run("stand");
 	Commands::run("talknpc 155 180 c c c $r c r0");
 	return 1;
 }
