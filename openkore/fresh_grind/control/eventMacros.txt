@@ -871,6 +871,7 @@ automacro Grind_Done25 {
 ###############################################################################
 # Sell @ 40% OW via built-in sellAuto (items_control must autoSell junk)
 # Standpoint 130,72 is walkable; NPC talk uses distance (do NOT stand on 126,74)
+# Leader uses Grind_SellLoot; followers use Grind_FollowerSellLoot (pause follow).
 ###############################################################################
 automacro Grind_SellLoot {
 	exclusive 1
@@ -880,9 +881,25 @@ automacro Grind_SellLoot {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindDone35 1
 	Eval (Misc::percent_weight($char) >= 40) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
 	call grind_sell_loot
+}
+
+# Followers never hit Grind_SellLoot (ConfigKeyNot follow 1) — they softlock at 89% OW.
+automacro Grind_FollowerSellLoot {
+	exclusive 1
+	timeout 90
+	priority 2
+	ConfigKey follow 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindBuyingArrows 1
+	ConfigKeyNot grindDone35 1
+	Eval (Misc::percent_weight($char) >= 40) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call grind_follower_sell_loot
 }
 
 macro grind_sell_loot {
@@ -908,6 +925,31 @@ macro grind_sell_loot {
 		do eval Grind_ResumeHuntLock()
 		do conf grindSelling 0
 		log Grind: sell done - resume hunt
+	]
+}
+
+macro grind_follower_sell_loot {
+	[
+		log Grind: follower OW>=40% - pause follow, sell, rejoin Cedric
+		do conf grindSelling 1
+		do conf follow 0
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 1
+		do conf sellAuto_standpoint prt_in 130 72
+		do conf sellAuto_npc prt_in 126 76
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do move prt_in 130 72
+		pause 35
+		do eval AI::queue("sellAuto")
+		pause 35
+		do move 135 71
+		pause 6
+		do conf grindSelling 0
+		do eval Grind_ApplyFollowerFollow()
+		log Grind: follower sell done - following Cedric again
 	]
 }
 
