@@ -1,6 +1,6 @@
 ######## Fresh grind — per-class skill raise + auto-use ########
 # Applied by apply-class-skills.py / sync based on grindTargetJob.
-# inLockOnly left off so party followers (no lockMap) still cast.
+# inLockOnly left off so skills still cast while routing to lockMap.
 
 ### Swordman
 # skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Increase HP Recovery 5

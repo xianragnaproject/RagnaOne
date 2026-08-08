@@ -1,5 +1,5 @@
 # Merged into OpenKore control/timeouts.txt by sync-all-profiles.sh
-# Default is 10s — followers give up and solo-hunt before partyfollow can rejoin
+# Kept high so accidental follow never thrash-resets (solo grind uses follow 0)
 ai_follow_lost_end 180
 
 # 24/7 uptime: reconnect quickly after map/server blips (default backoff reaches 1800s)

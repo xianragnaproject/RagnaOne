@@ -220,7 +220,7 @@ elif [[ -f "$SCRIPT_DIR/apply-class-skills.py" ]]; then
   python3 "$SCRIPT_DIR/apply-class-skills.py" "$PROFILES_ROOT" || true
 fi
 
-# Party follow roles for grind fleet (no-op on already-thin follower keys; safe)
+# Force solo hunt keys on grind fleet (follow 0 / grindPartyMode 0)
 if [[ -f "$SCRIPT_DIR/apply-party-follow.py" ]]; then
   python3 "$SCRIPT_DIR/apply-party-follow.py" "$PROFILES_ROOT" || true
 fi

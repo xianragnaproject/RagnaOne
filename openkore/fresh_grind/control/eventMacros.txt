@@ -834,7 +834,7 @@ automacro Grind_Done35 {
 	}
 }
 
-# Legacy idle-at-25 (disabled — party continues to pay_fild03)
+# Legacy idle-at-25 (disabled — solo bots continue to pay_fild03)
 automacro Grind_Done25 {
 	disabled 1
 	exclusive 1
@@ -1018,7 +1018,7 @@ automacro Grind_ResumeAfterSell {
 }
 
 ###############################################################################
-# Fountain AFK (disabled during party pay_fild03 grind)
+# Fountain AFK (disabled — solo pay_fild03 grind)
 ###############################################################################
 automacro Grind_FountainAFK {
 	disabled 1

@@ -16,7 +16,7 @@ moc_para01 10000
 prt_maze01 10000
 prt_fild08a 10000
 
-# Never route through Geffen orc fields (kills ~base 25 party)
+# Never route through Geffen orc fields (lethal around base 25)
 gef_fild00 10000
 gef_fild01 10000
 gef_fild02 10000

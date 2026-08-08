@@ -12,7 +12,7 @@ mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/fleet-watchdog.log"
 INTERVAL="${WATCHDOG_INTERVAL:-45}"
 
-# Default fleet: fresh grind party
+# Default fleet: fresh grind (solo)
 PROFILES=(
   GrindSword
   GrindPrt08

@@ -2,7 +2,7 @@
 master RagnaOne
 server 0
 attackAuto 2
-attackAuto_party 1
+attackAuto_party 0
 attackAuto_onlyWhenSafe 0
 attackAuto_notInTown 1
 attackAuto_outOfLock 0
@@ -23,7 +23,7 @@ sitAuto_hp_lower 35
 sitAuto_hp_upper 70
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
-# Hunt map: prt_fild08 (<25) then pay_fild03 (25-35). Party leader uses this lockMap.
+# Hunt map: prt_fild08 (<25) then solo pay_fild03 (25-35). Each bot lockMaps alone.
 # attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
 lockMap pay_fild03
 grindHuntMap pay_fild03
@@ -71,7 +71,6 @@ follow 0
 followBot 0
 followTarget
 attackAuto_followTarget 0
-attackAuto_party 0
 
 ######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
 # Index order matters for Grind_EnableGearBuy (buyAuto_0..)
