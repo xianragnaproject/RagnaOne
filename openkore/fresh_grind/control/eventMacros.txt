@@ -5,14 +5,14 @@
 # 2) -> Prontera Job Master (config grindTargetJob)
 # 3) After 1st job -> buy class gear (weapon/shield/arrows)
 # 4) Keep grinding prt_fild08 until base 25
-# 5) Base 25-35: party hunt pay_fild03 (leader lockMap; others follow)
+# 5) Base 25-35: solo hunt pay_fild03 (each bot lockMap — no party/follow)
 # 6) Sell @ 40% OW (Prontera tool dealer)
 #
 # grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief | random
-# grindPartyRole: leader | follower
 # Shared pack: one control folder for all accounts (login-only thin profiles).
 # Macros are JobID-gated; class skills enabled by Grind_ApplyClassSkills.
 # grindHuntMap: prt_fild08 | pay_fild03
+# grindPartyMode 0 = solo (default). Party/follow macros stay disabled.
 ###############################################################################
 
 # ---- Leave novice training: new_1-1 -> new_1-2 ----
@@ -576,7 +576,7 @@ automacro Grind_ResumeField08 {
 	}
 }
 
-# Base 25+: switch party leader hunt to pay_fild03 (25-35)
+# Base 25+: solo hunt pay_fild03 (25-35) — every account locks the map
 # Route via Alberta (avoid kafra→gef_fild10 orc misroutes)
 automacro Grind_PhasePay03 {
 	exclusive 1
@@ -590,12 +590,12 @@ automacro Grind_PhasePay03 {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot follow 1
 	ConfigKeyNot grindHuntMap pay_fild03
 	call {
 		[
-			log Grind: BASE 25+ - hunt pay_fild03 until base 35 (via Alberta)
+			log Grind: BASE 25+ - solo hunt pay_fild03 until base 35 (via Alberta)
 			do conf grindDone25 1
+			do conf follow 0
 			do conf -f grindHuntMap pay_fild03
 			do conf grindAfk 0
 			do conf attackAuto_routeToLock 0
@@ -619,11 +619,11 @@ automacro Grind_ResumeFieldPay03 {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
-	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	call {
 		[
-			log Grind: restore lockMap pay_fild03
+			log Grind: restore lockMap pay_fild03 (solo)
+			do conf follow 0
 			do eval Grind_StartHunt()
 		]
 	}
@@ -643,10 +643,10 @@ automacro Grind_StagePay03FromTown {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot follow 1
 	call {
 		[
-			log Grind: stage to pay_fild03 via Alberta
+			log Grind: stage to pay_fild03 via Alberta (solo)
+			do conf follow 0
 			do conf attackAuto_routeToLock 0
 			do conf attackAuto_outOfLock 0
 			do conf teleportAuto_deadly 1
@@ -660,7 +660,6 @@ automacro Grind_EnsureLockPay03 {
 	timeout 30
 	priority 5
 	InMap pay_fild03
-	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
@@ -671,7 +670,8 @@ automacro Grind_EnsureLockPay03 {
 	BaseLevel < 35
 	call {
 		[
-			log Grind: restore lockMap pay_fild03
+			log Grind: restore lockMap pay_fild03 (solo)
+			do conf follow 0
 			do conf -f grindHuntMap pay_fild03
 			do conf lockMap pay_fild03
 			do conf attackAuto 2
@@ -693,12 +693,12 @@ automacro Grind_KafraAlbertaForPay {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
-	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	Eval abs(($char->{pos}{x}//0)-146) <= 8 && abs(($char->{pos}{y}//0)-89) <= 8
 	call {
 		[
 			log Grind: kafra warp Alberta (avoid Orc Dungeon option)
+			do conf follow 0
 			do conf attackAuto 0
 			do talknpc 146 89 c r2 c r5
 			pause 8
@@ -719,11 +719,11 @@ automacro Grind_AlbertaToPay03 {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
-	ConfigKeyNot follow 1
 	ConfigKeyNot lockMap pay_fild03
 	call {
 		[
-			log Grind: Alberta reached - enter pay_fild03 via west gate
+			log Grind: Alberta reached - enter pay_fild03 via west gate (solo)
+			do conf follow 0
 			do conf attackAuto_routeToLock 0
 			do conf attackAuto_outOfLock 0
 			do conf teleportAuto_deadly 0
@@ -742,7 +742,6 @@ automacro Grind_KeepAggressivePay03 {
 	timeout 45
 	priority 8
 	InMap pay_fild03
-	ConfigKeyNot follow 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindBuyingArrows 1
@@ -753,90 +752,62 @@ automacro Grind_KeepAggressivePay03 {
 	BaseLevel < 35
 	call {
 		[
+			do conf follow 0
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
 	}
 }
 
-# Party followers must never keep a lockMap — it overrides follow and they wander alone
+# --- Party/follow macros DISABLED (solo grind only) ---
 automacro Grind_PartyFollowerNoLock {
+	disabled 1
 	exclusive 1
 	timeout 15
 	priority 0
 	ConfigKey follow 1
-	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindBuyingArrows 1
-	Eval defined $config{lockMap} && $config{lockMap} ne '' && $config{lockMap} ne 'none'
 	call {
 		[
-			log Grind: follower clear lockMap - stay on Cedric
-			do eval Grind_ApplyFollowerFollow()
+			do eval Grind_ApplySoloHunt()
 		]
 	}
 }
 
-# If follow drops while party mode, restore it
 automacro Grind_PartyFollowerRestore {
+	disabled 1
 	exclusive 1
 	timeout 20
 	priority 1
 	ConfigKey grindPartyMode 1
-	ConfigKey grindPartyLeader Cedric
-	ConfigKeyNot follow 1
-	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindBuyingArrows 1
-	Eval !$config{follow} || !$config{followTarget}
 	call {
 		[
-			log Grind: restore follow Cedric (party support)
-			do conf follow 1
-			do conf followTarget Cedric
-			do eval Grind_ApplyFollowerFollow()
+			do eval Grind_ApplySoloHunt()
 		]
 	}
 }
 
-# Re-assert follower follow settings (attackAuto 2 = kill all mobs near Cedric)
 automacro Grind_PartyFollowerAssist {
+	disabled 1
 	exclusive 1
 	timeout 45
 	priority 2
 	ConfigKey follow 1
-	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindBuyingArrows 1
-	Eval !($config{attackAuto} == 2 && ($timeout{ai_follow_lost_end}{timeout}//0) >= 120)
 	call {
 		[
-			log Grind: follower assist mode (stick to Cedric, kill all)
-			do eval Grind_ApplyFollowerFollow()
+			do eval Grind_ApplySoloHunt()
 		]
 	}
 }
 
-# If far from Cedric / wrong map, clear combat AI so partyfollow can rejoin
 automacro Grind_PartyFollowerRejoin {
+	disabled 1
 	exclusive 1
 	timeout 25
 	priority 0
 	ConfigKey follow 1
-	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindBuyingArrows 1
-	Eval Grind_FollowerFarFromLeader()
 	call {
 		[
-			log Grind: far from Cedric - clear AI and rejoin
-			do ai clear
-			do conf follow 1
-			do conf followTarget Cedric
-			do eval Grind_ApplyFollowerFollow()
+			do eval Grind_ApplySoloHunt()
 		]
 	}
 }
@@ -906,8 +877,9 @@ automacro Grind_SellLoot {
 	call grind_sell_loot
 }
 
-# Followers never hit Grind_SellLoot (ConfigKeyNot follow 1) — they softlock at 89% OW.
+# Followers sell path unused in solo mode (kept disabled)
 automacro Grind_FollowerSellLoot {
+	disabled 1
 	exclusive 1
 	timeout 90
 	priority 2
@@ -967,8 +939,8 @@ macro grind_follower_sell_loot {
 		do move 135 71
 		pause 6
 		do conf grindSelling 0
-		do eval Grind_ApplyFollowerFollow()
-		log Grind: follower sell done - following Cedric again
+		do eval Grind_StartHunt()
+		log Grind: follower sell done - resume solo hunt
 	]
 }
 
@@ -1279,20 +1251,14 @@ sub Grind_EnableArrowBuyOnly {
 sub Grind_ResumeAfterArrowBuy {
 	Commands::run("conf grindBuyingArrows 0");
 	Commands::run("conf attackEquip_arrow Arrow");
-	if ($config{followTarget} || ($config{grindPartyMode} && $config{grindPartyLeader})) {
-		my $leader = $config{followTarget} || $config{grindPartyLeader} || 'Cedric';
-		Commands::run("conf follow 1");
-		Commands::run("conf followTarget $leader");
-		Grind_ApplyFollowerFollow();
-	} else {
-		Grind_StartHunt();
-	}
+	Grind_StartHunt();
 	return 1;
 }
 
 sub Grind_GoPay03Safe {
 	# Prontera kafra Teleport -> Alberta (NOT Orc Dungeon). Menu on RagnaOne:
 	# r2 = Use Teleport Service, r5 = Alberta
+	Commands::run("conf follow 0");
 	Commands::run("conf attackAuto 0");
 	Commands::run("conf route_randomWalk 0");
 	Commands::run("conf lockMap none");
@@ -1300,66 +1266,42 @@ sub Grind_GoPay03Safe {
 	Commands::run("conf attackAuto_outOfLock 0");
 	Commands::run("conf teleportAuto_deadly 0");
 	Commands::run("move prontera 146 89");
-	Log::message("[Grind] Safe route: Prontera kafra -> Alberta -> pay_fild03\n", "success");
+	Log::message("[Grind] Safe route: Prontera kafra -> Alberta -> pay_fild03 (solo)\n", "success");
 	return 1;
 }
 
+# Solo grind: no party follow. Kept name alias for old macro calls.
 sub Grind_ApplyFollowerFollow {
-	# Stick to leader: no lockMap, no scatter teleports.
-	# attackAuto 2 = kill all monsters (mon_control all 2); partyfollow + rejoin keep them with Cedric.
-	Commands::run("conf follow 1");
-	Commands::run("conf followTarget Cedric") unless ($config{followTarget} && $config{followTarget} ne '');
-	Commands::run("conf followBot 1");
-	Commands::run("conf followDistanceMin 1");
-	Commands::run("conf followDistanceMax 10");
-	Commands::run("conf lockMap none");
-	Commands::run("conf route_randomWalk 0");
+	return Grind_ApplySoloHunt();
+}
+
+sub Grind_ApplySoloHunt {
+	Commands::run("conf follow 0");
+	Commands::run("conf followTarget");
+	Commands::run("conf followBot 0");
+	Commands::run("conf grindPartyMode 0");
+	Commands::run("conf partyAuto 0");
 	Commands::run("conf attackAuto 2");
-	Commands::run("conf attackAuto_inLockOnly 0");
-	Commands::run("conf attackAuto_followTarget 1");
-	Commands::run("conf attackAuto_party 1");
+	Commands::run("conf attackAuto_inLockOnly 1");
+	Commands::run("conf attackAuto_followTarget 0");
+	Commands::run("conf attackAuto_party 0");
+	Commands::run("conf route_randomWalk 1");
+	Commands::run("conf sellAuto 1");
 	Commands::run("conf runFromTarget 0");
-	Commands::run("conf sellAuto 0");
-	Commands::run("conf teleportAuto_deadly 0");
-	Commands::run("conf teleportAuto_maxDmg 0");
-	Commands::run("conf teleportAuto_atkMiss 0");
-	Commands::run("conf teleportAuto_useSkill 0");
-	Commands::run("conf teleportAuto_dropTargetEngaged 0");
-	Commands::run("timeout ai_follow_lost_end 180");
 	return 1;
 }
 
 sub Grind_FollowerFarFromLeader {
-	return 0 unless $config{follow} && $config{followTarget} && $char && $char->{party};
-	my $id = main::findPartyUserID($config{followTarget});
-	return 0 if !defined $id || $id eq '';
-	my $u = $char->{party}{users}{$id};
-	return 0 unless $u;
-	my $mmap = '';
-	if ($u->{map}) {
-		($mmap) = $u->{map} =~ /([\s\S]*)\.gat/;
-		$mmap = $u->{map} unless defined $mmap && $mmap ne '';
-		$mmap =~ s/\.gat$//;
-	}
-	my $fmap = ($field && $field->baseName) ? $field->baseName : '';
-	return 1 if $mmap && $fmap && $mmap ne $fmap;
-	my $mx = $u->{pos}{x};
-	my $my = $u->{pos}{y};
-	return 0 unless defined $mx && defined $my && $mx ne '' && $my ne '';
-	my $cx = $char->{pos_to}{x} // $char->{pos}{x} // 0;
-	my $cy = $char->{pos_to}{y} // $char->{pos}{y} // 0;
-	my $dist = abs($cx - $mx) + abs($cy - $my);
-	return $dist > 22;
+	# Party disabled — never trigger rejoin
+	return 0;
 }
 
 sub Grind_StartHunt {
 	return 1 if $config{grindBuyingArrows};
-	# Party followers stick to the leader instead of locking the field
-	if ($config{follow} && $config{followTarget}) {
-		Grind_ApplyFollowerFollow();
-		Log::message("[Grind] Following ".$config{followTarget}." (party support)\n", "success");
-		return 1;
-	}
+	# Always solo: lock hunt map and fight
+	Commands::run("conf follow 0");
+	Commands::run("conf followTarget");
+	Commands::run("conf grindPartyMode 0");
 	my $map = $config{grindHuntMap};
 	if (!$map || $map eq '' || $map eq 'none') {
 		$map = ($char && $char->{lv} >= 25) ? 'pay_fild03' : 'prt_fild08';
@@ -1368,8 +1310,11 @@ sub Grind_StartHunt {
 	Commands::run("conf lockMap $map");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf attackAuto 2");
+	Commands::run("conf attackAuto_inLockOnly 1");
+	Commands::run("conf attackAuto_followTarget 0");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
+	Commands::run("conf sellAuto 1");
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_hp_lower 35");
 	if ($map eq 'pay_fild03') {
@@ -1377,7 +1322,7 @@ sub Grind_StartHunt {
 		Commands::run("conf attackAuto_outOfLock 0");
 		Commands::run("conf teleportAuto_deadly 1");
 	}
-	Log::message("[Grind] Hunting $map (party leader)\n", "success");
+	Log::message("[Grind] Solo hunting $map\n", "success");
 	return 1;
 }
 

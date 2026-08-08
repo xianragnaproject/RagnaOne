@@ -63,16 +63,15 @@ grindGearDone 0
 grindDone15 0
 grindDone25 1
 grindDone35 0
-# Party: Cedric (Swordsman) leads; other classes follow + support
-# Followers: follow 1 / followTarget Cedric / attackAuto 1 (see Grind_ApplyFollowerFollow)
-# Leader keeps lockMap + attackAuto 2; followers must not lockMap or solo-hunt
-grindPartyMode 1
-grindPartyLeader Cedric
-partyAuto 2
-partyAutoShare 1
-followDistanceMin 1
-followDistanceMax 10
-followBot 1
+# Solo grind — no party / no follow
+grindPartyMode 0
+partyAuto 0
+partyAutoShare 0
+follow 0
+followBot 0
+followTarget
+attackAuto_followTarget 0
+attackAuto_party 0
 
 ######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
 # Index order matters for Grind_EnableGearBuy (buyAuto_0..)
