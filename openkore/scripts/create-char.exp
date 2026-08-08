@@ -14,6 +14,7 @@ if {$sex eq "F" || $sex eq "f" || $sex eq "female"} {
 
 cd $::env(HOME)/openkore
 log_file "/tmp/ok-create-$profile.log"
+set ::acct_timeouts 0
 
 spawn perl ./openkore.pl --profile=$profile --interface=Console --ai=manual
 
@@ -32,6 +33,15 @@ expect {
     puts "SERVER_CLOSED"
     catch {send "quit\r"}
     exit 7
+  }
+  -re {Timeout on Account Server} {
+    incr ::acct_timeouts
+    if {$::acct_timeouts >= 2} {
+      puts "SERVER_CLOSED"
+      catch {send "quit\r"}
+      exit 7
+    }
+    exp_continue
   }
   -re {Password Error|Enter your Ragnarok Online password again} {
     puts "BAD_LOGIN"
