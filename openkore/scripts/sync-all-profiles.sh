@@ -211,8 +211,18 @@ print(f'Synced {synced} profiles, skipped {skipped}')
 PY
 
 # Apply per-class skillsAddAuto + attack/party/self skill blocks for grind fleet
-if [[ -f "$SCRIPT_DIR/apply-class-skills.py" ]]; then
+# Prefer shared-pack thin profiles (login + !include) when builder exists
+if [[ -f "$SCRIPT_DIR/make-thin-grind-profiles.py" ]]; then
+  python3 "$SCRIPT_DIR/make-thin-grind-profiles.py" \
+    "${OPENKORE_HOME:-$HOME/openkore}" \
+    "$PACKS_ROOT/fresh_grind/control" || true
+elif [[ -f "$SCRIPT_DIR/apply-class-skills.py" ]]; then
   python3 "$SCRIPT_DIR/apply-class-skills.py" "$PROFILES_ROOT" || true
+fi
+
+# Party follow roles for grind fleet (no-op on already-thin follower keys; safe)
+if [[ -f "$SCRIPT_DIR/apply-party-follow.py" ]]; then
+  python3 "$SCRIPT_DIR/apply-party-follow.py" "$PROFILES_ROOT" || true
 fi
 
 # Merge fresh_grind timeout overrides into live OpenKore control/timeouts.txt
@@ -239,11 +249,6 @@ for line in ovr.read_text().splitlines():
 dst.write_text(text)
 print(f'Merged timeouts overrides -> {dst}')
 PY
-fi
-
-# Party followers: lockMap off, follow Cedric, assist-only combat (not solo hunt)
-if [[ -f "$SCRIPT_DIR/apply-party-follow.py" ]]; then
-  python3 "$SCRIPT_DIR/apply-party-follow.py" "$PROFILES_ROOT" || true
 fi
 
 # 24/7: ensure char slot + never permanent DC on storage/full reconnects

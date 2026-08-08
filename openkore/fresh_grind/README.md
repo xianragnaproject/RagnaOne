@@ -1,30 +1,69 @@
-# Fresh grind pack — prt_fild08 1→25
+# FreshGrind shared control pack
 
-Clean profile (no AssassinClean quest macros).
+One shared folder for all grind accounts. Per-account files only hold **login + role**.
 
-## Behavior
-1. Aggressive farm on `prt_fild08` until Novice **base 15 + job 10**
-2. Job change at Prontera Job Master (`155, 180`) — target from `grindTargetJob`
-3. After 1st job only: auto-buy class gear (dagger / sword+shield / bow+arrow / etc.)
-4. Keep grinding **`prt_fild08` until base 25**
-5. Sell at ≥40% OW; occasional fountain AFK
+## Layout
 
-## `grindTargetJob` values
-`Swordman` | `Magician` | `Archer` | `Acolyte` | `Merchant` | `Thief`
-
-## Profiles (example fleet)
-| Profile | Class | Notes |
-|---------|-------|-------|
-| GrindPrt08 | Thief | original |
-| GrindSword | Swordman | |
-| GrindMage | Magician | |
-| GrindArcher | Archer | |
-| GrindAco | Acolyte | |
-| GrindMerch | Merchant | |
-
-Credentials live in `~/openkore/profiles/ACCOUNT_MAP.txt`.
-
-## Create more class accounts
-```bash
-python3 openkore/scripts/batch-create-fresh-grind.py
 ```
+openkore/fresh_grind/control/     # SOURCE OF TRUTH (edit here)
+  config-shared.txt               # combat, buy/equip, all 1st-job skills
+  eventMacros.txt                 # JobID-gated macros
+  items_control.txt / mon_control.txt / ...
+
+openkore/profiles/GrindSword/
+  config.txt                      # thin: !include + username/password/role
+  eventMacros.txt -> ../../fresh_grind/control/eventMacros.txt
+  ...
+```
+
+## Add a new account
+
+1. Create a blank profile folder (or copy any `Grind*`).
+2. Put credentials in `profiles/ACCOUNT_MAP.txt` or the thin `config.txt`:
+   ```
+   !include ../../fresh_grind/control/config-shared.txt
+   username myuser
+   password mypass
+   char 0
+   grindTargetJob random
+   grindPartyRole follower
+   follow 1
+   followTarget Cedric
+   ```
+3. Run:
+   ```bash
+   python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_grind/control
+   ```
+4. Start: `./scripts/run-profile.sh GrindNewName`
+
+## Job selection
+
+| `grindTargetJob` | Behavior |
+|------------------|----------|
+| `Swordman` / `Magician` / `Archer` / `Acolyte` / `Merchant` / `Thief` | Fixed class at Job Master |
+| `random` (or empty) | Macro picks a random 1st job, then enables that class’s skills/gear |
+
+Macros that buy swords, cast Mammonite, heal, etc. are **JobID-gated** — they only fire for the matching class.
+
+## Party fleet (current)
+
+Fixed roles (not random), so Cedric stays tank leader:
+
+| Profile | Job | Role |
+|---------|-----|------|
+| GrindSword | Swordman | leader |
+| GrindPrt08 | Thief | follower |
+| GrindMage | Magician | follower |
+| GrindArcher | Archer | follower |
+| GrindAco | Acolyte | follower |
+| GrindMerch | Merchant | follower |
+
+## Sync from repo → live OpenKore
+
+```bash
+python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_grind/control
+# or via sync-all-profiles.sh (calls the thin builder for Grind*)
+bash openkore/scripts/sync-all-profiles.sh
+```
+
+Edit **macros/combat once** under `fresh_grind/control/` — every Grind account picks it up (symlinks / include).

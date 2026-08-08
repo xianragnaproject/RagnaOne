@@ -1,0 +1,459 @@
+######## Fresh grind overrides (merge into profile config) ########
+master RagnaOne
+server 0
+attackAuto 2
+attackAuto_party 1
+attackAuto_onlyWhenSafe 0
+attackAuto_notInTown 1
+attackAuto_outOfLock 0
+# Don't fight while walking to lockMap (orc kafra misroutes are lethal at ~25)
+attackAuto_routeToLock 0
+attackAuto_followTarget 0
+attackAuto_allowKS 1
+attackAuto_inLockOnly 1
+teleportAuto_deadly 1
+attackChangeTarget 0
+attackCheckLOS 1
+attackMinPlayerDistance 0
+attackMinPortalDistance 0
+aggressiveAntiKS 0
+teleportAuto_deadly 0
+teleportAuto_hp 0
+sitAuto_hp_lower 35
+sitAuto_hp_upper 70
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+# Hunt map: prt_fild08 (<25) then pay_fild03 (25-35). Party leader uses this lockMap.
+# attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
+lockMap pay_fild03
+grindHuntMap pay_fild03
+itemsTakeAuto 2
+itemsGatherAuto 2
+itemsGatherAuto_notInTown 1
+itemsGatherAutoMinPlayerDistance 3
+itemsGatherAutoMinPortalDistance 2
+itemsMaxWeight 89
+itemsMaxWeight_sellOrStore 40
+sellAuto 1
+sellAuto_npc prt_in 126 76
+# 130,72 is walkable; 126,74 often causes Stuck during route loops
+sellAuto_standpoint prt_in 130 72
+sellAuto_distance 10
+sellAuto_maxDistance 14
+sellAuto_npc_steps s
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnDualLogin 0
+dcOnMaxReconnections 0
+dcOnServerShutDown 0
+dcOnServerClose 0
+dcOnStorageFull 0
+# Auto-pick slot 0 after reconnect (missing char hangs at "Enter your answer")
+char 0
+aiChat 0
+
+# Job change target (Swordman|Magician|Archer|Acolyte|Merchant|Thief)
+grindTargetJob Thief
+grindLeftTraining 1
+grindAfk 0
+grindSelling 0
+grindJobbing 0
+grindJob1st 0
+grindGearDone 0
+grindDone15 0
+grindDone25 1
+grindDone35 0
+# Party: Cedric (Swordsman) leads; other classes follow + support
+# Followers: follow 1 / followTarget Cedric / attackAuto 1 (see Grind_ApplyFollowerFollow)
+# Leader keeps lockMap + attackAuto 2; followers must not lockMap or solo-hunt
+grindPartyMode 1
+grindPartyLeader Cedric
+partyAuto 2
+partyAutoShare 1
+followDistanceMin 1
+followDistanceMax 10
+followBot 1
+
+######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
+# Index order matters for Grind_EnableGearBuy (buyAuto_0..)
+buyAuto Fly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 5
+	maxAmount 30
+	zeny > 100
+	disabled 0
+}
+buyAuto Red Potion {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 3
+	maxAmount 20
+	price 50
+	zeny > 200
+	disabled 0
+}
+# Thief dagger
+buyAuto Knife [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman sword
+buyAuto Sword [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman / tank shield
+buyAuto Guard {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 500
+	disabled 1
+}
+# Magician
+buyAuto Rod [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer bow
+buyAuto Bow [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer arrows (tool dealer) — kept disabled for non-Archers; Archer macros enable when low
+buyAuto Arrow {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 30
+	maxAmount 500
+	zeny > 50
+	disabled 1
+}
+# Acolyte club (sold at Prontera Church, NOT weapon shop 172,130)
+buyAuto Club {
+	npc prt_church 108 124
+	standpoint prt_church 108 122
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Merchant
+buyAuto Axe [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Shared armor
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 10
+	disabled 1
+}
+
+######## Equip after 1st job (use isJob — JobID is NOT checked by equipAuto) ########
+equipAuto {
+	rightHand Knife [3]
+	armor Cotton Shirt
+	isJob Thief
+	disabled 1
+}
+equipAuto {
+	rightHand Sword [3]
+	leftHand Guard
+	armor Cotton Shirt
+	isJob Swordsman
+	disabled 1
+}
+equipAuto {
+	rightHand Rod [3]
+	armor Cotton Shirt
+	isJob Mage
+	disabled 1
+}
+equipAuto {
+	rightHand Bow [3]
+	arrow Arrow
+	armor Cotton Shirt
+	isJob Archer
+	disabled 1
+}
+equipAuto {
+	rightHand Club
+	armor Cotton Shirt
+	isJob Acolyte
+	disabled 1
+}
+equipAuto {
+	rightHand Axe [3]
+	armor Cotton Shirt
+	isJob Merchant
+	disabled 1
+}
+
+statsAddAuto 1
+statsAddAuto_list 10 str, 10 vit, 10 dex, 10 agi, 20 str, 20 vit, 20 dex, 15 agi, 30 str, 30 vit, 25 dex, 20 agi, 40 str, 40 vit, 30 dex, 25 agi, 50 str, 50 vit, 40 dex, 30 agi
+statsAddAuto_dontUseBonus 0
+statsAdd_over_99 1
+skillsAddAuto 1
+# Per-class lists applied by scripts/apply-class-skills.py (do not rely on Basic-only)
+skillsAddAuto_list Basic Skill 9
+
+# Party Heal support (Acolyte); apply-class-skills adds full Acolyte party/self set
+partySkill Heal {
+	lvl 10
+	dist 1
+	maxDist 8
+	sp > 15
+	target_hp < 80%
+	notPartyOnly 0
+	isSelfSkill 0
+	timeout 1
+}
+
+######## Heal items (always keep HP conditions or the bot spams potions) ########
+useSelf_item Red Potion {
+	hp < 55%
+	inInventory Red Potion > 0
+	timeout 2
+	dcOnEmpty 0
+}
+useSelf_item Green Potion {
+	hp < 40%
+	inInventory Green Potion > 0
+	timeout 3
+	dcOnEmpty 0
+}
+
+######## All 1st-job skills (job-gated at runtime) ########
+# --- Swordman skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Bash {
+	lvl 10
+	dist 1
+	maxDist 2
+	sp > 5
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+attackSkillSlot Magnum Break {
+	lvl 10
+	dist 1
+	maxDist 2
+	sp > 12
+	notInTown 1
+	timeout 2
+	disabled 1
+}
+attackSkillSlot Provoke {
+	lvl 5
+	dist 1
+	maxDist 9
+	sp > 5
+	notInTown 1
+	timeout 3
+	disabled 1
+}
+# --- Magician skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Fire Bolt {
+	lvl 10
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+attackSkillSlot Cold Bolt {
+	lvl 5
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+attackSkillSlot Lightning Bolt {
+	lvl 5
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+attackSkillSlot Napalm Beat {
+	lvl 5
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+# --- Archer skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Double Strafe {
+	lvl 10
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+attackSkillSlot Arrow Shower {
+	lvl 10
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 2
+	disabled 1
+}
+attackSkillSlot Charge Arrow {
+	lvl 1
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 2
+	disabled 1
+}
+useSelf_skill Improve Concentration {
+	lvl 5
+	sp > 8
+	whenStatusInactive Improve Concentration
+	notInTown 1
+	timeout 60
+	disabled 1
+}
+# --- Acolyte skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Holy Light {
+	lvl 1
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+useSelf_skill Heal {
+	lvl 10
+	sp > 8
+	hp < 70%
+	timeout 1
+	disabled 1
+}
+useSelf_skill Angelus {
+	lvl 5
+	sp > 12
+	whenStatusInactive Angelus
+	notInTown 1
+	timeout 30
+	disabled 1
+}
+useSelf_skill Blessing {
+	lvl 10
+	sp > 12
+	whenStatusInactive Blessing
+	notInTown 1
+	timeout 30
+	disabled 1
+}
+useSelf_skill Increase Agility {
+	lvl 10
+	sp > 12
+	whenStatusInactive Increase Agility
+	notInTown 1
+	timeout 30
+	disabled 1
+}
+partySkill Heal {
+	lvl 10
+	dist 1
+	maxDist 8
+	sp > 8
+	target_hp < 80%
+	notPartyOnly 0
+	isSelfSkill 0
+	timeout 1
+	disabled 1
+}
+partySkill Blessing {
+	lvl 10
+	dist 1
+	maxDist 8
+	sp > 15
+	target_whenStatusInactive Blessing
+	notPartyOnly 0
+	timeout 20
+	disabled 1
+}
+partySkill Increase Agility {
+	lvl 10
+	dist 1
+	maxDist 8
+	sp > 15
+	target_whenStatusInactive Increase Agility
+	notPartyOnly 0
+	timeout 20
+	disabled 1
+}
+# --- Merchant skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Mammonite {
+	lvl 10
+	dist 1
+	maxDist 2
+	sp > 8
+	zeny > 1500
+	notInTown 1
+	timeout 1
+	disabled 1
+}
+# --- Thief skills (enabled by Grind_ApplyClassSkills) ---
+attackSkillSlot Envenom {
+	lvl 5
+	dist 1
+	maxDist 2
+	sp > 8
+	notInTown 1
+	timeout 2
+	disabled 1
+}
+
+# grindSkillList_Swordman / etc. are set at runtime; defaults unused

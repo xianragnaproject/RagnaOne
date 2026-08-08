@@ -8,7 +8,10 @@
 # 5) Base 25-35: party hunt pay_fild03 (leader lockMap; others follow)
 # 6) Sell @ 40% OW (Prontera tool dealer)
 #
-# grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief
+# grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief | random
+# grindPartyRole: leader | follower
+# Shared pack: one control folder for all accounts (login-only thin profiles).
+# Macros are JobID-gated; class skills enabled by Grind_ApplyClassSkills.
 # grindHuntMap: prt_fild08 | pay_fild03
 ###############################################################################
 
@@ -191,14 +194,30 @@ automacro Grind_JobDone {
 	ConfigKeyNot grindJob1st 1
 	call {
 		[
-			log Grind: 1st job acquired - enable class gear buy
+			log Grind: 1st job acquired - enable class skills + gear buy
 			do conf grindJob1st 1
 			do conf grindJobbing 0
 			do conf grindDone15 1
+			do eval Grind_ApplyClassSkills()
 			do eval Grind_EnableGearBuy()
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
+		]
+	}
+}
+
+# Already jobbed (or after reload): keep the right skill blocks enabled
+automacro Grind_EnsureClassSkills {
+	exclusive 1
+	timeout 60
+	priority 5
+	JobIDNot 0
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindAfk 1
+	call {
+		[
+			do eval Grind_ApplyClassSkills()
 		]
 	}
 }
@@ -1071,7 +1090,8 @@ macro grind_fountain_afk {
 # Perl helpers
 ###############################################################################
 sub Grind_TalkJobMaster {
-	my $job = lc($config{grindTargetJob} || 'Thief');
+	my $job = lc($config{grindTargetJob} || 'random');
+	my @pool = qw(Swordman Magician Archer Acolyte Merchant Thief);
 	my %menu = (
 		swordman => 'r0',
 		swordsman => 'r0',
@@ -1088,10 +1108,86 @@ sub Grind_TalkJobMaster {
 		thief => 'r5',
 		assassin => 'r5',
 	);
+	# Shared-pack mode: grindTargetJob random|none|auto -> pick a 1st job
+	if ($job eq '' || $job eq 'random' || $job eq 'none' || $job eq 'auto') {
+		my $pick = $pool[int(rand(scalar @pool))];
+		Commands::run("conf grindTargetJob $pick");
+		$job = lc($pick);
+		Log::message("[Grind] Random class selected: $pick\n", "success");
+	}
 	my $r = $menu{$job} || 'r5';
 	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
 	Commands::run("stand");
 	Commands::run("talknpc 155 180 c c c $r c r0");
+	return 1;
+}
+
+# Enable only this jobID's attack/party/self skills from the shared skill pool
+sub Grind_ApplyClassSkills {
+	return 0 unless $char;
+	my $jid = $char->{jobID} // 0;
+	my %by_id = (
+		1 => {
+			name => 'Swordman',
+			list => 'Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Increase HP Recovery 5',
+			skills => ['Bash', 'Magnum Break', 'Provoke'],
+		},
+		2 => {
+			name => 'Magician',
+			list => 'Basic Skill 9, Increase SP Recovery 8, Sight 1, Fire Bolt 10, Cold Bolt 5, Lightning Bolt 5, Napalm Beat 5, Fire Ball 5',
+			skills => ['Fire Bolt', 'Cold Bolt', 'Lightning Bolt', 'Napalm Beat'],
+		},
+		3 => {
+			name => 'Archer',
+			list => "Basic Skill 9, Owl's Eye 10, Vulture's Eye 10, Double Strafe 10, Improve Concentration 5, Arrow Shower 10, Charge Arrow 1",
+			skills => ['Double Strafe', 'Arrow Shower', 'Charge Arrow', 'Improve Concentration'],
+		},
+		4 => {
+			name => 'Acolyte',
+			list => 'Basic Skill 9, Heal 10, Increase Agility 10, Blessing 10, Angelus 5, Cure 1, Divine Protection 5, Demon Bane 3, Holy Light 1, Ruwach 1',
+			skills => ['Holy Light', 'Heal', 'Angelus', 'Blessing', 'Increase Agility'],
+		},
+		5 => {
+			name => 'Merchant',
+			list => 'Basic Skill 9, Enlarge Weight Limit 10, Mammonite 10, Discount 5, Overcharge 5, Pushcart 10, Item Appraisal 1, Vending 1',
+			skills => ['Mammonite'],
+		},
+		6 => {
+			name => 'Thief',
+			list => 'Basic Skill 9, Double Attack 10, Improve Dodge 10, Envenom 5, Steal 4, Hiding 2, Detoxify 1',
+			skills => ['Envenom'],
+		},
+	);
+	my $spec = $by_id{$jid};
+	unless ($spec) {
+		Log::message("[Grind] ApplyClassSkills: unsupported jobID=$jid\n", "system");
+		return 0;
+	}
+	my %want = map { $_ => 1 } @{$spec->{skills}};
+	Commands::run("conf skillsAddAuto 1");
+	Commands::run("conf skillsAddAuto_list $spec->{list}");
+	Commands::run("conf -f grindTargetJob $spec->{name}") if !$config{grindTargetJob} || $config{grindTargetJob} =~ /^(random|none|auto)?$/i;
+
+	for my $prefix (qw(attackSkillSlot useSelf_skill partySkill)) {
+		for (my $i = 0; exists $config{"${prefix}_$i"} || ($i == 0 && exists $config{$prefix}); $i++) {
+			my $name = $config{"${prefix}_$i"} || '';
+			next unless $name =~ /\S/;
+			# Skip unnamed/template blocks
+			next if $name =~ /^\{/;
+			my $disabled = $want{$name} ? 0 : 1;
+			# Keep generic potion/heal item blocks alone; only gate named class skills we know
+			# Unknown named skills stay disabled unless wanted
+			if ($prefix eq 'partySkill' && $name eq 'Heal' && $jid == 4) {
+				$disabled = 0;
+			}
+			Commands::run("conf ${prefix}_${i}_disabled $disabled");
+		}
+	}
+	# Merchant Mammonite still needs zeny gate
+	if ($jid == 5) {
+		Grind_SetMammoniteDisabled(($char->{zeny} // 0) < 1500 ? 1 : 0);
+	}
+	Log::message("[Grind] Class skills enabled for $spec->{name} (jobID=$jid)\n", "success");
 	return 1;
 }
 
