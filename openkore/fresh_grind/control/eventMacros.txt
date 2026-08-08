@@ -82,6 +82,55 @@ automacro Grind_StartFarm {
 
 ###############################################################################
 # prt_fild08 hunt lock - all phases, base < 25
+# Mass spawn stuck at Prontera fountain/center while routing to south field gate
+automacro Grind_UnstickPronteraSouth {
+	exclusive 1
+	timeout 20
+	priority 0
+	InMap prontera
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
+	ConfigKey lockMap prt_fild08
+	Console /Stuck at prontera \(15[0-9],1[7-9][0-9]\)/
+	call grind_unstick_prt_south
+}
+
+automacro Grind_UnstickPronteraSouthPos {
+	exclusive 1
+	timeout 25
+	priority 1
+	InMap prontera
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
+	ConfigKey lockMap prt_fild08
+	Eval abs(($char->{pos}{x}//0)-155) <= 8 && abs(($char->{pos}{y}//0)-183) <= 12
+	call grind_unstick_prt_south
+}
+
+macro grind_unstick_prt_south {
+	[
+		log Grind: unstick Prontera spawn - clear lock and walk south gate
+		do ai clear
+		do conf follow 0
+		do conf lockMap
+		do conf route_randomWalk 0
+		do conf attackAuto 0
+		do move 140 160
+		pause 8
+		do move 156 90
+		pause 10
+		do move 156 40
+		pause 12
+		do move 156 22
+		pause 10
+		do conf lockMap prt_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+	]
+}
+
 ###############################################################################
 automacro Grind_EnsureLock08 {
 	exclusive 1
@@ -593,7 +642,7 @@ automacro Grind_PhasePay03 {
 	ConfigKeyNot grindHuntMap pay_fild03
 	call {
 		[
-			log Grind: BASE 25+ - solo hunt pay_fild03 until base 35 (via Alberta)
+			log Grind: BASE 25+ - solo hunt pay_fild03 until base 35 via Alberta
 			do conf grindDone25 1
 			do conf follow 0
 			do conf -f grindHuntMap pay_fild03
@@ -622,7 +671,7 @@ automacro Grind_ResumeFieldPay03 {
 	ConfigKeyNot lockMap pay_fild03
 	call {
 		[
-			log Grind: restore lockMap pay_fild03 (solo)
+			log Grind: restore lockMap pay_fild03 solo
 			do conf follow 0
 			do eval Grind_StartHunt()
 		]
@@ -645,7 +694,7 @@ automacro Grind_StagePay03FromTown {
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log Grind: stage to pay_fild03 via Alberta (solo)
+			log Grind: stage to pay_fild03 via Alberta solo
 			do conf follow 0
 			do conf attackAuto_routeToLock 0
 			do conf attackAuto_outOfLock 0
@@ -670,7 +719,7 @@ automacro Grind_EnsureLockPay03 {
 	BaseLevel < 35
 	call {
 		[
-			log Grind: restore lockMap pay_fild03 (solo)
+			log Grind: restore lockMap pay_fild03 solo
 			do conf follow 0
 			do conf -f grindHuntMap pay_fild03
 			do conf lockMap pay_fild03
@@ -722,7 +771,7 @@ automacro Grind_AlbertaToPay03 {
 	ConfigKeyNot lockMap pay_fild03
 	call {
 		[
-			log Grind: Alberta reached - enter pay_fild03 via west gate (solo)
+			log Grind: Alberta reached - enter pay_fild03 via west gate solo
 			do conf follow 0
 			do conf attackAuto_routeToLock 0
 			do conf attackAuto_outOfLock 0
