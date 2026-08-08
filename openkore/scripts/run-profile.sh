@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run OpenKore profile forever: auto-answer portal compile + char select, restart on exit.
-# After login prompts settle, `interact` forwards tmux/console input to OpenKore.
+# After login, interact forwards tmux/console input to OpenKore.
 set -uo pipefail
 PROFILE="${1:-}"
 [[ -n "$PROFILE" ]] || { echo "Usage: $0 <ProfileName>"; exit 1; }
@@ -31,19 +31,20 @@ expect {
     exp_continue
   }
   -re {You are now in the game|Map loaded|Your Coordinates:} {
-    # In-game: forward console keys (tmux send-keys) while still auto-answering prompts
+    # In-game: forward console keys; still auto-answer rare prompts from spawn output
     interact {
-      -o -re {Please choose a character} {
-        expect_user
+      -o
+      -re {Please choose a character} {
         send "0\r"
       }
-      -o -re {Please choose a server} {
-        expect_user
+      -re {Please choose a server} {
         send "0\r"
       }
-      -o -re {Compile portals} {
-        expect_user
+      -re {Compile portals} {
         send "1\r"
+      }
+      -re {Enter your answer:} {
+        send "0\r"
       }
     }
   }
