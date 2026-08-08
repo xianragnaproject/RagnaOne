@@ -43,9 +43,6 @@ expect {
       -re {Compile portals} {
         send "1\r"
       }
-      -re {Enter your answer:} {
-        send "0\r"
-      }
     }
   }
   eof
