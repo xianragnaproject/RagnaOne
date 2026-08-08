@@ -50,3 +50,16 @@ python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_g
 # or
 bash openkore/scripts/sync-all-profiles.sh
 ```
+
+## Scale to N accounts (e.g. 40)
+
+```bash
+# Creates Grind07.. until total Grind* count == N (keeps existing)
+python3 openkore/scripts/batch-create-fresh-grind-n.py 40
+bash openkore/scripts/start-fleet.sh
+# If login server was closed, keep retrying char create:
+bash openkore/scripts/register-pending-grind.sh
+```
+
+Pending registrations: `/tmp/fresh-grind-n-pending.txt`  
+Results: `/tmp/fresh-grind-n-results.txt`

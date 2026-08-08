@@ -12,15 +12,36 @@ mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/fleet-watchdog.log"
 INTERVAL="${WATCHDOG_INTERVAL:-45}"
 
-# Default fleet: fresh grind (solo)
-PROFILES=(
-  GrindSword
-  GrindPrt08
-  GrindMage
-  GrindArcher
-  GrindAco
-  GrindMerch
-)
+# Default fleet: all FreshGrind (Grind*) profiles on disk, minus pending registration
+PENDING_FILE="${PENDING_FILE:-/tmp/fresh-grind-n-pending.txt}"
+load_profiles() {
+  local dir="${OK}/profiles"
+  local pending=""
+  PROFILES=()
+  if [[ -f "$PENDING_FILE" ]]; then
+    pending=$(awk -F'\t' '!/^#/ && NF>=1 {print $1}' "$PENDING_FILE")
+  fi
+  if [[ -d "$dir" ]]; then
+    while IFS= read -r p; do
+      [[ -n "$p" ]] || continue
+      if echo "$pending" | grep -qx "$p"; then
+        continue
+      fi
+      PROFILES+=("$p")
+    done < <(find "$dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -E '^Grind' | sort)
+  fi
+  if [[ ${#PROFILES[@]} -eq 0 ]]; then
+    PROFILES=(
+      GrindSword
+      GrindPrt08
+      GrindMage
+      GrindArcher
+      GrindAco
+      GrindMerch
+    )
+  fi
+}
+load_profiles
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" | tee -a "$LOG"; }
 
@@ -92,8 +113,9 @@ heal_stuck_prompts() {
   fi
 }
 
-log "watchdog start interval=${INTERVAL}s profiles=${PROFILES[*]}"
+log "watchdog start interval=${INTERVAL}s profiles=${#PROFILES[@]} (${PROFILES[*]})"
 while true; do
+  load_profiles
   for p in "${PROFILES[@]}"; do
     [[ -f "$OK/profiles/$p/config.txt" ]] || continue
     ensure_session "$p"

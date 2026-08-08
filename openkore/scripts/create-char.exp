@@ -1,7 +1,7 @@
 #!/usr/bin/env expect
 # Create a character on an empty account via OpenKore profile.
 # Usage: create-char.exp <Profile> <CharName> <Sex:M|F>
-set timeout 180
+set timeout 60
 set profile [lindex $argv 0]
 set charname [lindex $argv 1]
 set sex [lindex $argv 2]
@@ -27,6 +27,16 @@ expect {
     expect -re {Enter your answer:}
     send "1\r"
     exp_continue
+  }
+  -re {Server is closed|The server is closed|The server has denied your connection} {
+    puts "SERVER_CLOSED"
+    catch {send "quit\r"}
+    exit 7
+  }
+  -re {Password Error|Enter your Ragnarok Online password again} {
+    puts "BAD_LOGIN"
+    catch {send "quit\r"}
+    exit 2
   }
   -re {Account name .* doesn't exist|The account or password you entered is incorrect|Wrong password} {
     puts "BAD_LOGIN"

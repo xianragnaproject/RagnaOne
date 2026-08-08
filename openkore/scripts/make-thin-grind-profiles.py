@@ -133,9 +133,12 @@ def main() -> int:
         if user == "CHANGE_ME":
             raise SystemExit(f"REFUSING {prof.name}: no username")
 
-        job = JOB_BY_PROFILE.get(prof.name, "random")
         existing_job = get_key(old, "grindTargetJob")
-        if existing_job and existing_job.lower() == "random":
+        job = JOB_BY_PROFILE.get(prof.name)
+        if existing_job:
+            # Prefer per-profile target (Grind07+ / random overrides)
+            job = existing_job
+        elif not job:
             job = "random"
 
         state = {}
