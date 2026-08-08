@@ -232,7 +232,7 @@ def create_char(profile: str, char_name: str, sex: str) -> tuple[int, str]:
     if log.exists():
         log.unlink()
     proc = subprocess.run(
-        ["expect", str(CREATE_EXP), profile, char_name, sex],
+        ["timeout", "75", "expect", str(CREATE_EXP), profile, char_name, sex],
         cwd=str(OK),
         capture_output=True,
         text=True,
@@ -247,6 +247,21 @@ def create_char(profile: str, char_name: str, sex: str) -> tuple[int, str]:
 
 def classify(rc: int, out: str) -> str:
     low = out.lower()
+    # timeout(1) exits 124 — still OK if create markers present
+    if any(
+        t in out
+        for t in (
+            "IN_GAME",
+            "CREATE_OK",
+            "DONE_SOFT",
+            "DONE_EXISTING",
+            "STATUS_OK",
+            "SENT_CREATE",
+            "SELECT_AFTER_CREATE",
+            "ALREADY_HAS_TARGET",
+        )
+    ):
+        return "OK" if rc in (0, 124) else "OK_SOFT"
     if (
         "SERVER_CLOSED" in out
         or "server is closed" in low
@@ -259,12 +274,8 @@ def classify(rc: int, out: str) -> str:
         return "BANNED"
     if "NAME_TAKEN" in out and ("CREATE_OK" in out or "IN_GAME" in out or "DONE" in out):
         return "OK_RENAMED"
-    if rc == 0 and any(
-        t in out for t in ("IN_GAME", "CREATE_OK", "DONE", "STATUS_OK", "DONE_EXISTING")
-    ):
+    if rc == 0 and "DONE" in out:
         return "OK"
-    if any(t in out for t in ("IN_GAME", "CREATE_OK", "DONE_EXISTING", "STATUS_OK")):
-        return "OK_SOFT"
     return f"FAIL:{rc}"
 
 
@@ -396,7 +407,7 @@ def main() -> int:
             )
             if not status.startswith("OK"):
                 still.append(row)
-            time.sleep(1.5)
+            time.sleep(3)
         write_pending(still)
         RESULTS.write_text(
             "profile\tjob\tstatus\tuser\tpass\tchar\n" + "\n".join(results) + "\n"
@@ -473,7 +484,7 @@ def main() -> int:
         else:
             fail += 1
             still.append(row)
-        time.sleep(1.2)
+        time.sleep(3)
 
     write_pending(still)
     RESULTS.write_text(
