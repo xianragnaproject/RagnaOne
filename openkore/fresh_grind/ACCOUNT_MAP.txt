@@ -1,0 +1,7 @@
+# profile_label	ProfileDir	CharName	username	password	sex
+FreshGrind-Swordman	GrindSword	Cedric	cedriclane	-YnZrVkMLRnS	M
+FreshGrind-Thief	GrindPrt08	Kael	kaelvoss	RXRiPVnC_nLe	M
+FreshGrind-Magician	GrindMage	Lyra	lyramoon	XXY14UD2w85d	M
+FreshGrind-Archer	GrindArcher	Finn	finnarrow	UaQ2xJuWykbw	M
+FreshGrind-Acolyte	GrindAco	Elise	elisegrace	Kr60bwfCc-7f	M
+FreshGrind-Merchant	GrindMerch	Tobin	tobincrane	E5qidtZU1xcO	M
