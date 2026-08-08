@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run OpenKore profile forever: auto-answer portal compile + char select, restart on exit.
+# After login prompts settle, `interact` forwards tmux/console input to OpenKore.
 set -uo pipefail
 PROFILE="${1:-}"
 [[ -n "$PROFILE" ]] || { echo "Usage: $0 <ProfileName>"; exit 1; }
@@ -10,7 +11,6 @@ attempt=0
 while true; do
   attempt=$((attempt + 1))
   echo "[run-profile] $(date -u +%Y-%m-%dT%H:%M:%SZ) starting $PROFILE (attempt $attempt)"
-  # Don't use set -e: expect exit codes vary; we always restart.
   expect <<EXP || true
 set timeout -1
 spawn perl ./openkore.pl --profile=$PROFILE --interface=Console
@@ -29,6 +29,23 @@ expect {
     expect -re {Enter your answer:}
     send "0\r"
     exp_continue
+  }
+  -re {You are now in the game|Map loaded|Your Coordinates:} {
+    # In-game: forward console keys (tmux send-keys) while still auto-answering prompts
+    interact {
+      -o -re {Please choose a character} {
+        expect_user
+        send "0\r"
+      }
+      -o -re {Please choose a server} {
+        expect_user
+        send "0\r"
+      }
+      -o -re {Compile portals} {
+        expect_user
+        send "1\r"
+      }
+    }
   }
   eof
 }
