@@ -66,6 +66,11 @@ grindDone25 0
 grindDone35 0
 grindPhase1Done 0
 grindPhase2 0
+grindP2Guard 0
+grindP2SavePayon 0
+grindP2Gear 0
+grindP2Shops 0
+grindP2Buying 0
 grindUnsticking 0
 # Solo grind — no party / no follow (each bot lockMaps the hunt field)
 grindPartyMode 0
@@ -124,14 +129,52 @@ buyAuto Sword [3] {
 	zeny > 50
 	disabled 1
 }
-# Swordman / tank shield
+# Swordman / tank shield — Phase2 buys at Alberta alberta_in 180,15
 buyAuto Guard {
-	npc prt_in 172 132
-	standpoint prt_in 172 134
+	npc alberta_in 180 15
+	standpoint alberta_in 180 18
 	distance 5
 	minAmount 1
 	maxAmount 1
 	zeny > 500
+	disabled 1
+}
+# Phase2 Swordman weapon (Payon)
+buyAuto Blade {
+	npc payon_in01 15 119
+	standpoint payon_in01 15 117
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 2900
+	disabled 1
+}
+# Phase2 Swordman armor set (Payon)
+buyAuto Shoes {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 3500
+	disabled 1
+}
+buyAuto Wooden Mail {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 5500
+	disabled 1
+}
+buyAuto Manteau {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 32000
 	disabled 1
 }
 # Magician
@@ -200,6 +243,15 @@ equipAuto {
 	rightHand Knife [3]
 	armor Cotton Shirt
 	isJob Thief
+	disabled 1
+}
+equipAuto {
+	rightHand Blade
+	leftHand Guard
+	armor Wooden Mail
+	robe Manteau
+	shoes Shoes
+	isJob Swordsman
 	disabled 1
 }
 equipAuto {

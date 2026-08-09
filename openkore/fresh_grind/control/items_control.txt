@@ -23,6 +23,10 @@ Knife [3] 1 0 0
 Sword 1 0 0
 Sword [3] 1 0 0
 Guard 1 0 0
+Blade 1 0 0
+Wooden Mail 1 0 0
+Manteau 1 0 0
+Shoes 1 0 0
 Rod 1 0 0
 Rod [3] 1 0 0
 Bow 1 0 0

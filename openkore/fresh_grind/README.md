@@ -47,12 +47,22 @@ bash ~/openkore/scripts/start-bot.sh Grind02
 5. **Job change at Job Level 10** (Novice, high priority, random 1st job)  
 
 After **base 15 + job change** → Prontera fountain AFK (`grindPhase1Done 1`).  
-Gear / `pay_fild03` stay off until `grindPhase2 1`.
+Non-Swordman stay AFK here.
+
+## Phase 2 macros (Swordman only)
+
+Triggers when **JobID 1 (Swordsman) + base ≥ 15** (`grindPhase2 1`):
+
+1. **Alberta** — buy **Guard** (`alberta_in` armor shop)  
+2. **Payon Kafra** — set **savepoint** (181,104)  
+3. **Payon shops** — buy **Blade / Shoes / Wooden Mail / Manteau**  
+4. Hunt **`pay_fild08`**; potions + sell at Payon tool dealer  
+5. AFK breaks near **Payon Kafra**
 
 ## What macros own
 
 - `grindTargetJob random` → pick job at Job Master  
-- lockMap / hunt map (`prt_fild08`; phase2 later → `pay_fild03`)  
+- lockMap / hunt map (`prt_fild08`; phase2 Swordman → `pay_fild08`)  
 - potions, skills, sell, AFK, unstuck, solo flags  
 
 ## Sync pack → control/

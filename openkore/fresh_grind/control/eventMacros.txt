@@ -1,12 +1,20 @@
 ###############################################################################
-# Fresh grind macros — PHASE 1 ONLY (base 1-15)
+# Fresh grind macros — PHASE 1 (base 1-15) + PHASE 2 (Swordman)
 #
+# Phase 1:
 # 1) Leave training -> Prontera -> lock prt_fild08
-# 2) Novice Red Potion buy @ Prontera tool dealer (zeny>2000, stock 0)
-# 3) Sell @ 30% OW (portal-first; built-in sellAuto off while lockMap set)
-# 4) Random fountain AFK breaks while grinding (5-10 min)
-# 5) Job Level 10 Novice -> random 1st job (HIGH PRIORITY)
-# 6) After base 15 + job change -> Prontera AFK (grindPhase1Done)
+# 2) Novice Red Potion buy @ Prontera tool dealer
+# 3) Sell @ 30% OW (portal-first)
+# 4) Fountain AFK breaks while grinding
+# 5) Job Level 10 Novice -> random 1st job
+# 6) Base 15 + job -> Prontera AFK (grindPhase1Done) — non-Swordman stay here
+#
+# Phase 2 (JobID 1 Swordman, base >= 15):
+# 1) Alberta buy Guard
+# 2) Payon savepoint (Kafra 181,104)
+# 3) Payon buy Blade / Manteau / Shoes / Wooden Mail
+# 4) Hunt pay_fild08; buy potions + sell in Payon
+# 5) AFK near Payon Kafra
 #
 # grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief | random
 ###############################################################################
@@ -423,6 +431,7 @@ automacro Grind_Phase1AfkHold {
 	timeout 90
 	priority 0
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	call grind_phase1_afk_hold
@@ -453,6 +462,7 @@ automacro Grind_Phase1AfkResit {
 	priority 3
 	InMap prontera
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
 	Eval !$char->{sitting}
 	# Fountain plaza is ~y 185-210; do not sit at south gate (~y 26)
@@ -491,6 +501,7 @@ automacro Grind_SellLoot {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	Eval (Misc::percent_weight($char) >= 30) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
 	call grind_sell_loot
 }
@@ -678,6 +689,7 @@ automacro Grind_Phase1StillOnField {
 	priority 0
 	InMap prt_fild08
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	call grind_phase1_afk_hold
@@ -690,6 +702,7 @@ automacro Grind_Phase1ToFountain {
 	priority 0
 	InMap prontera
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
 	# South of fountain plaza (south gate / midtown) — walk up
 	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 20)
@@ -712,6 +725,7 @@ automacro Grind_Phase1AfkInTown {
 	priority 2
 	InMap prontera
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
 	Eval !$char->{sitting}
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
@@ -730,6 +744,7 @@ automacro Grind_Phase1ShuffleLook {
 	priority 4
 	InMap prontera
 	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
 	call {
 		[
@@ -741,7 +756,414 @@ automacro Grind_Phase1ShuffleLook {
 }
 
 ###############################################################################
-# Perl helpers (phase 1 only)
+# PHASE 2 — Swordman (JobID 1) base >= 15
+# Alberta Guard → Payon save → Payon gear → pay_fild08 hunt + Payon buy/sell/AFK
+###############################################################################
+
+# Kick off Phase 2 from Prontera AFK (or anywhere) once Swordman + base 15
+automacro Grind_Phase2Start {
+	exclusive 1
+	timeout 45
+	priority 0
+	JobID 1
+	BaseLevel >= 15
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log PHASE2 START - Swordman base15+ - Alberta Guard then Payon
+			do conf grindPhase1Done 1
+			do conf grindPhase2 1
+			do conf grindAfk 0
+			do conf sitAuto_idle 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sellAuto 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
+		]
+	}
+}
+
+# Prontera kafra → Alberta
+automacro Grind_Phase2ToAlberta {
+	exclusive 1
+	timeout 60
+	priority 1
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Guard 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	InMapRegex /^(prontera|prt_in|prt_fild08)$/
+	call {
+		[
+			log PHASE2: kafra warp Prontera → Alberta
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move prontera 146 89
+			pause 40
+			do talknpc 146 89 c r2 c r5
+			pause 20
+		]
+	}
+}
+
+# Alberta: buy Guard at alberta_in armor dealer (180,15)
+automacro Grind_Phase2BuyGuard {
+	exclusive 1
+	timeout 90
+	priority 1
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Guard 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	InInventory "Guard" < 1
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log PHASE2: buy Guard @ Alberta armor shop
+			do conf grindP2Buying 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "buyAuto")
+			do eval Grind_SetBuyNpc("Guard", "alberta_in 180 15", "alberta_in 180 18")
+			do eval Grind_EnableBuyItem("Guard")
+			do move alberta_in 180 18
+			pause 40
+			do eval AI::queue("buyAuto")
+			pause 40
+			# Direct shop buy fallback (store slot 0 = Guard @ alberta_in 180,15)
+			do talknpc 180 15 b 0,1 e
+			pause 8
+			# leave buyAuto enabled — Grind_Phase2GuardDone finishes the step
+			do conf grindP2Buying 0
+		]
+	}
+}
+
+automacro Grind_Phase2GuardDone {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Guard 1
+	InInventory "Guard" > 0
+	call {
+		[
+			log PHASE2: Guard acquired
+			do conf grindP2Guard 1
+			do conf grindP2Buying 0
+			do eval Grind_DisableBuyItem("Guard")
+			do eq Guard
+			pause 2
+		]
+	}
+}
+
+# Alberta kafra → Payon after Guard
+automacro Grind_Phase2AlbertaToPayon {
+	exclusive 1
+	timeout 60
+	priority 2
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Guard 1
+	ConfigKeyNot grindP2SavePayon 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	call {
+		[
+			log PHASE2: Alberta kafra → Payon
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move alberta 113 60
+			pause 30
+			do talknpc 113 60 c r2 c r0
+			pause 20
+		]
+	}
+}
+
+# Save at Payon Kafra (181,104)
+automacro Grind_Phase2SavePayon {
+	exclusive 1
+	timeout 50
+	priority 1
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Guard 1
+	ConfigKeyNot grindP2SavePayon 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(payon|payon_in01)$/
+	call {
+		[
+			log PHASE2: set save @ Payon Kafra 181,104
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move payon 181 104
+			pause 25
+			do talknpc 181 104 c r0
+			pause 5
+			do conf grindP2SavePayon 1
+			do conf saveMap payon
+			do conf saveMap_x 181
+			do conf saveMap_y 104
+			do conf autoMoveOnDeath 1
+			do conf autoMoveOnDeath_map payon
+			do conf autoMoveOnDeath_x 181
+			do conf autoMoveOnDeath_y 104
+			log PHASE2: save point Payon
+		]
+	}
+}
+
+# Payon shops: Blade + Shoes + Wooden Mail + Manteau; remap potion/sell NPCs
+automacro Grind_Phase2BuyPayonGear {
+	exclusive 1
+	timeout 120
+	priority 1
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2SavePayon 1
+	ConfigKeyNot grindP2Gear 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(payon|payon_in01)$/
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log PHASE2: Payon weapon/armor buy Blade Manteau Shoes Wooden Mail
+			do conf grindP2Buying 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "buyAuto")
+			do eval Grind_ApplyPayonShops()
+			do conf grindP2Shops 1
+			# Weapon dealer — Blade
+			do move payon_in01 15 117
+			pause 35
+			do eval Grind_EnableBuyItem("Blade")
+			do eval AI::queue("buyAuto")
+			pause 50
+			do eval Grind_DisableBuyItem("Blade")
+			# Armor dealer — Shoes / Wooden Mail / Manteau
+			do move payon_in01 10 119
+			pause 25
+			do eval Grind_EnableBuyItem("Shoes")
+			do eval Grind_EnableBuyItem("Wooden Mail")
+			do eval Grind_EnableBuyItem("Manteau")
+			do eval AI::queue("buyAuto")
+			pause 70
+			do eval Grind_DisableBuyItem("Shoes")
+			do eval Grind_DisableBuyItem("Wooden Mail")
+			do eval Grind_DisableBuyItem("Manteau")
+			do eval Grind_EnableBuyItem("Red Potion")
+			do eval Grind_Phase2Equip()
+			do conf grindP2Buying 0
+			do conf grindP2Gear 1
+			do conf grindGearDone 1
+			do move payon 181 100
+			pause 15
+			log PHASE2: Payon gear done — hunt pay_fild08
+		]
+	}
+}
+
+# Hunt pay_fild08 after gear
+automacro Grind_Phase2HuntPay08 {
+	exclusive 1
+	timeout 40
+	priority 2
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Gear 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot lockMap pay_fild08
+	call {
+		[
+			log PHASE2: lockMap pay_fild08
+			do conf grindAfk 0
+			do conf -f grindHuntMap pay_fild08
+			do conf lockMap pay_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf sitAuto_idle 1
+			do stand
+		]
+	}
+}
+
+automacro Grind_Phase2KeepAggressive {
+	exclusive 1
+	timeout 35
+	priority 8
+	JobID 1
+	InMap pay_fild08
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Gear 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot attackAuto 2
+	call {
+		[
+			log PHASE2: restore attackAuto 2 on pay_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap pay_fild08
+		]
+	}
+}
+
+# Sell @ 30% OW — Payon tool dealer (portal-first)
+automacro Grind_Phase2SellLoot {
+	exclusive 1
+	timeout 60
+	priority 2
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	Eval (Misc::percent_weight($char) >= 30) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call grind_phase2_sell_payon
+}
+
+macro grind_phase2_sell_payon {
+	[
+		log PHASE2: OW>=30% - sell @ Payon tool dealer
+		do conf grindSelling 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "sellAuto")
+		do move payon 141 85
+		pause 45
+		do move payon_in01 7 49
+		pause 25
+		do conf sellAuto 1
+		do conf sellAuto_standpoint payon_in01 7 49
+		do conf sellAuto_npc payon_in01 5 49
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do eval AI::queue("sellAuto")
+		pause 40
+		do conf sellAuto 0
+		do move payon 181 100
+		pause 12
+		do conf grindSelling 0
+		do conf -f grindHuntMap pay_fild08
+		do conf lockMap pay_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		log PHASE2: sell done - resume pay_fild08
+	]
+}
+
+# AFK break near Payon Kafra while hunting phase 2
+automacro Grind_Phase2PayonAfk {
+	exclusive 1
+	timeout 900
+	priority 3
+	InMap pay_fild08
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Gear 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	call grind_phase2_payon_afk
+}
+
+macro grind_phase2_payon_afk {
+	$secs = &rand(300, 600)
+	[
+		log PHASE2: AFK near Payon Kafra for $secs sec
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do move payon 181 104
+		pause 50
+		do eval Grind_Phase2SitNearKafra()
+		pause 20
+	]
+	call grind_afk_face_sit
+	[
+		pause $secs
+		do stand
+		log PHASE2: AFK done - resume pay_fild08
+		do conf grindAfk 0
+		do conf -f grindHuntMap pay_fild08
+		do conf lockMap pay_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf sitAuto_idle 1
+	]
+}
+
+automacro Grind_Phase2AfkResit {
+	exclusive 1
+	timeout 90
+	priority 3
+	InMap payon
+	ConfigKey grindPhase2 1
+	ConfigKey grindAfk 1
+	Eval !$char->{sitting}
+	Eval $char && abs(($char->{pos}{x} || 0) - 181) <= 12 && abs(($char->{pos}{y} || 0) - 104) <= 12
+	call {
+		[
+			do eval Grind_AfkSit()
+			pause 3
+		]
+	}
+}
+
+automacro Grind_Phase2ShuffleLook {
+	exclusive 1
+	timeout 180
+	priority 4
+	InMap payon
+	ConfigKey grindPhase2 1
+	ConfigKey grindAfk 1
+	call {
+		[
+			log PHASE2: reshuffle Payon AFK facing
+			do conf sitAuto_idle 0
+			do eval Grind_Phase2SitNearKafra()
+			pause 8
+		]
+		call grind_afk_face_sit
+	}
+}
+
+###############################################################################
+# Perl helpers (phase 1 + phase 2)
 ###############################################################################
 sub Grind_IsInPronteraTown {
 	return 0 unless $field;
@@ -1079,12 +1501,22 @@ sub Grind_ApplySoloHunt {
 }
 
 sub Grind_StartHunt {
-	return 1 if $config{grindPhase1Done};
+	return 1 if $config{grindAfk};
+	# Phase1 park: no hunt unless Phase2 Swordman path is active
+	if ($config{grindPhase1Done} && !$config{grindPhase2}) {
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
 	Commands::run("conf follow 0");
 	Commands::run("conf followTarget");
 	Commands::run("conf grindPartyMode 0");
 	my $map = $config{grindHuntMap};
-	if (!$map || $map eq '' || $map eq 'none') {
+	if ($config{grindPhase2} && $config{grindP2Gear}) {
+		$map = 'pay_fild08';
+		Commands::run("conf -f grindHuntMap $map");
+	} elsif (!$map || $map eq '' || $map eq 'none') {
 		$map = 'prt_fild08';
 		Commands::run("conf -f grindHuntMap $map");
 	}
@@ -1103,7 +1535,13 @@ sub Grind_StartHunt {
 }
 
 sub Grind_ResumeHuntLock {
-	if ($config{grindPhase1Done}) {
+	if ($config{grindAfk}) {
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
+	if ($config{grindPhase1Done} && !$config{grindPhase2}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
@@ -1116,5 +1554,76 @@ sub Grind_ResumeHuntLock {
 		return 1;
 	}
 	Grind_StartHunt();
+	return 1;
+}
+
+# Remap sell + potion buy + gear buy NPCs to Payon shops
+sub Grind_ApplyPayonShops {
+	Commands::run("conf sellAuto_npc payon_in01 5 49");
+	Commands::run("conf sellAuto_standpoint payon_in01 7 49");
+	Commands::run("conf sellAuto_distance 10");
+	Commands::run("conf sellAuto_maxDistance 14");
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		my $item = $config{"buyAuto_$i"} || "";
+		my ($npc, $stand);
+		if ($item =~ /^(Red Potion|Fly Wing|Butterfly Wing|Arrow)$/i) {
+			$npc = "payon_in01 5 49";
+			$stand = "payon_in01 7 49";
+		} elsif ($item =~ /^(Shoes|Wooden Mail|Manteau|Cotton Shirt|Guard)$/i) {
+			$npc = "payon_in01 7 119";
+			$stand = "payon_in01 10 119";
+		} elsif ($item =~ /^(Blade|Sword|Knife|Rod|Bow|Axe)/i) {
+			$npc = "payon_in01 15 119";
+			$stand = "payon_in01 15 117";
+		} else {
+			next;
+		}
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand");
+	}
+	Log::message("[Grind] Payon shops applied (tool/armor/weapon)\n", "success");
+	return 1;
+}
+
+sub Grind_SetBuyNpc {
+	my ($name, $npc, $stand) = @_;
+	return 0 unless $name && $npc;
+	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
+		next unless ($config{"buyAuto_$i"} || "") eq $name;
+		Commands::run("conf buyAuto_${i}_npc $npc");
+		Commands::run("conf buyAuto_${i}_standpoint $stand") if $stand;
+		return 1;
+	}
+	return 0;
+}
+
+sub Grind_Phase2Equip {
+	my $inv = $char && $char->inventory;
+	for my $name ("Blade", "Guard", "Wooden Mail", "Manteau", "Shoes") {
+		next unless $inv && $inv->getByName($name);
+		Commands::run("eq $name");
+	}
+	for (my $i = 0; exists $config{"equipAuto_$i"}; $i++) {
+		my $job = $config{"equipAuto_${i}_isJob"} || "";
+		next unless $job =~ /Swordsman/i;
+		Commands::run("conf equipAuto_${i}_disabled 0");
+	}
+	Log::message("[Grind] PHASE2 equip Blade/Guard/Wooden Mail/Manteau/Shoes\n", "success");
+	return 1;
+}
+
+# Sit tile near Payon Kafra (181,104) — keep clear of NPC cell
+sub Grind_Phase2SitNearKafra {
+	return 0 unless $field && $field->baseName eq 'payon' && $char;
+	my @spots = (
+		[178, 100], [184, 100], [175, 104], [187, 104],
+		[178, 108], [184, 108], [181, 98], [181, 110],
+		[176, 101], [186, 101], [179, 106], [183, 106],
+	);
+	my $s = $spots[int(rand(scalar @spots))];
+	my ($x, $y) = ($s->[0], $s->[1]);
+	Commands::run("stand") if $char->{sitting};
+	Commands::run("move $x $y");
+	Log::message("[Grind] PHASE2 Payon kafra AFK → $x,$y\n", "success");
 	return 1;
 }
