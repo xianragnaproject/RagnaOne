@@ -459,8 +459,9 @@ automacro Grind_Phase1AfkResit {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
-			do eval Grind_RandomAfkLook()
+			do eval Grind_PickAfkLook()
 			do sit
+			pause 3
 		]
 	}
 }
@@ -617,13 +618,15 @@ macro grind_fountain_afk {
 		do conf attackAuto 0
 		do conf route_randomWalk 0
 		do conf lockMap none
+		do eval Grind_PickAfkLook()
 	]
 	call grind_to_prontera
 	[
 		do eval Grind_Phase1SitIfInTown()
 		pause 70
-		do eval Grind_RandomAfkLook()
+		do eval Grind_PickAfkLook()
 		do sit
+		pause 3
 		pause $secs
 		do stand
 		log Grind: AFK done - resume hunt
@@ -643,6 +646,7 @@ macro grind_phase1_afk_hold {
 		do conf itemsTakeAuto 0
 		do conf itemsGatherAuto 0
 		do conf itemsGatherAutoMinPlayerDistance 99
+		do eval Grind_PickAfkLook()
 		do eval AI::clear("move", "route", "mapRoute", "attack", "items_take", "items_gather", "gather")
 		do stand
 	]
@@ -650,7 +654,9 @@ macro grind_phase1_afk_hold {
 	[
 		do eval Grind_Phase1SitIfInTown()
 		pause 90
-		do eval Grind_SitIfNearFountain()
+		do eval Grind_PickAfkLook()
+		do sit
+		pause 3
 	]
 }
 
@@ -683,8 +689,9 @@ automacro Grind_Phase1ToFountain {
 			do eval AI::clear("move", "route", "mapRoute")
 			do eval Grind_Phase1SitIfInTown()
 			pause 90
-			do eval Grind_RandomAfkLook()
+			do eval Grind_PickAfkLook()
 			do sit
+			pause 3
 		]
 	}
 }
@@ -700,26 +707,29 @@ automacro Grind_Phase1AfkInTown {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
-			do eval Grind_RandomAfkLook()
+			do eval Grind_PickAfkLook()
 			do sit
+			pause 3
 		]
 	}
 }
 
-# Already AFK-sitting: shuffle facing so the plaza is not all north
+# Already AFK: periodically stand→sit so sitAuto_look applies (look-while-sitting ignored)
 automacro Grind_Phase1ShuffleLook {
 	exclusive 1
-	timeout 240
-	priority 9
+	timeout 20
+	priority 4
 	InMap prontera
 	ConfigKey grindPhase1Done 1
 	ConfigKey grindAfk 1
-	Eval $char && $char->{sitting}
 	call {
 		[
-			do eval Grind_RandomAfkLook()
-			pause 1
+			log PHASE1: reshuffle AFK facing
+			do eval Grind_PickAfkLook()
+			do stand
+			pause 2
 			do sit
+			pause 3
 		]
 	}
 }
@@ -780,18 +790,30 @@ sub Grind_NearFountain {
 
 sub Grind_SitIfNearFountain {
 	return 0 unless Grind_NearFountain();
-	Grind_RandomAfkLook();
+	Grind_PickAfkLook();
 	Commands::run("sit");
 	return 1;
 }
 
-# Random body (0-7) + head (0-2) so AFK bots don't all face the same way.
-sub Grind_RandomAfkLook {
+# Pick random body dir and arm OpenKore sitAuto_look so facing applies on sit confirm.
+# Body 0-7 (0=N …); head unused by sitAuto_look but logged for shuffle macros.
+sub Grind_PickAfkLook {
 	my $body = int(rand(8));
 	my $head = int(rand(3));
-	Commands::run("stand") if $char && $char->{sitting};
-	Commands::run("look $body $head");
-	Log::message("[Grind] AFK look body=$body head=$head\n", "success");
+	Commands::run("conf sitAuto_look $body");
+	Commands::run("conf sitAuto_look_delay 1");
+	Log::message("[Grind] AFK sitAuto_look=$body (head=$head)\n", "success");
+	return $body;
+}
+
+# Compat alias — prefer stand/sit with sitAuto_look armed (see ShuffleLook).
+sub Grind_RandomAfkLook {
+	return Grind_PickAfkLook();
+}
+
+sub Grind_AfkSitAndLook {
+	Grind_PickAfkLook();
+	Commands::run("sit") if $char && !$char->{sitting};
 	return 1;
 }
 
