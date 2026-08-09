@@ -31,19 +31,8 @@ expect {
     exp_continue
   }
   -re {You are now in the game|Map loaded|Your Coordinates:} {
-    # In-game: forward console keys; still auto-answer rare prompts from spawn output
-    interact {
-      -o
-      -re {Please choose a character} {
-        send "0\r"
-      }
-      -re {Please choose a server} {
-        send "0\r"
-      }
-      -re {Compile portals} {
-        send "1\r"
-      }
-    }
+    # Stay attached so tmux send-keys reach OpenKore. Char/server already auto-picked.
+    interact
   }
   eof
 }

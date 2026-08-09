@@ -108,25 +108,23 @@ automacro Grind_UnstickPronteraSouthPos {
 }
 
 macro grind_unstick_prt_south {
-	[
-		log Grind: unstick Prontera spawn - clear lock and walk south gate
-		do ai clear
-		do conf follow 0
-		do conf lockMap
-		do conf route_randomWalk 0
-		do conf attackAuto 0
-		do move 140 160
-		pause 8
-		do move 156 90
-		pause 10
-		do move 156 40
-		pause 12
-		do move 156 22
-		pause 10
-		do conf lockMap prt_fild08
-		do conf attackAuto 2
-		do conf route_randomWalk 1
-	]
+	log Grind: unstick Prontera spawn - clear lock and walk south gate
+	do eval AI::clear("move", "route", "mapRoute")
+	do conf follow 0
+	do conf lockMap none
+	do conf route_randomWalk 0
+	do conf attackAuto 0
+	do move 140 160
+	pause 8
+	do move 156 90
+	pause 10
+	do move 156 40
+	pause 12
+	do move 156 22
+	pause 15
+	do conf lockMap prt_fild08
+	do conf attackAuto 2
+	do conf route_randomWalk 1
 }
 
 ###############################################################################
@@ -1126,7 +1124,7 @@ automacro Grind_UnstickShopSellRoute {
 macro grind_unstick_shop {
 	[
 		log Grind: unstick shop - clear route and talk from 130 72
-		do ai clear
+		do eval AI::clear("move", "route", "mapRoute")
 		do conf sellAuto_standpoint prt_in 130 72
 		do conf sellAuto_distance 10
 		do conf sellAuto_maxDistance 14
