@@ -232,6 +232,31 @@ automacro Grind_Jobbed_DisablePotionBuy {
 }
 
 ###############################################################################
+# prt_fild08 -> prontera: ALWAYS same-map to 170,375 then step portal.
+# Never "move prontera X Y" from deep field (MapRoute hang / wrong map).
+# Portal src 170,378 is not a pathfind dest — approach 170,375 then enter.
+# Do NOT sit until map change confirms town (sit cancels route).
+###############################################################################
+macro grind_to_prontera {
+	[
+		log Grind: exit field via north portal 170,375 -> prontera
+		do conf lockMap none
+		do conf route_randomWalk 0
+		do conf attackAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute")
+		do eval Grind_ApproachFieldPortal()
+		pause 60
+		do eval Grind_EnterFieldPortal()
+		pause 20
+		do eval Grind_EnterFieldPortal()
+		pause 20
+		do eval Grind_EnterFieldPortal()
+		pause 20
+	]
+}
+
+###############################################################################
 # Job Level 10 Novice -> Prontera Job Master (HIGH PRIORITY)
 ###############################################################################
 automacro Grind_JobChange_Go {
@@ -247,14 +272,16 @@ automacro Grind_JobChange_Go {
 	NpcNotNear /Job Master/
 	call {
 		[
-			log Grind: Job10 Novice PRIORITY - walk to Job Master
+			log Grind: Job10 Novice PRIORITY - portal to town then Job Master
 			do conf grindJobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
 			do stand
-			pause 1
-			do move prontera 155 180
+		]
+		call grind_to_prontera
+		[
+			do move 155 180
 		]
 	}
 }
@@ -400,7 +427,7 @@ automacro Grind_SellLoot {
 
 macro grind_sell_loot {
 	[
-		log Grind: OW>=30% - clear lockMap, portal to town, sell at tool dealer
+		log Grind: OW>=30% - portal to town, sell at tool dealer
 		do conf grindSelling 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -408,8 +435,9 @@ macro grind_sell_loot {
 		do conf sellAuto 0
 		do stand
 		do eval AI::clear("move", "route", "mapRoute", "sellAuto")
-		do move 170 375
-		pause 100
+	]
+	call grind_to_prontera
+	[
 		do move prt_in 130 72
 		pause 50
 		do conf sellAuto 1
@@ -513,17 +541,18 @@ automacro Grind_FountainAFK {
 }
 
 macro grind_fountain_afk {
-	$fx = &rand(148, 164)
-	$fy = &rand(183, 199)
 	$secs = &rand(300, 600)
 	[
-		log Grind: AFK break - Prontera fountain at $fx $fy for $secs sec
+		log Grind: AFK break - portal then fountain for $secs sec
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
 		do conf lockMap none
-		do move prontera $fx $fy
-		pause 50
+	]
+	call grind_to_prontera
+	[
+		do eval Grind_Phase1SitIfInTown()
+		pause 40
 		do sit
 		pause $secs
 		do stand
@@ -534,19 +563,33 @@ macro grind_fountain_afk {
 }
 
 macro grind_phase1_afk_hold {
-	log PHASE1: AFK sit-in-place until next phase
-	do conf grindAfk 1
-	do conf attackAuto 0
-	do conf route_randomWalk 0
-	do conf lockMap none
-	do conf sellAuto 0
-	do conf itemsTakeAuto 0
-	do conf itemsGatherAuto 0
-	do conf itemsGatherAutoMinPlayerDistance 99
-	do eval AI::clear("move", "route", "mapRoute", "attack", "items_take", "items_gather", "gather")
-	do stand
-	pause 2
-	do sit
+	[
+		log PHASE1: portal to Prontera then AFK sit
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do conf itemsTakeAuto 0
+		do conf itemsGatherAuto 0
+		do conf itemsGatherAutoMinPlayerDistance 99
+		do eval AI::clear("move", "route", "mapRoute", "attack", "items_take", "items_gather", "gather")
+		do stand
+	]
+	call grind_to_prontera
+	do eval Grind_Phase1SitIfInTown()
+}
+
+# Still on field after phase1 — force portal (do not AFK on 170,375)
+automacro Grind_Phase1StillOnField {
+	exclusive 1
+	timeout 120
+	priority 0
+	InMap prt_fild08
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_afk_hold
 }
 
 automacro Grind_Phase1AfkInTown {
@@ -559,7 +602,7 @@ automacro Grind_Phase1AfkInTown {
 	Eval !$char->{sitting}
 	call {
 		[
-			do move &rand(148, 164) &rand(183, 199)
+			do eval Grind_Phase1SitIfInTown()
 			pause 20
 			do sit
 		]
@@ -569,6 +612,67 @@ automacro Grind_Phase1AfkInTown {
 ###############################################################################
 # Perl helpers (phase 1 only)
 ###############################################################################
+sub Grind_IsInPronteraTown {
+	return 0 unless $field;
+	my $m = $field->baseName;
+	return ($m eq 'prontera' || $m eq 'prt_in') ? 1 : 0;
+}
+
+# Same-map walk to walkable approach tile beside north portal.
+# Portal src is prt_fild08 170,378 (not a pathfind dest).
+sub Grind_ApproachFieldPortal {
+	return 1 if Grind_IsInPronteraTown();
+	return 1 unless $field && $field->baseName eq 'prt_fild08';
+	my $x = $char->{pos}{x} // 0;
+	my $y = $char->{pos}{y} // 0;
+	return 1 if abs($x - 170) <= 2 && abs($y - 375) <= 3;
+	Commands::run("move 170 375");
+	return 1;
+}
+
+# From approach tile, enter portal then land at Prontera south gate.
+# One action per call — grind_to_prontera invokes this several times with pauses.
+sub Grind_EnterFieldPortal {
+	return 1 if Grind_IsInPronteraTown();
+	return 1 unless $field && $field->baseName eq 'prt_fild08';
+	my $x = $char->{pos}{x} // 0;
+	my $y = $char->{pos}{y} // 0;
+	unless (abs($x - 170) <= 6 && abs($y - 375) <= 10) {
+		Commands::run("stand") if $char->{sitting};
+		Commands::run("move 170 375");
+		return 1;
+	}
+	Commands::run("stand") if $char->{sitting};
+	# Adjacent to portal: step north into warp (170,378), else short MapRoute
+	if ($y < 377) {
+		Commands::run("move 170 377");
+	} elsif ($y < 378) {
+		# Last step onto portal cell — may log "not walkable" but still warps
+		Commands::run("north");
+	} else {
+		Commands::run("move prontera 156 30");
+	}
+	return 1;
+}
+
+# Walk to a known-walkable Prontera fountain-adjacent tile (avoid water).
+sub Grind_Phase1SitIfInTown {
+	return 0 unless Grind_IsInPronteraTown();
+	my ($x, $y) = Grind_RandomFountainTile();
+	Commands::run("move $x $y");
+	return 1;
+}
+
+sub Grind_RandomFountainTile {
+	my @spots = (
+		[155, 180], [150, 185], [160, 185], [148, 188],
+		[158, 188], [152, 182], [157, 182], [155, 185],
+		[146, 190], [162, 190], [155, 192],
+	);
+	my $s = $spots[int(rand(scalar @spots))];
+	return ($s->[0], $s->[1]);
+}
+
 sub Grind_TalkJobMaster {
 	my $job = lc($config{grindTargetJob} || 'random');
 	my @pool = qw(Swordman Magician Archer Acolyte Merchant Thief);
