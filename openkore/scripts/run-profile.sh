@@ -41,7 +41,7 @@ expect {
   -re {Password Error|Enter your Ragnarok Online password again} {
     puts "\\n\[run-profile\] password prompt — resending configured password"
     expect -re {Enter your answer:}
-    send -- "$pass\r"
+    send -- "\$pass\r"
     exp_continue
   }
   -re {You are now in the game} {
