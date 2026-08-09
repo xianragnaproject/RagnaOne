@@ -459,6 +459,7 @@ automacro Grind_Phase1AfkResit {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
+			do eval Grind_RandomAfkLook()
 			do sit
 		]
 	}
@@ -621,6 +622,7 @@ macro grind_fountain_afk {
 	[
 		do eval Grind_Phase1SitIfInTown()
 		pause 70
+		do eval Grind_RandomAfkLook()
 		do sit
 		pause $secs
 		do stand
@@ -681,6 +683,7 @@ automacro Grind_Phase1ToFountain {
 			do eval AI::clear("move", "route", "mapRoute")
 			do eval Grind_Phase1SitIfInTown()
 			pause 90
+			do eval Grind_RandomAfkLook()
 			do sit
 		]
 	}
@@ -697,6 +700,25 @@ automacro Grind_Phase1AfkInTown {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
+			do eval Grind_RandomAfkLook()
+			do sit
+		]
+	}
+}
+
+# Already AFK-sitting: shuffle facing so the plaza is not all north
+automacro Grind_Phase1ShuffleLook {
+	exclusive 1
+	timeout 240
+	priority 9
+	InMap prontera
+	ConfigKey grindPhase1Done 1
+	ConfigKey grindAfk 1
+	Eval $char && $char->{sitting}
+	call {
+		[
+			do eval Grind_RandomAfkLook()
+			pause 1
 			do sit
 		]
 	}
@@ -758,7 +780,18 @@ sub Grind_NearFountain {
 
 sub Grind_SitIfNearFountain {
 	return 0 unless Grind_NearFountain();
+	Grind_RandomAfkLook();
 	Commands::run("sit");
+	return 1;
+}
+
+# Random body (0-7) + head (0-2) so AFK bots don't all face the same way.
+sub Grind_RandomAfkLook {
+	my $body = int(rand(8));
+	my $head = int(rand(3));
+	Commands::run("stand") if $char && $char->{sitting};
+	Commands::run("look $body $head");
+	Log::message("[Grind] AFK look body=$body head=$head\n", "success");
 	return 1;
 }
 
