@@ -2211,6 +2211,8 @@ sub Grind_Phase2MaybeProgressBladeBuy {
 	return 0 unless ($config{grindP2BuyingBlade} || "") eq "1";
 	return 0 unless $field && $char;
 	return 0 if Grind_Phase2HasItem("Blade");
+	# Don't yank an in-progress walk every audit tick
+	return 0 if AI::inQueue("move") || AI::inQueue("route") || AI::inQueue("mapRoute") || AI::is("move", "route", "mapRoute");
 	my $m = $field->baseName;
 	my $x = $char->{pos}{x} || 0;
 	my $y = $char->{pos}{y} || 0;
@@ -2238,11 +2240,9 @@ sub Grind_Phase2MaybeProgressBladeBuy {
 		Log::message("[Grind] PHASE2 Blade progress: talknpc buy Blade\n", "success");
 		AI::clear("NPC", "buyAuto");
 		Commands::run('talknpc 15 119 b b4,1 e');
-		# Mark complete on next audit if Blade appears; keep flag until owned
 		return 1;
 	}
 
-	# Wrong map while buying blade — clear and let return macros handle
 	Log::message("[Grind] PHASE2 Blade progress: unexpected map $m — clear blade buy flag\n", "success");
 	Commands::run("conf -f grindP2BuyingBlade 0");
 	return 0;
