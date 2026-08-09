@@ -214,7 +214,7 @@ automacro Grind_Jobbed_DisablePotionBuy {
 automacro Grind_JobChange_Go {
 	exclusive 1
 	timeout 40
-	priority -1
+	priority 0
 	JobID 0
 	JobLevel >= 10
 	ConfigKeyNot grindJob1st 1
@@ -239,7 +239,7 @@ automacro Grind_JobChange_Go {
 automacro Grind_JobChange_Talk {
 	exclusive 1
 	timeout 30
-	priority -1
+	priority 0
 	JobID 0
 	JobLevel >= 10
 	ConfigKeyNot grindJob1st 1
@@ -265,7 +265,7 @@ automacro Grind_JobChange_Talk {
 automacro Grind_JobDone {
 	exclusive 1
 	timeout 20
-	priority -1
+	priority 0
 	JobIDNot 0
 	ConfigKeyNot grindJob1st 1
 	call {
