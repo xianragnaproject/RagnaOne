@@ -1,20 +1,10 @@
 #!/usr/bin/env python3
-"""Build thin Grind profiles: login only + !include shared pack (solo, no party)."""
+"""Ensure Grind profiles are config.txt-only (shared files live in openkore/control/)."""
 from __future__ import annotations
 
 import re
 import sys
 from pathlib import Path
-
-# Fixed class targets for existing fleet accounts (still solo lockMap hunters)
-JOB_BY_PROFILE = {
-    "GrindSword": "Swordman",
-    "GrindPrt08": "Thief",
-    "GrindMage": "Magician",
-    "GrindArcher": "Archer",
-    "GrindAco": "Acolyte",
-    "GrindMerch": "Merchant",
-}
 
 SOLO_KEYS = {
     "grindPartyMode": "0",
@@ -23,22 +13,17 @@ SOLO_KEYS = {
     "followTarget": "",
     "followBot": "0",
     "partyAuto": "0",
-    "lockMap": "pay_fild03",
+    "lockMap": "prt_fild08",
     "route_randomWalk": "1",
-    "attackAuto_inLockOnly": "1",
+    "attackAuto": "2",
     "attackAuto_followTarget": "0",
     "attackAuto_party": "0",
     "sellAuto": "1",
     "teleportAuto_deadly": "0",
 }
 
-SHARED_LINKS = (
-    "eventMacros.txt",
-    "items_control.txt",
-    "mon_control.txt",
-    "pickupitems.txt",
-    "routeweights.txt",
-)
+# Only login-related files belong in the profile dir
+KEEP = {"config.txt", "class.meta"}
 
 PRESERVE_STATE = (
     "grindLeftTraining",
@@ -74,8 +59,8 @@ def write_thin_config(
     state: dict[str, str],
 ) -> None:
     lines = [
-        "######## Thin login profile — shared FreshGrind pack (SOLO) ########",
-        "# Edit login here. Macros/combat: openkore/fresh_grind/control/",
+        "######## Account config only — shared files in openkore/control/ ########",
+        "# Macros/items/monsters: control/  |  pack source: fresh_grind/control/",
         "# grindTargetJob: Swordman|Magician|Archer|Acolyte|Merchant|Thief|random",
         "!include ../../fresh_grind/control/config-shared.txt",
         "",
@@ -97,15 +82,14 @@ def write_thin_config(
     path.write_text("\n".join(lines) + "\n")
 
 
-def link_shared(prof: Path, pack_control: Path) -> None:
-    for name in SHARED_LINKS:
-        src = pack_control / name
-        dst = prof / name
-        if not src.exists():
+def strip_profile_extras(prof: Path) -> None:
+    for p in list(prof.iterdir()):
+        if p.name in KEEP:
             continue
-        if dst.is_symlink() or dst.exists():
-            dst.unlink()
-        dst.symlink_to(Path("../../fresh_grind/control") / name)
+        if p.is_symlink() or p.is_file():
+            p.unlink()
+            print(f"  rm  {prof.name}/{p.name}")
+        # leave unexpected subdirs alone
 
 
 def main() -> int:
@@ -121,6 +105,13 @@ def main() -> int:
                 (live_pack / f.name).write_bytes(f.read_bytes())
                 print(f"pack  {f.name}")
 
+    # Install shared files into control/
+    import subprocess
+
+    install = Path(__file__).resolve().parent / "install-shared-control.sh"
+    if install.exists():
+        subprocess.run(["bash", str(install), str(live_pack)], check=False)
+
     n = 0
     for prof in sorted(profiles.iterdir()):
         if not prof.is_dir() or not prof.name.startswith("Grind"):
@@ -133,13 +124,8 @@ def main() -> int:
         if user == "CHANGE_ME":
             raise SystemExit(f"REFUSING {prof.name}: no username")
 
-        existing_job = get_key(old, "grindTargetJob")
-        job = JOB_BY_PROFILE.get(prof.name)
-        if existing_job:
-            # Prefer per-profile target (Grind07+ / random overrides)
-            job = existing_job
-        elif not job:
-            job = "random"
+        # Prefer existing job; default random for new/unknown
+        job = get_key(old, "grindTargetJob") or "random"
 
         state = {}
         for k in PRESERVE_STATE:
@@ -155,11 +141,11 @@ def main() -> int:
             job=job,
             state=state,
         )
-        link_shared(prof, live_pack)
-        print(f"thin  {prof.name} job={job} mode=solo")
+        strip_profile_extras(prof)
+        print(f"thin  {prof.name} job={job} (config.txt only)")
         n += 1
 
-    print(f"Made {n} thin solo Grind profiles -> {live_pack}")
+    print(f"Made {n} config-only Grind profiles; shared → {openkore / 'control'}")
     return 0
 
 

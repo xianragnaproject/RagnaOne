@@ -145,6 +145,7 @@ def ensure_pack() -> None:
 
 
 def link_shared(prof: Path) -> None:
+    # Shared files live in openkore/control/ — profile is config.txt only.
     for name in (
         "eventMacros.txt",
         "items_control.txt",
@@ -152,13 +153,9 @@ def link_shared(prof: Path) -> None:
         "pickupitems.txt",
         "routeweights.txt",
     ):
-        src = LIVE_PACK / name
         dst = prof / name
-        if not src.exists():
-            continue
-        if dst.is_symlink() or dst.exists():
+        if dst.is_symlink() or dst.is_file():
             dst.unlink()
-        dst.symlink_to(Path("../../fresh_grind/control") / name)
 
 
 def write_thin(
@@ -422,11 +419,7 @@ def main() -> int:
 
     new_names = next_profile_names(need, existing_names)
     # Balanced job mix across new accounts
-    job_cycle = []
-    while len(job_cycle) < need:
-        job_cycle.extend(JOBS)
-    job_cycle = job_cycle[:need]
-    random.shuffle(job_cycle)
+    job_cycle = ["random"] * need
 
     new_rows: list[dict[str, str]] = []
     for profile, job in zip(new_names, job_cycle):

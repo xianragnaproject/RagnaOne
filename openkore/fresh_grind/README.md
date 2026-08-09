@@ -1,13 +1,15 @@
-# FreshGrind shared control pack (SOLO)
+# FreshGrind — one OpenKore folder, shared everything except account config
 
-One shared folder for all grind accounts. Per-account files only hold **login + job**.
-**No party / no follow** — every bot lockMaps and hunts alone.
+All bots use the same OpenKore install. **Shared** macros/items/monsters live in
+`control/`. Each account is only a thin `profiles/<Name>/config.txt`.
+
+**Solo grind** — no party / no follow. Job defaults to **random**.
 
 ## Progression
 
 1. Leave novice training → Prontera  
 2. Farm `prt_fild08` until Novice base 15 / job 10  
-3. Job Master → `grindTargetJob` (or `random`)  
+3. Job Master → `grindTargetJob` (**random** or a fixed 1st job)  
 4. Buy class gear + enable class skills  
 5. Farm `prt_fild08` until base 25  
 6. Solo hunt `pay_fild03` until base 35  
@@ -16,17 +18,32 @@ One shared folder for all grind accounts. Per-account files only hold **login + 
 ## Layout
 
 ```
-openkore/fresh_grind/control/     # SOURCE OF TRUTH
-  config-shared.txt
-  eventMacros.txt
-  items_control.txt / mon_control.txt / ...
-
-openkore/profiles/GrindSword/
-  config.txt                      # thin: !include + username/password/job
-  eventMacros.txt -> shared symlink
+~/openkore/                         # ONE OpenKore
+  openkore.pl
+  control/                          # SHARED (eventMacros, items, mon, …)
+  fresh_grind/control/              # pack source + config-shared.txt
+  profiles/
+    Grind01/
+      config.txt                    # ONLY per-account file (login + job)
+    Grind02/
+      config.txt
 ```
 
-## Add a new account
+OpenKore `--profile=Grind01` loads `profiles/Grind01/` first, then falls back to
+`control/` for every other file.
+
+## Add an account
+
+```bash
+bash openkore/scripts/install-shared-control.sh   # once / after pack edits
+bash openkore/scripts/add-fresh-account.sh Grind02 myuser mypass random
+# create char (Hercules auto-create via user_M on first login):
+expect ~/openkore/scripts/create-char.exp Grind02 MyCharName M
+# then strip _M from username in config if create script left it, and:
+bash ~/openkore/scripts/start-bot.sh Grind02
+```
+
+Minimal `config.txt`:
 
 ```
 !include ../../fresh_grind/control/config-shared.txt
@@ -36,30 +53,13 @@ char 0
 grindTargetJob random
 follow 0
 grindPartyMode 0
-lockMap pay_fild03
+lockMap prt_fild08
 ```
 
-```bash
-python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_grind/control
-```
-
-## Sync
+## Sync pack → control/
 
 ```bash
-python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_grind/control
+bash openkore/scripts/install-shared-control.sh
 # or
-bash openkore/scripts/sync-all-profiles.sh
+python3 openkore/scripts/make-thin-grind-profiles.py ~/openkore openkore/fresh_grind/control
 ```
-
-## Scale to N accounts (e.g. 40)
-
-```bash
-# Creates Grind07.. until total Grind* count == N (keeps existing)
-python3 openkore/scripts/batch-create-fresh-grind-n.py 40
-bash openkore/scripts/start-fleet.sh
-# If login server was closed, keep retrying char create:
-bash openkore/scripts/register-pending-grind.sh
-```
-
-Pending registrations: `/tmp/fresh-grind-n-pending.txt`  
-Results: `/tmp/fresh-grind-n-results.txt`
