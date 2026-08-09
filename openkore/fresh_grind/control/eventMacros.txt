@@ -1385,11 +1385,10 @@ automacro Grind_Phase2FixEquipAuto {
 	}
 }
 
-# Log gear + clear false grindP2Gear; drive Alberta→Payon / Blade buy from audit when needed
+# Log gear; non-exclusive so hunt/field macros can run
 automacro Grind_Phase2GearAudit {
-	exclusive 1
-	timeout 60
-	priority 7
+	timeout 45
+	priority 9
 	JobID 1
 	ConfigKey grindPhase2 1
 	call {
@@ -1406,22 +1405,19 @@ automacro Grind_Phase2GearAudit {
 	}
 }
 
-# Hunt pay_fild08 after full gear (Blade + Guard + armor)
+# Hunt pay_fild08 after full gear (grindP2Gear only set when Blade+Guard+armor owned)
 automacro Grind_Phase2HuntPay08 {
 	exclusive 1
 	timeout 40
-	priority 2
+	priority 1
 	JobID 1
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot lockMap pay_fild08
-	Eval Grind_Phase2HasBlade()
-	Eval Grind_Phase2HasGuard()
-	Eval Grind_Phase2HasShoes()
-	Eval Grind_Phase2HasWoodenMail()
 	call {
 		[
 			log PHASE2: lockMap pay_fild08
@@ -1450,10 +1446,7 @@ automacro Grind_Phase2ToFieldPortal {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	Eval Grind_Phase2HasBlade()
-	Eval Grind_Phase2HasGuard()
-	Eval Grind_Phase2HasShoes()
-	Eval Grind_Phase2HasWoodenMail()
+	ConfigKeyNot grindP2BuyingBlade 1
 	InMapRegex /^(payon|payon_in01)$/
 	call {
 		[
@@ -1483,10 +1476,6 @@ automacro Grind_Phase2KeepAggressive {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot attackAuto 2
-	Eval Grind_Phase2HasBlade()
-	Eval Grind_Phase2HasGuard()
-	Eval Grind_Phase2HasShoes()
-	Eval Grind_Phase2HasWoodenMail()
 	call {
 		[
 			log PHASE2: restore attackAuto 2 on pay_fild08
@@ -1544,7 +1533,7 @@ macro grind_phase2_sell_payon {
 	]
 }
 
-# AFK break near Payon Kafra only after full gear (Blade + Guard + armor)
+# AFK break near Payon Kafra only after full gear
 automacro Grind_Phase2PayonAfk {
 	exclusive 1
 	timeout 900
@@ -1556,10 +1545,7 @@ automacro Grind_Phase2PayonAfk {
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	Eval Grind_Phase2HasBlade()
-	Eval Grind_Phase2HasGuard()
-	Eval Grind_Phase2HasWoodenMail()
-	Eval Grind_Phase2HasShoes()
+	ConfigKeyNot grindP2BuyingBlade 1
 	call grind_phase2_payon_afk
 }
 
@@ -2357,9 +2343,17 @@ sub Grind_Phase2MarkGearIfComplete {
 	Commands::run("conf grindP2Gear 1");
 	Commands::run("conf grindGearDone 1");
 	Commands::run("conf grindP2Guard 1");
-	Commands::run("conf grindP2Armor 1");
+	Commands::run("conf -f grindP2Armor 1");
 	Commands::run("conf -f grindP2BuyingBlade 0");
 	Commands::run("conf grindP2Buying 0");
+	# Kick hunt immediately when gear completes
+	Commands::run("conf grindAfk 0");
+	Commands::run("conf -f grindHuntMap pay_fild08");
+	Commands::run("conf lockMap pay_fild08");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf lockMap_y none");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf route_randomWalk 1");
 	Log::message("[Grind] PHASE2 full gear OK — Blade Guard Shoes Muffler Wooden Mail\n", "success");
 	return 1;
 }
