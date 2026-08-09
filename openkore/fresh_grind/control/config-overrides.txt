@@ -65,6 +65,7 @@ grindDone25 0
 grindDone35 0
 grindPhase1Done 0
 grindPhase2 0
+grindUnsticking 0
 # Solo grind — no party / no follow
 grindPartyMode 0
 grindPartyRole solo
@@ -74,7 +75,7 @@ follow 0
 followBot 0
 followTarget
 attackAuto_followTarget 0
-lockMap prt_fild08
+lockMap
 grindHuntMap prt_fild08
 
 ######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########

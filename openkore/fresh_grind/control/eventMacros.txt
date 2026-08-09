@@ -57,74 +57,113 @@ automacro Grind_Leave_new12 {
 }
 
 automacro Grind_StartFarm {
+	disabled 1
 	exclusive 1
-	timeout 20
+	timeout 60
+	run-once 1
 	priority 2
 	InMap prontera
 	ConfigKeyNot grindLeftTraining 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindUnsticking 1
+	ConfigKeyNot grindPhase1Done 1
 	JobID 0
 	BaseLevel < 15
 	call {
-		[
-			log Grind: start aggressive farm prt_fild08
-			do conf grindLeftTraining 1
-			do conf attackAuto 2
-			do conf route_randomWalk 1
-			do conf lockMap prt_fild08
-			do conf lockMap_x none
-		]
+		log Grind: walk Prontera south gate then lock prt_fild08
+		do conf grindLeftTraining 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do stand
+		do eval AI::clear("move", "route", "mapRoute")
+		do move 156 22
+		pause 120
+		do conf lockMap prt_fild08
+		do conf -f grindHuntMap prt_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+	}
+}
+
+# Re-arm if stuck in town with hunt already flagged
+automacro Grind_EnsureHuntFromTown {
+	disabled 1
+	exclusive 1
+	timeout 90
+	priority 2
+	InMap prontera
+	ConfigKey grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindUnsticking 1
+	ConfigKeyNot grindPhase1Done 1
+	BaseLevel < 15
+	Eval !($char->{jobID} == 0 && $char->{lv_job} >= 10)
+	Eval !$config{lockMap} || $config{lockMap} eq '' || $config{lockMap} eq 'none'
+	call {
+		log Grind: re-arm south gate walk -> prt_fild08
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute")
+		do move 156 22
+		pause 120
+		do conf lockMap prt_fild08
+		do conf -f grindHuntMap prt_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
 	}
 }
 
 ###############################################################################
 # prt_fild08 hunt lock - all phases, base < 25
-# Mass spawn stuck at Prontera fountain/center while routing to south field gate
+# Mass spawn stuck at Prontera fountain — do NOT thrash-restart routes.
+# Pos-based unstick disabled (it cancelled every south walk). Console stuck only.
 automacro Grind_UnstickPronteraSouth {
 	exclusive 1
-	timeout 20
+	timeout 60
 	priority 0
 	InMap prontera
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindUnsticking 1
 	ConfigKey lockMap prt_fild08
 	Console /Stuck at prontera \(15[0-9],1[7-9][0-9]\)/
 	call grind_unstick_prt_south
 }
 
 automacro Grind_UnstickPronteraSouthPos {
+	disabled 1
 	exclusive 1
-	timeout 25
+	timeout 60
 	priority 1
 	InMap prontera
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindUnsticking 1
 	ConfigKey lockMap prt_fild08
 	Eval abs(($char->{pos}{x}//0)-155) <= 8 && abs(($char->{pos}{y}//0)-183) <= 12
 	call grind_unstick_prt_south
 }
 
 macro grind_unstick_prt_south {
-	log Grind: unstick Prontera spawn - clear lock and walk south gate
+	log Grind: unstick Prontera spawn - one walk to south gate
+	# Runtime-only flags (avoid polluting thin profile config.txt)
+	do eval $config{grindUnsticking} = 1; $config{lockMap} = ''; $config{route_randomWalk} = 0; $config{attackAuto} = 0; 1
+	do stand
 	do eval AI::clear("move", "route", "mapRoute")
-	do conf follow 0
-	do conf lockMap none
-	do conf route_randomWalk 0
-	do conf attackAuto 0
-	do move 140 160
-	pause 8
-	do move 156 90
-	pause 10
-	do move 156 40
-	pause 12
 	do move 156 22
-	pause 15
+	pause 90
 	do conf lockMap prt_fild08
 	do conf attackAuto 2
 	do conf route_randomWalk 1
+	do conf -f grindHuntMap prt_fild08
+	do eval $config{grindUnsticking} = 0; 1
 }
 
 ###############################################################################
@@ -179,16 +218,14 @@ automacro Grind_KeepAggressive08 {
 ###############################################################################
 automacro Grind_Novice_EnablePotionBuy {
 	exclusive 1
-	timeout 25
+	timeout 300
+	run-once 1
 	priority 1
 	JobID 0
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindJobbing 1
 	call {
-		[
-			log PHASE1: enable Red Potion buy Novice zeny>2000 stock0
-			do eval Grind_EnableBuyItem("Red Potion")
-		]
+		do eval Grind_EnableBuyItem("Red Potion")
 	}
 }
 
@@ -1411,11 +1448,15 @@ sub Grind_DisableBuyItem {
 sub Grind_EnableBuyItem {
 	my ($name) = @_;
 	return 0 unless defined $name && $name ne '';
+	my $changed = 0;
 	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
 		my $item = $config{"buyAuto_$i"} || '';
 		next unless $item eq $name;
+		next if defined $config{"buyAuto_${i}_disabled"} && $config{"buyAuto_${i}_disabled"} eq '0';
 		Commands::run("conf buyAuto_${i}_disabled 0");
+		$changed = 1;
 	}
+	Log::message("[Grind] Enabled buyAuto for $name\n", "success") if $changed;
 	return 1;
 }
 

@@ -6,3 +6,6 @@ ai_follow_lost_end 180
 reconnect 15
 reconnect_backoff 10,20,30,45,60,90
 reconnect_random 8
+
+# Prontera fountain spawn: walk packets are slow; 2s unstuck cancels every step
+ai_route_unstuck 12

@@ -172,21 +172,17 @@ def write_thin(
     cfg_path = prof / "config.txt"
     lines = [
         "######## Account only — macros + shared control own everything else ########",
+        # profiles/ plugin loads THIS file instead of control/config.txt —
+        # include the full base first or defaults (clientSight, etc.) are missing.
+        "!include ../../control/config.txt",
         "!include ../../fresh_grind/control/config-shared.txt",
         f"username {username}",
         f"password {password}",
         "",
     ]
-    cfg_path.write_text("
-".join(lines) + "
-")
+    cfg_path.write_text("\n".join(lines) + "\n")
     (prof / "class.meta").write_text(
-        f"label={job}
-char_name={char_name}
-sex={sex}
-account={username}
-pack=fresh_grind
-"
+        f"label={job}\nchar_name={char_name}\nsex={sex}\naccount={username}\npack=fresh_grind\n"
     )
     link_shared(prof)
 

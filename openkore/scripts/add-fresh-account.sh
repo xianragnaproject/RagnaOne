@@ -27,6 +27,9 @@ mkdir -p "$DST"
 
 cat > "$DST/config.txt" <<EOF
 ######## Account only — macros + shared control own everything else ########
+# profiles/ plugin loads THIS config.txt instead of control/config.txt,
+# so include the full base config first or defaults (clientSight, etc.) are missing.
+!include ../../control/config.txt
 !include ../../fresh_grind/control/config-shared.txt
 username $USER
 password $PASS

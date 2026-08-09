@@ -24,6 +24,9 @@ def write_login_only(path: Path, username: str, password: str) -> None:
         "\n".join(
             [
                 "######## Account only — macros + shared control own everything else ########",
+                # profiles/ plugin loads THIS file instead of control/config.txt —
+                # include the full base first or defaults (clientSight, etc.) are missing.
+                "!include ../../control/config.txt",
                 "!include ../../fresh_grind/control/config-shared.txt",
                 f"username {username}",
                 f"password {password}",

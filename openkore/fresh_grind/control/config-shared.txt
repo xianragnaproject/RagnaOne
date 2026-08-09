@@ -64,6 +64,7 @@ grindDone25 0
 grindDone35 0
 grindPhase1Done 0
 grindPhase2 0
+grindUnsticking 0
 # Solo grind — no party / no follow (each bot lockMaps the hunt field)
 grindPartyMode 0
 grindPartyRole solo
@@ -73,8 +74,9 @@ follow 0
 followBot 0
 followTarget
 attackAuto_followTarget 0
-# Start hunt map for fresh novices; macros switch later
-lockMap prt_fild08
+# Start with empty lockMap; macros/run-profile walk south gate then set prt_fild08
+# (Do NOT write "lockMap none" here — that sets the string "none" as a map name.)
+lockMap
 grindHuntMap prt_fild08
 
 

@@ -7,10 +7,11 @@ Everything else is shared (`control/` + `config-shared.txt`) and **macros** chan
 
 ```
 ~/openkore/
-  control/                 # SHARED macros/items/monsters/…
+  control/                 # SHARED macros/items/monsters/… + full config.txt defaults
   fresh_grind/control/     # pack + config-shared.txt
   profiles/Grind01/
-    config.txt             # ONLY:
+    config.txt             # login only:
+                           #   !include ../../control/config.txt
                            #   !include …/config-shared.txt
                            #   username …
                            #   password …
@@ -18,7 +19,12 @@ Everything else is shared (`control/` + `config-shared.txt`) and **macros** chan
 
 ## Account config
 
+`--profile=X` makes OpenKore load `profiles/X/config.txt` **instead of**
+`control/config.txt`. Always include the full base config first, then shared
+overrides, then credentials:
+
 ```
+!include ../../control/config.txt
 !include ../../fresh_grind/control/config-shared.txt
 username myuser
 password mypass
