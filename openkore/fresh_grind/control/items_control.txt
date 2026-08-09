@@ -26,6 +26,7 @@ Guard 1 0 0
 Blade 1 0 0
 Wooden Mail 1 0 0
 Manteau 1 0 0
+Muffler 1 0 0
 Shoes 1 0 0
 Rod 1 0 0
 Rod [3] 1 0 0

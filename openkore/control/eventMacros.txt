@@ -934,7 +934,7 @@ automacro Grind_Phase2SavePayon {
 	}
 }
 
-# Payon shops: Blade + Shoes + Wooden Mail + Manteau; remap potion/sell NPCs
+# Payon shops: Blade + Shoes + Wooden Mail + Muffler (direct talknpc buy — buyAuto was unreliable)
 automacro Grind_Phase2BuyPayonGear {
 	exclusive 1
 	timeout 120
@@ -947,45 +947,114 @@ automacro Grind_Phase2BuyPayonGear {
 	ConfigKeyNot grindAfk 1
 	InMapRegex /^(payon|payon_in01)$/
 	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
-	call {
-		[
-			log PHASE2: Payon weapon/armor buy Blade Manteau Shoes Wooden Mail
-			do conf grindP2Buying 1
-			do conf attackAuto 0
-			do conf route_randomWalk 0
-			do conf lockMap none
-			do stand
-			do eval AI::clear("move", "route", "mapRoute", "buyAuto")
-			do eval Grind_ApplyPayonShops()
-			do conf grindP2Shops 1
-			# Weapon dealer — Blade
-			do move payon_in01 15 117
-			pause 35
-			do eval Grind_EnableBuyItem("Blade")
-			do eval AI::queue("buyAuto")
-			pause 50
-			do eval Grind_DisableBuyItem("Blade")
-			# Armor dealer — Shoes / Wooden Mail / Manteau
-			do move payon_in01 10 119
-			pause 25
-			do eval Grind_EnableBuyItem("Shoes")
-			do eval Grind_EnableBuyItem("Wooden Mail")
-			do eval Grind_EnableBuyItem("Manteau")
-			do eval AI::queue("buyAuto")
-			pause 70
-			do eval Grind_DisableBuyItem("Shoes")
-			do eval Grind_DisableBuyItem("Wooden Mail")
-			do eval Grind_DisableBuyItem("Manteau")
-			do eval Grind_EnableBuyItem("Red Potion")
-			do eval Grind_Phase2Equip()
-			do conf grindP2Buying 0
-			do conf grindP2Gear 1
-			do conf grindGearDone 1
-			do move payon 181 100
-			pause 15
-			log PHASE2: Payon gear done — hunt pay_fild08
-		]
-	}
+	call grind_phase2_buy_payon_gear
+}
+
+# Already marked gear-done but missing Shoes / Wooden Mail / Muffler — go buy them
+automacro Grind_Phase2BuyMissingShoes {
+	exclusive 1
+	timeout 75
+	priority 0
+	JobID 1
+	InventoryReady
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	InInventory "Shoes" < 1
+	Zeny > 3500
+	call grind_phase2_buy_missing_armor
+}
+
+automacro Grind_Phase2BuyMissingMail {
+	exclusive 1
+	timeout 75
+	priority 0
+	JobID 1
+	InventoryReady
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	InInventory "Wooden Mail" < 1
+	Zeny > 5500
+	call grind_phase2_buy_missing_armor
+}
+
+automacro Grind_Phase2BuyMissingMuffler {
+	exclusive 1
+	timeout 75
+	priority 0
+	JobID 1
+	InventoryReady
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	InInventory "Muffler" < 1
+	InInventory "Manteau" < 1
+	Zeny > 5000
+	call grind_phase2_buy_missing_armor
+}
+
+macro grind_phase2_buy_missing_armor {
+	[
+		log PHASE2: missing Shoes/Wooden Mail/Muffler — buy at Payon armor shop
+		do conf grindP2Buying 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "NPC")
+		do move payon_in01 10 119
+		pause 45
+		do eval Grind_Phase2TalkBuyArmor()
+		pause 10
+		do eval Grind_Phase2Equip()
+		do conf grindP2Buying 0
+		do conf -f grindHuntMap pay_fild08
+		do conf lockMap pay_fild08
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do move payon 267 89
+		pause 45
+		log PHASE2: armor restock done — resume pay_fild08
+	]
+}
+
+macro grind_phase2_buy_payon_gear {
+	[
+		log PHASE2: Payon buy Blade + Shoes + Wooden Mail + Muffler
+		do conf grindP2Buying 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "buyAuto", "NPC")
+		do eval Grind_ApplyPayonShops()
+		do conf grindP2Shops 1
+		# Weapon dealer — Blade (store idx 4 = item 1107)
+		do move payon_in01 15 117
+		pause 40
+		do eval Grind_Phase2TalkBuyBlade()
+		pause 6
+		# Armor dealer — Shoes(1) Muffler(4) Wooden Mail(13)
+		do move payon_in01 10 119
+		pause 30
+		do eval Grind_Phase2TalkBuyArmor()
+		pause 8
+		do eval Grind_EnableBuyItem("Red Potion")
+		do eval Grind_Phase2Equip()
+		do conf grindP2Buying 0
+		do conf grindP2Gear 1
+		do conf grindGearDone 1
+		do move payon 181 100
+		pause 15
+		log PHASE2: Payon gear done — hunt pay_fild08
+	]
 }
 
 # Hunt pay_fild08 after gear
@@ -1111,7 +1180,7 @@ macro grind_phase2_sell_payon {
 	]
 }
 
-# AFK break near Payon Kafra while hunting phase 2
+# AFK break near Payon Kafra while hunting phase 2 (only after armor bought)
 automacro Grind_Phase2PayonAfk {
 	exclusive 1
 	timeout 900
@@ -1122,13 +1191,15 @@ automacro Grind_Phase2PayonAfk {
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	InInventory "Wooden Mail" > 0
+	InInventory "Shoes" > 0
 	call grind_phase2_payon_afk
 }
 
 macro grind_phase2_payon_afk {
-	$secs = &rand(300, 600)
 	[
-		log PHASE2: AFK near Payon Kafra for $secs sec
+		log PHASE2: AFK near Payon Kafra for 5-10 min
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -1143,7 +1214,7 @@ macro grind_phase2_payon_afk {
 	]
 	call grind_afk_face_sit
 	[
-		pause $secs
+		pause 450
 		do stand
 		log PHASE2: AFK done - resume pay_fild08
 		do conf grindAfk 0
@@ -1597,7 +1668,7 @@ sub Grind_ApplyPayonShops {
 		if ($item =~ /^(Red Potion|Fly Wing|Butterfly Wing|Arrow)$/i) {
 			$npc = "payon_in01 5 49";
 			$stand = "payon_in01 7 49";
-		} elsif ($item =~ /^(Shoes|Wooden Mail|Manteau|Cotton Shirt|Guard)$/i) {
+		} elsif ($item =~ /^(Shoes|Wooden Mail|Manteau|Muffler|Cotton Shirt|Guard)$/i) {
 			$npc = "payon_in01 7 119";
 			$stand = "payon_in01 10 119";
 		} elsif ($item =~ /^(Blade|Sword|Knife|Rod|Bow|Axe)/i) {
@@ -1627,7 +1698,7 @@ sub Grind_SetBuyNpc {
 
 sub Grind_Phase2Equip {
 	my $inv = $char && $char->inventory;
-	for my $name ("Blade", "Guard", "Wooden Mail", "Manteau", "Shoes") {
+	for my $name ("Blade", "Guard", "Wooden Mail", "Muffler", "Manteau", "Shoes") {
 		next unless $inv && $inv->getByName($name);
 		Commands::run("eq $name");
 	}
@@ -1636,7 +1707,43 @@ sub Grind_Phase2Equip {
 		next unless $job =~ /Swordsman/i;
 		Commands::run("conf equipAuto_${i}_disabled 0");
 	}
-	Log::message("[Grind] PHASE2 equip Blade/Guard/Wooden Mail/Manteau/Shoes\n", "success");
+	Log::message("[Grind] PHASE2 equip Blade/Guard/Wooden Mail/Muffler/Shoes\n", "success");
+	return 1;
+}
+
+# True if any core Payon armor piece is missing (inventory includes equipped).
+sub Grind_Phase2NeedsArmor {
+	return 0 unless $char && $char->inventory;
+	my $inv = $char->inventory;
+	return 1 unless $inv->getByName("Shoes");
+	return 1 unless $inv->getByName("Wooden Mail");
+	return 1 unless ($inv->getByName("Muffler") || $inv->getByName("Manteau"));
+	return 0;
+}
+
+# payon_in01 15,119 weapon shop: idx 4 = Blade (1107)
+sub Grind_Phase2TalkBuyBlade {
+	return 1 if $char && $char->inventory && $char->inventory->getByName("Blade");
+	Commands::run('talknpc 15 119 b 4,1 e');
+	Log::message("[Grind] PHASE2 talknpc buy Blade\n", "success");
+	return 1;
+}
+
+# payon_in01 7,119 armor shop indices:
+# 1=Shoes(2403) 4=Muffler(2503) 13=Wooden Mail(2328)
+sub Grind_Phase2TalkBuyArmor {
+	my $inv = $char && $char->inventory;
+	my @buys;
+	push @buys, "1,1" unless $inv && $inv->getByName("Shoes");
+	push @buys, "4,1" unless $inv && ($inv->getByName("Muffler") || $inv->getByName("Manteau"));
+	push @buys, "13,1" unless $inv && $inv->getByName("Wooden Mail");
+	unless (@buys) {
+		Log::message("[Grind] PHASE2 armor already owned\n", "success");
+		return 1;
+	}
+	my $seq = join(" ", map { "b $_" } @buys);
+	Commands::run("talknpc 7 119 $seq e");
+	Log::message("[Grind] PHASE2 talknpc buy armor: $seq\n", "success");
 	return 1;
 }
 
@@ -1654,4 +1761,19 @@ sub Grind_Phase2SitNearKafra {
 	Commands::run("move $x $y");
 	Log::message("[Grind] PHASE2 Payon kafra AFK → $x,$y\n", "success");
 	return 1;
+}
+
+# One-shot zeny dump for operators
+automacro Grind_ReportZeny {
+	exclusive 1
+	timeout 15
+	priority 9
+	JobID 1
+	ConfigKeyNot grindZenyReported 1
+	call {
+		[
+			log ZENY report: $.zeny
+			do conf grindZenyReported 1
+		]
+	}
 }
