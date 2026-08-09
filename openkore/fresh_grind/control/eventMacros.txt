@@ -184,7 +184,7 @@ automacro Grind_EnsureLock08 {
 
 automacro Grind_KeepAggressive08 {
 	exclusive 1
-	timeout 45
+	timeout 30
 	priority 8
 	InMap prt_fild08
 	ConfigKeyNot grindAfk 1
@@ -195,8 +195,73 @@ automacro Grind_KeepAggressive08 {
 	Eval !($char->{jobID} == 0 && $char->{lv_job} >= 10)
 	call {
 		[
+			log Grind: restore attackAuto 2 on field
 			do conf attackAuto 2
 			do conf route_randomWalk 1
+			do conf lockMap prt_fild08
+		]
+	}
+}
+
+# Stuck jobbing on the field with attack off — force portal to Job Master again
+automacro Grind_JobbingStuckOnField {
+	exclusive 1
+	timeout 75
+	priority 0
+	InMap prt_fild08
+	ConfigKey grindJobbing 1
+	ConfigKeyNot grindJob1st 1
+	ConfigKeyNot grindPhase1Done 1
+	JobID 0
+	JobLevel >= 10
+	call {
+		[
+			log Grind: jobbing stuck on field - portal to Job Master
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+		]
+		call grind_to_prontera
+		[
+			do move 155 180
+			pause 40
+		]
+	}
+}
+
+# Already jobbed but grindJobbing flag left on — clear and resume hunt
+automacro Grind_ClearStuckJobbing {
+	exclusive 1
+	timeout 20
+	priority 0
+	JobIDNot 0
+	ConfigKey grindJobbing 1
+	ConfigKeyNot grindPhase1Done 1
+	call {
+		[
+			log Grind: clear stuck grindJobbing after job change
+			do eval Grind_AfterJobChange()
+		]
+	}
+}
+
+# Anywhere in phase1 with attack off and not jobbing/selling/AFK — re-arm hunt
+automacro Grind_RestoreHunt {
+	exclusive 1
+	timeout 40
+	priority 6
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindPhase1Done 1
+	ConfigKeyNot attackAuto 2
+	Eval !($char->{jobID} == 0 && $char->{lv_job} >= 10)
+	call {
+		[
+			log Grind: restore hunt (attackAuto was off)
+			do conf -f grindHuntMap prt_fild08
+			do eval Grind_StartHunt()
 		]
 	}
 }
@@ -261,7 +326,7 @@ macro grind_to_prontera {
 ###############################################################################
 automacro Grind_JobChange_Go {
 	exclusive 1
-	timeout 40
+	timeout 50
 	priority 0
 	JobID 0
 	JobLevel >= 10
@@ -282,6 +347,7 @@ automacro Grind_JobChange_Go {
 		call grind_to_prontera
 		[
 			do move 155 180
+			pause 35
 		]
 	}
 }
