@@ -1,16 +1,25 @@
 #!/usr/bin/env expect
 # Create a character on an empty account via OpenKore profile.
-# Usage: create-char.exp <Profile> <CharName> <Sex:M|F>
+# Usage: create-char.exp <Profile> <CharName> <Sex:M|F> [hair_style] [hair_color]
 set timeout 60
 set profile [lindex $argv 0]
 set charname [lindex $argv 1]
 set sex [lindex $argv 2]
+set hair_style [lindex $argv 3]
+set hair_color [lindex $argv 4]
 if {$sex eq ""} { set sex "M" }
 if {$sex eq "F" || $sex eq "f" || $sex eq "female"} {
   set sexflag "F"
 } else {
   set sexflag "M"
 }
+# Safe defaults / clamps (classic RO palette)
+if {$hair_style eq "" || ![string is integer -strict $hair_style]} { set hair_style 1 }
+if {$hair_color eq "" || ![string is integer -strict $hair_color]} { set hair_color 1 }
+if {$hair_style < 1} { set hair_style 1 }
+if {$hair_style > 25} { set hair_style 25 }
+if {$hair_color < 0} { set hair_color 0 }
+if {$hair_color > 8} { set hair_color 8 }
 
 cd $::env(HOME)/openkore
 log_file "/tmp/ok-create-$profile.log"
@@ -106,8 +115,8 @@ send "0\r"
 expect {
   -re {desired properties for your characters} {
     expect -re {Enter your answer:}
-    send "0 \"$charname\" 1 1 novice $sexflag\r"
-    puts "SENT_CREATE $charname $sexflag"
+    send "0 \"$charname\" $hair_style $hair_color novice $sexflag\r"
+    puts "SENT_CREATE $charname $sexflag hair=$hair_style color=$hair_color"
 
     expect {
       -re {Character .* created|Character creation successful|created successfully} {
@@ -116,13 +125,13 @@ expect {
       -re {Character name is already used|name is unavailable|Name already exists} {
         puts "NAME_TAKEN"
         expect -re {Enter your answer:}
-        send "0 \"${charname}x\" 1 1 novice $sexflag\r"
+        send "0 \"${charname}x\" $hair_style $hair_color novice $sexflag\r"
         expect -re {created|Character List|Please choose}
       }
       -re {Unknown job or sex|Stats must be} {
         puts "PARAM_RETRY"
         expect -re {Enter your answer:}
-        send "0 \"$charname\" 1 1\r"
+        send "0 \"$charname\" $hair_style $hair_color\r"
         expect -re {created|Character List|Please choose|Unknown}
       }
       -re {Please choose a character or an action|Character List|Slot 0:} {

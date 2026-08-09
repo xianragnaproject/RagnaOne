@@ -2,14 +2,17 @@
 """Create N FreshGrind OpenKore accounts (solo shared pack) and register chars.
 
 Keeps existing Grind* accounts. Creates additional thin profiles until TOTAL
-FreshGrind bots exist (default 40).
+FreshGrind bots exist (default 40), or create exactly --count new ones.
 
 Hercules auto-register: first login as username_M / username_F.
 On success, username is rewritten without the sex suffix.
 
+Hair style (1-23) and hair color (0-8) are randomized per char.
+
 Usage:
   python3 openkore/scripts/batch-create-fresh-grind-n.py [total=40]
-  python3 openkore/scripts/batch-create-fresh-grind-n.py 40 --retry-only
+  python3 openkore/scripts/batch-create-fresh-grind-n.py --count 10
+  python3 openkore/scripts/batch-create-fresh-grind-n.py --retry-only
 """
 from __future__ import annotations
 
@@ -18,7 +21,6 @@ import os
 import random
 import re
 import secrets
-import string
 import subprocess
 import time
 from pathlib import Path
@@ -88,11 +90,15 @@ def rand_char(used: set[str]) -> str:
             name = name[:23]
         if name not in used:
             return name
-    # fallback
     while True:
         name = "Bot" + secrets.token_hex(4)
         if name not in used:
             return name
+
+
+def rand_look() -> tuple[int, int]:
+    """Random hair style (1-23) and color (0-8)."""
+    return random.randint(1, 23), random.randint(0, 8)
 
 
 def load_map() -> tuple[set[str], set[str], set[str]]:
@@ -122,9 +128,9 @@ def list_grind_profiles() -> list[Path]:
 
 
 def next_profile_names(need: int, existing: set[str]) -> list[str]:
-    """Allocate Grind07.. then Grind41.. skipping taken names."""
+    """Allocate Grind01.. skipping taken names."""
     names: list[str] = []
-    n = 7
+    n = 1
     while len(names) < need:
         cand = f"Grind{n:02d}"
         if cand not in existing and not (PROFILES / cand).exists():
@@ -145,7 +151,6 @@ def ensure_pack() -> None:
 
 
 def link_shared(prof: Path) -> None:
-    # Shared files live in openkore/control/ — profile is config.txt only.
     for name in (
         "eventMacros.txt",
         "items_control.txt",
@@ -166,14 +171,14 @@ def write_thin(
     job: str,
     char_name: str,
     sex: str,
+    hair_style: int = 1,
+    hair_color: int = 1,
     fresh: bool = True,
 ) -> None:
     """Login-only config; shared pack + macros own behavior."""
     cfg_path = prof / "config.txt"
     lines = [
         "######## Account only — macros + shared control own everything else ########",
-        # profiles/ plugin loads THIS file instead of control/config.txt —
-        # include the full base first or defaults (clientSight, etc.) are missing.
         "!include ../../control/config.txt",
         "!include ../../fresh_grind/control/config-shared.txt",
         f"username {username}",
@@ -182,18 +187,35 @@ def write_thin(
     ]
     cfg_path.write_text("\n".join(lines) + "\n")
     (prof / "class.meta").write_text(
-        f"label={job}\nchar_name={char_name}\nsex={sex}\naccount={username}\npack=fresh_grind\n"
+        f"label={job}\nchar_name={char_name}\nsex={sex}\n"
+        f"hair_style={hair_style}\nhair_color={hair_color}\n"
+        f"account={username}\npack=fresh_grind\n"
     )
     link_shared(prof)
 
 
-
-def create_char(profile: str, char_name: str, sex: str) -> tuple[int, str]:
+def create_char(
+    profile: str,
+    char_name: str,
+    sex: str,
+    hair_style: int = 1,
+    hair_color: int = 1,
+) -> tuple[int, str]:
     log = Path(f"/tmp/ok-create-{profile}.log")
     if log.exists():
         log.unlink()
     proc = subprocess.run(
-        ["timeout", "75", "expect", str(CREATE_EXP), profile, char_name, sex],
+        [
+            "timeout",
+            "75",
+            "expect",
+            str(CREATE_EXP),
+            profile,
+            char_name,
+            sex,
+            str(hair_style),
+            str(hair_color),
+        ],
         cwd=str(OK),
         capture_output=True,
         text=True,
@@ -208,7 +230,6 @@ def create_char(profile: str, char_name: str, sex: str) -> tuple[int, str]:
 
 def classify(rc: int, out: str) -> str:
     low = out.lower()
-    # timeout(1) exits 124 — still OK if create markers present
     if any(
         t in out
         for t in (
@@ -245,7 +266,6 @@ def append_map(job: str, profile: str, char: str, user: str, passwd: str, sex: s
         ACCOUNT_MAP.write_text(
             "# profile_label\tProfileDir\tCharName\tusername\tpassword\tsex\n"
         )
-    # skip duplicate profile lines
     text = ACCOUNT_MAP.read_text()
     if re.search(rf"\t{re.escape(profile)}\t", text):
         return
@@ -262,24 +282,27 @@ def pending_rows() -> list[dict[str, str]]:
             continue
         parts = line.split("\t")
         if len(parts) >= 6:
-            rows.append(
-                {
-                    "profile": parts[0],
-                    "char": parts[1],
-                    "sex": parts[2],
-                    "user": parts[3],
-                    "pass": parts[4],
-                    "job": parts[5],
-                }
-            )
+            row = {
+                "profile": parts[0],
+                "char": parts[1],
+                "sex": parts[2],
+                "user": parts[3],
+                "pass": parts[4],
+                "job": parts[5],
+            }
+            if len(parts) >= 8:
+                row["hair_style"] = parts[6]
+                row["hair_color"] = parts[7]
+            rows.append(row)
     return rows
 
 
 def write_pending(rows: list[dict[str, str]]) -> None:
     PENDING.write_text(
-        "# profile\tchar\tsex\tuser\tpass\tjob\n"
+        "# profile\tchar\tsex\tuser\tpass\tjob\thair_style\thair_color\n"
         + "\n".join(
-            f"{r['profile']}\t{r['char']}\t{r['sex']}\t{r['user']}\t{r['pass']}\t{r['job']}"
+            f"{r['profile']}\t{r['char']}\t{r['sex']}\t{r['user']}\t{r['pass']}\t{r['job']}\t"
+            f"{r.get('hair_style', '1')}\t{r.get('hair_color', '1')}"
             for r in rows
         )
         + ("\n" if rows else "")
@@ -294,6 +317,8 @@ def attempt_register(row: dict[str, str]) -> str:
     sex = row["sex"]
     char = row["char"]
     job = row["job"]
+    hair_style = int(row.get("hair_style") or 1)
+    hair_color = int(row.get("hair_color") or 1)
     prof = PROFILES / profile
     login_user = f"{user}_{sex}"
 
@@ -304,10 +329,16 @@ def attempt_register(row: dict[str, str]) -> str:
         job=job,
         char_name=char,
         sex=sex,
+        hair_style=hair_style,
+        hair_color=hair_color,
         fresh=False,
     )
-    print(f"=== CREATE {profile} job={job} user={login_user} char={char} ===", flush=True)
-    rc, out = create_char(profile, char, sex)
+    print(
+        f"=== CREATE {profile} job={job} user={login_user} char={char} "
+        f"look=h{hair_style}/c{hair_color} ===",
+        flush=True,
+    )
+    rc, out = create_char(profile, char, sex, hair_style, hair_color)
     status = classify(rc, out)
     print(f"  rc={rc} status={status}", flush=True)
     if status.startswith("OK"):
@@ -318,11 +349,12 @@ def attempt_register(row: dict[str, str]) -> str:
             job=job,
             char_name=char,
             sex=sex,
+            hair_style=hair_style,
+            hair_color=hair_color,
             fresh=False,
         )
         append_map(job, profile, char, user, passwd, sex)
     else:
-        # Keep _SEX so a later retry / bot start can still auto-create account
         write_thin(
             prof,
             username=login_user,
@@ -330,6 +362,8 @@ def attempt_register(row: dict[str, str]) -> str:
             job=job,
             char_name=char,
             sex=sex,
+            hair_style=hair_style,
+            hair_color=hair_color,
             fresh=False,
         )
         if "SERVER_CLOSED" in status or status.startswith("FAIL"):
@@ -339,14 +373,25 @@ def attempt_register(row: dict[str, str]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("total", nargs="?", type=int, default=40)
+    ap.add_argument(
+        "total",
+        nargs="?",
+        type=int,
+        default=None,
+        help="Target total Grind* profiles (default: current + --count or 40)",
+    )
+    ap.add_argument(
+        "--count",
+        type=int,
+        default=None,
+        help="Create this many NEW accounts",
+    )
     ap.add_argument(
         "--retry-only",
         action="store_true",
         help="Only retry pending registrations",
     )
     args = ap.parse_args()
-    total = args.total
 
     if not CREATE_EXP.exists():
         raise SystemExit(f"Missing create-char.exp: {CREATE_EXP}")
@@ -364,25 +409,33 @@ def main() -> int:
         for row in pending:
             status = attempt_register(row)
             results.append(
-                f"{row['profile']}\t{row['job']}\t{status}\t{row['user']}\t{row['pass']}\t{row['char']}"
+                f"{row['profile']}\t{row['job']}\t{status}\t{row['user']}\t{row['pass']}\t"
+                f"{row['char']}\th{row.get('hair_style', '?')}/c{row.get('hair_color', '?')}"
             )
             if not status.startswith("OK"):
                 still.append(row)
             time.sleep(3)
         write_pending(still)
         RESULTS.write_text(
-            "profile\tjob\tstatus\tuser\tpass\tchar\n" + "\n".join(results) + "\n"
+            "profile\tjob\tstatus\tuser\tpass\tchar\tlook\n" + "\n".join(results) + "\n"
         )
         print(RESULTS.read_text())
         print(f"pending={len(still)} → {PENDING}")
         return 0
 
     have = len(existing)
-    need = max(0, total - have)
+    if args.count is not None:
+        need = max(0, args.count)
+        total = have + need
+    elif args.total is not None:
+        total = args.total
+        need = max(0, total - have)
+    else:
+        total = 40
+        need = max(0, total - have)
     print(f"Have {have} Grind profiles; creating {need} more to reach {total}", flush=True)
 
     new_names = next_profile_names(need, existing_names)
-    # Balanced job mix across new accounts
     job_cycle = ["random"] * need
 
     new_rows: list[dict[str, str]] = []
@@ -393,6 +446,7 @@ def main() -> int:
         char = rand_char(used_chars)
         used_chars.add(char)
         passwd = rand_pass()
+        hair_style, hair_color = rand_look()
         prof = PROFILES / profile
         prof.mkdir(parents=True, exist_ok=False)
         write_thin(
@@ -402,6 +456,8 @@ def main() -> int:
             job=job,
             char_name=char,
             sex=sex,
+            hair_style=hair_style,
+            hair_color=hair_color,
             fresh=True,
         )
         new_rows.append(
@@ -412,13 +468,16 @@ def main() -> int:
                 "user": user,
                 "pass": passwd,
                 "job": job,
+                "hair_style": str(hair_style),
+                "hair_color": str(hair_color),
             }
         )
-        print(f"prepared {profile} {job} {char} {user}_{sex}", flush=True)
+        print(
+            f"prepared {profile} {job} {char} {user}_{sex} look=h{hair_style}/c{hair_color}",
+            flush=True,
+        )
 
-    # Also retry any older pending
     queue = pending + new_rows
-    # de-dupe by profile
     seen = set()
     deduped = []
     for r in queue:
@@ -434,7 +493,8 @@ def main() -> int:
         print(f"[{i}/{len(queue)}] registering {row['profile']}", flush=True)
         status = attempt_register(row)
         results.append(
-            f"{row['profile']}\t{row['job']}\t{status}\t{row['user']}\t{row['pass']}\t{row['char']}"
+            f"{row['profile']}\t{row['job']}\t{status}\t{row['user']}\t{row['pass']}\t"
+            f"{row['char']}\th{row.get('hair_style', '?')}/c{row.get('hair_color', '?')}"
         )
         if status.startswith("OK"):
             ok += 1
@@ -445,7 +505,7 @@ def main() -> int:
 
     write_pending(still)
     RESULTS.write_text(
-        "profile\tjob\tstatus\tuser\tpass\tchar\n" + "\n".join(results) + "\n"
+        "profile\tjob\tstatus\tuser\tpass\tchar\tlook\n" + "\n".join(results) + "\n"
     )
     print(RESULTS.read_text())
     print(
