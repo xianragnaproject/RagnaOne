@@ -1269,13 +1269,17 @@ macro grind_fountain_afk {
 
 # Permanent park after phase1 (base15 + jobbed)
 macro grind_phase1_afk_park {
-	log PHASE1: AFK park (sit in place until phase2) - waiting next phase
+	log PHASE1: AFK sit-in-place until next phase
 	do conf grindAfk 1
 	do conf attackAuto 0
 	do conf route_randomWalk 0
 	do conf lockMap none
 	do conf sellAuto 0
-	do eval AI::clear("move", "route", "mapRoute", "attack")
+	# Loot/gather while AFK stands the char and times out — can drop the map TCP
+	do conf itemsTakeAuto 0
+	do conf itemsGatherAuto 0
+	do conf itemsGatherAutoMinPlayerDistance 99
+	do eval AI::clear("move", "route", "mapRoute", "attack", "items_take", "items_gather", "gather")
 	do stand
 	pause 2
 	do sit

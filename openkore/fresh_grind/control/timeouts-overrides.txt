@@ -16,3 +16,6 @@ play 180
 
 # Map-login handshake can exceed 12s after char select on this server
 maplogin 30
+
+# Keepalive tick while AFK sitting (default 12 is fine; tighten a bit)
+ai_sync 8

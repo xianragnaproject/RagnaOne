@@ -103,10 +103,21 @@ heal_stuck_prompts() {
     tmux -f "$TF" send-keys -t "${session}:0.0" '0' C-m
     return
   fi
+  # Stuck on map connect without entering game (leftover char-list / handshake)
+  if echo "$text" | tail -12 | grep -q 'Connecting to Map Server' \
+     && ! echo "$text" | tail -12 | grep -q 'You are now in the game' \
+     && ! echo "$text" | tail -12 | grep -qiE 'Timeout on Map Server|Disconnected from Map'; then
+    # Only if the last lines are still the connect banner (no progress)
+    if echo "$text" | tail -6 | grep -qE 'Connecting \(.*5121\)|Connecting to Map Server'; then
+      log "MAPLOGIN stuck → relog $profile"
+      tmux -f "$TF" send-keys -t "${session}:0.0" 'relog 2' C-m
+      return
+    fi
+  fi
   # Stuck disconnected with long wait / idle shell
   if echo "$text" | tail -8 | grep -q '^disconnected$'; then
     # If also showing reconnect countdown recently, leave it; else nudge relog
-    if ! echo "$text" | tail -15 | grep -qiE 'connecting|Connecting|Relogging|Wait .* seconds|Timeout on'; then
+    if ! echo "$text" | tail -15 | grep -qiE 'connecting|Connecting|Relogging|Wait .* seconds|Timeout on|Account Server in'; then
       log "RELOG nudge $profile (idle disconnected)"
       tmux -f "$TF" send-keys -t "${session}:0.0" 'relog 3' C-m
     fi
