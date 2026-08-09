@@ -383,12 +383,14 @@ automacro Grind_Phase1Redetect {
 
 automacro Grind_Phase1AfkResit {
 	exclusive 1
-	timeout 180
-	priority 2
+	timeout 90
+	priority 3
 	InMap prontera
 	ConfigKey grindPhase1Done 1
 	ConfigKey grindAfk 1
 	Eval !$char->{sitting}
+	# Fountain plaza is ~y 185-210; do not sit at south gate (~y 26)
+	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
 			do sit
@@ -552,7 +554,7 @@ macro grind_fountain_afk {
 	call grind_to_prontera
 	[
 		do eval Grind_Phase1SitIfInTown()
-		pause 40
+		pause 70
 		do sit
 		pause $secs
 		do stand
@@ -564,7 +566,7 @@ macro grind_fountain_afk {
 
 macro grind_phase1_afk_hold {
 	[
-		log PHASE1: portal to Prontera then AFK sit
+		log PHASE1: portal to Prontera then AFK sit by fountain
 		do conf grindAfk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -577,7 +579,11 @@ macro grind_phase1_afk_hold {
 		do stand
 	]
 	call grind_to_prontera
-	do eval Grind_Phase1SitIfInTown()
+	[
+		do eval Grind_Phase1SitIfInTown()
+		pause 90
+		do eval Grind_SitIfNearFountain()
+	]
 }
 
 # Still on field after phase1 — force portal (do not AFK on 170,375)
@@ -592,18 +598,39 @@ automacro Grind_Phase1StillOnField {
 	call grind_phase1_afk_hold
 }
 
+# In Prontera AFK but not by the fountain (e.g. stuck at south gate) — walk there
+automacro Grind_Phase1ToFountain {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap prontera
+	ConfigKey grindPhase1Done 1
+	ConfigKey grindAfk 1
+	# South of fountain plaza (south gate / midtown) — walk up
+	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 20)
+	call {
+		[
+			log PHASE1: walk to random fountain sit tile
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do eval Grind_Phase1SitIfInTown()
+			pause 90
+			do sit
+		]
+	}
+}
+
 automacro Grind_Phase1AfkInTown {
 	exclusive 1
 	timeout 120
-	priority 1
+	priority 2
 	InMap prontera
 	ConfigKey grindPhase1Done 1
 	ConfigKey grindAfk 1
 	Eval !$char->{sitting}
+	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
-			do eval Grind_Phase1SitIfInTown()
-			pause 20
 			do sit
 		]
 	}
@@ -655,21 +682,61 @@ sub Grind_EnterFieldPortal {
 	return 1;
 }
 
-# Walk to a known-walkable Prontera fountain-adjacent tile (avoid water).
+# Fountain plaza center ~156,198. "Near" = plaza south/sides (y>=170).
+sub Grind_NearFountain {
+	return 0 unless $field && $field->baseName eq 'prontera' && $char;
+	my $x = $char->{pos}{x} // 0;
+	my $y = $char->{pos}{y} // 0;
+	return ($y >= 170 && abs($x - 156) <= 20) ? 1 : 0;
+}
+
+sub Grind_SitIfNearFountain {
+	return 0 unless Grind_NearFountain();
+	Commands::run("sit");
+	return 1;
+}
+
+# Walk to a random walkable tile by the Prontera fountain (never south gate).
 sub Grind_Phase1SitIfInTown {
 	return 0 unless Grind_IsInPronteraTown();
+	if ($field && $field->baseName eq 'prt_in') {
+		Commands::run("move prontera 156 190");
+		return 1;
+	}
 	my ($x, $y) = Grind_RandomFountainTile();
+	Log::message("[Grind] PHASE1 fountain sit → $x,$y\n", "success");
+	Commands::run("stand") if $char && $char->{sitting};
 	Commands::run("move $x $y");
 	return 1;
 }
 
+# Pick a random tile on the Prontera fountain plaza (south/side of the water).
+# Do NOT trust isWalkable alone on this server build — it marks water as walkable.
 sub Grind_RandomFountainTile {
 	my @spots = (
-		[155, 180], [150, 185], [160, 185], [148, 188],
-		[158, 188], [152, 182], [157, 182], [155, 185],
-		[146, 190], [162, 190], [155, 192],
+		# South plaza (facing fountain) — standard AFK strip
+		[155, 185], [150, 185], [160, 185], [148, 185], [162, 185],
+		[155, 180], [152, 182], [158, 182], [150, 182], [160, 182],
+		[155, 188], [152, 188], [158, 188], [148, 188], [162, 188],
+		[155, 190], [150, 190], [160, 190], [152, 190], [158, 190],
+		# East / west apron
+		[145, 192], [146, 188], [166, 192], [167, 188],
+		[145, 185], [167, 185],
 	);
-	my $s = $spots[int(rand(scalar @spots))];
+	my @ok;
+	if ($field && $field->baseName eq 'prontera') {
+		for my $s (@spots) {
+			# Keep only tiles OpenKore will actually accept for move
+			next unless $field->isWalkable($s->[0], $s->[1]);
+			push @ok, $s;
+		}
+	}
+	# If filter empty OR filter only returned water-false-positives, use south plaza raw
+	@ok = (
+		[155, 185], [150, 185], [160, 185], [152, 182], [158, 182],
+		[155, 180], [148, 185], [162, 185], [155, 188],
+	) unless @ok;
+	my $s = $ok[int(rand(scalar @ok))];
 	return ($s->[0], $s->[1]);
 }
 
