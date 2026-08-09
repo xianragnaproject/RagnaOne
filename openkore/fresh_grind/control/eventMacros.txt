@@ -304,6 +304,21 @@ automacro Grind_Jobbed_DisablePotionBuy {
 	}
 }
 
+# After 1st job change the server grants a free stat reset — keep statsAddAuto off
+automacro Grind_Jobbed_DisableStatsAddAuto {
+	exclusive 1
+	timeout 60
+	priority 1
+	JobIDNot 0
+	ConfigKeyNot statsAddAuto 0
+	call {
+		[
+			log PHASE1: disable statsAddAuto after job change (server reset)
+			do conf statsAddAuto 0
+		]
+	}
+}
+
 ###############################################################################
 # prt_fild08 -> prontera: ALWAYS same-map to 170,375 then step portal.
 # Never "move prontera X Y" from deep field (MapRoute hang / wrong map).
@@ -1812,6 +1827,9 @@ sub Grind_TalkJobMaster {
 sub Grind_AfterJobChange {
 	Commands::run("conf grindJob1st 1");
 	Commands::run("conf grindJobbing 0");
+	# Server grants a free stat reset on job change — stop auto-allocating
+	# so the reset points are not burned by the novice statsAddAuto list.
+	Commands::run("conf statsAddAuto 0");
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
 	my $base = $char ? ($char->{lv} // 0) : 0;
