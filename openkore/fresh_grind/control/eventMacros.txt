@@ -478,7 +478,7 @@ automacro Grind_Phase1AfkResit {
 
 automacro Grind_EnsureClassSkills {
 	exclusive 1
-	timeout 60
+	timeout 180
 	priority 5
 	JobIDNot 0
 	ConfigKey grindJob1st 1
@@ -1011,6 +1011,34 @@ automacro Grind_Phase2HuntPay08 {
 			do conf route_randomWalk 1
 			do conf sitAuto_idle 1
 			do stand
+		]
+	}
+}
+
+# Leave Payon/indoors toward east gate portal → pay_fild08
+automacro Grind_Phase2ToFieldPortal {
+	exclusive 1
+	timeout 50
+	priority 1
+	JobID 1
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Gear 1
+	ConfigKey lockMap pay_fild08
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	InMapRegex /^(payon|payon_in01)$/
+	call {
+		[
+			log PHASE2: walk Payon east gate → pay_fild08
+			do stand
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do eval AI::clear("move", "route", "mapRoute")
+			do move payon 267 89
+			pause 55
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf lockMap pay_fild08
 		]
 	}
 }
