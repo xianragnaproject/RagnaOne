@@ -168,60 +168,28 @@ def write_thin(
     sex: str,
     fresh: bool = True,
 ) -> None:
-    state = {
-        "grindLeftTraining": "0",
-        "grindAfk": "0",
-        "grindSelling": "0",
-        "grindJobbing": "0",
-        "grindJob1st": "0",
-        "grindGearDone": "0",
-        "grindDone15": "0",
-        "grindDone25": "0",
-        "grindDone35": "0",
-    }
-    # Preserve progress if rewriting an existing profile
+    """Login-only config; shared pack + macros own behavior."""
     cfg_path = prof / "config.txt"
-    if cfg_path.exists() and not fresh:
-        old = cfg_path.read_text()
-        for k in list(state):
-            v = get_key(old, k)
-            if v is not None:
-                state[k] = v
-
     lines = [
-        "######## Thin login profile — shared FreshGrind pack (SOLO) ########",
-        "# Edit login here. Macros/combat: openkore/fresh_grind/control/",
-        "# grindTargetJob: Swordman|Magician|Archer|Acolyte|Merchant|Thief|random",
+        "######## Account only — macros + shared control own everything else ########",
         "!include ../../fresh_grind/control/config-shared.txt",
-        "",
         f"username {username}",
         f"password {password}",
-        "char 0",
         "",
-        f"grindTargetJob {job}",
-        "grindPartyMode 0",
-        "grindPartyRole solo",
-        "follow 0",
-        "followTarget",
-        "followBot 0",
-        "partyAuto 0",
-        "lockMap prt_fild08",
-        "route_randomWalk 1",
-        "attackAuto 2",
-        "attackAuto_followTarget 0",
-        "attackAuto_party 0",
-        "sellAuto 1",
-        "teleportAuto_deadly 0",
-        "",
-        "# Runtime grind flags (preserved across sync)",
     ]
-    for k, v in state.items():
-        lines.append(f"{k} {v}")
-    cfg_path.write_text("\n".join(lines) + "\n")
+    cfg_path.write_text("
+".join(lines) + "
+")
     (prof / "class.meta").write_text(
-        f"label={job}\nchar_name={char_name}\nsex={sex}\naccount={username}\npack=fresh_grind\n"
+        f"label={job}
+char_name={char_name}
+sex={sex}
+account={username}
+pack=fresh_grind
+"
     )
     link_shared(prof)
+
 
 
 def create_char(profile: str, char_name: str, sex: str) -> tuple[int, str]:

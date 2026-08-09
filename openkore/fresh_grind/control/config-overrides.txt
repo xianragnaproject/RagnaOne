@@ -25,8 +25,7 @@ route_randomWalk 1
 route_randomWalk_inLockOnly 1
 # Hunt map: prt_fild08 (<25) then solo pay_fild03 (25-35). Each bot lockMaps alone.
 # attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
-lockMap pay_fild03
-grindHuntMap pay_fild03
+# (lockMap / grindHuntMap set below; macros override)
 itemsTakeAuto 2
 itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
@@ -52,25 +51,28 @@ dcOnStorageFull 0
 char 0
 aiChat 0
 
-# Job change target (Swordman|Magician|Archer|Acolyte|Merchant|Thief)
-grindTargetJob Thief
-grindLeftTraining 1
+# Defaults — macros own progression. Accounts only set username/password.
+grindTargetJob random
+grindLeftTraining 0
 grindAfk 0
 grindSelling 0
 grindJobbing 0
 grindJob1st 0
 grindGearDone 0
 grindDone15 0
-grindDone25 1
+grindDone25 0
 grindDone35 0
 # Solo grind — no party / no follow
 grindPartyMode 0
+grindPartyRole solo
 partyAuto 0
 partyAutoShare 0
 follow 0
 followBot 0
 followTarget
 attackAuto_followTarget 0
+lockMap prt_fild08
+grindHuntMap prt_fild08
 
 ######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
 # Index order matters for Grind_EnableGearBuy (buyAuto_0..)
