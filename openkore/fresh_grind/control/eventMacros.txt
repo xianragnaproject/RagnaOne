@@ -459,8 +459,8 @@ automacro Grind_Phase1AfkResit {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
-			do eval Grind_PickAfkLook()
-			do sit
+			# Already faced via shuffle/hold — just sit, do not step again
+			do eval Grind_AfkSit()
 			pause 3
 		]
 	}
@@ -618,18 +618,19 @@ macro grind_fountain_afk {
 		do conf attackAuto 0
 		do conf route_randomWalk 0
 		do conf lockMap none
-		do eval Grind_PickAfkLook()
+		do conf sitAuto_idle 0
 	]
 	call grind_to_prontera
 	[
 		do eval Grind_Phase1SitIfInTown()
 		pause 70
-		do eval Grind_PickAfkLook()
-		do sit
-		pause 3
+	]
+	call grind_afk_face_sit
+	[
 		pause $secs
 		do stand
 		log Grind: AFK done - resume hunt
+		do conf sitAuto_idle 1
 		do eval Grind_ResumeHuntLock()
 		do conf grindAfk 0
 	]
@@ -646,7 +647,7 @@ macro grind_phase1_afk_hold {
 		do conf itemsTakeAuto 0
 		do conf itemsGatherAuto 0
 		do conf itemsGatherAutoMinPlayerDistance 99
-		do eval Grind_PickAfkLook()
+		do conf sitAuto_idle 0
 		do eval AI::clear("move", "route", "mapRoute", "attack", "items_take", "items_gather", "gather")
 		do stand
 	]
@@ -654,9 +655,19 @@ macro grind_phase1_afk_hold {
 	[
 		do eval Grind_Phase1SitIfInTown()
 		pause 90
-		do eval Grind_PickAfkLook()
-		do sit
-		pause 3
+	]
+	call grind_afk_face_sit
+}
+
+# Step one tile in a random dir (sets body facing for other clients), then sit.
+# NOTE: plain `do sit` is OK AFTER a step (facing already set by walk).
+# AI::sit() without sitAuto_forcedBySitCommand queues sitAuto which STANDS at full HP.
+macro grind_afk_face_sit {
+	[
+		do eval Grind_StepFace()
+		pause 8
+		do eval Grind_AfkSit()
+		pause 4
 	]
 }
 
@@ -686,13 +697,12 @@ automacro Grind_Phase1ToFountain {
 		[
 			log PHASE1: walk to random fountain sit tile
 			do stand
+			do conf sitAuto_idle 0
 			do eval AI::clear("move", "route", "mapRoute")
 			do eval Grind_Phase1SitIfInTown()
 			pause 90
-			do eval Grind_PickAfkLook()
-			do sit
-			pause 3
 		]
+		call grind_afk_face_sit
 	}
 }
 
@@ -707,30 +717,26 @@ automacro Grind_Phase1AfkInTown {
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
 		[
-			do eval Grind_PickAfkLook()
-			do sit
+			do eval Grind_AfkSit()
 			pause 3
 		]
 	}
 }
 
-# Already AFK: periodically stand→sit so sitAuto_look applies (look-while-sitting ignored)
+# Already AFK: step one tile random dir then sit — only way other clients see facing
 automacro Grind_Phase1ShuffleLook {
 	exclusive 1
-	timeout 20
+	timeout 180
 	priority 4
 	InMap prontera
 	ConfigKey grindPhase1Done 1
 	ConfigKey grindAfk 1
 	call {
 		[
-			log PHASE1: reshuffle AFK facing
-			do eval Grind_PickAfkLook()
-			do stand
-			pause 2
-			do sit
-			pause 3
+			log PHASE1: reshuffle AFK facing via step
+			do conf sitAuto_idle 0
 		]
+		call grind_afk_face_sit
 	}
 }
 
@@ -790,30 +796,67 @@ sub Grind_NearFountain {
 
 sub Grind_SitIfNearFountain {
 	return 0 unless Grind_NearFountain();
-	Grind_PickAfkLook();
+	return Grind_AfkSit();
+}
+
+# Body dirs: 0=N 1=NW 2=W 3=SW 4=S 5=SE 6=E 7=NE
+# Walking one tile is the only reliable way other players see facing on this server.
+# (`do sit` / Task::SitStand ignores sitAuto_look; look packets while idle often no-op.)
+sub Grind_StepFace {
+	return 0 unless $char && $field && $field->baseName eq 'prontera';
+	Commands::run("stand") if $char->{sitting};
+	AI::clear("move", "route", "mapRoute", "sitting", "standing", "look");
+
+	my @dx = (0, -1, -1, -1, 0, 1, 1, 1);
+	my @dy = (1, 1, 0, -1, -1, -1, 0, 1);
+	my @dir = qw(N NW W SW S SE E NE);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+
+	my @cands;
+	for my $d (0 .. 7) {
+		my ($tx, $ty) = ($x + $dx[$d], $y + $dy[$d]);
+		next unless $ty >= 170 && abs($tx - 156) <= 22;
+		# Prefer tiles we know are plaza; isWalkable is unreliable on water here
+		push @cands, [$d, $tx, $ty];
+	}
+	unless (@cands) {
+		for my $d (0 .. 7) {
+			push @cands, [$d, $x + $dx[$d], $y + $dy[$d]];
+		}
+	}
+	# Shuffle
+	for (my $i = @cands - 1; $i > 0; $i--) {
+		my $j = int(rand($i + 1));
+		@cands[$i, $j] = @cands[$j, $i];
+	}
+	my ($body, $tx, $ty) = @{$cands[0]};
+	Commands::run("conf sitAuto_look $body");
+	Commands::run("conf sitAuto_look_delay 0");
+	Commands::run("move $tx $ty");
+	Log::message("[Grind] AFK step face=$body ($dir[$body]) -> $tx,$ty\n", "success");
+	return $body;
+}
+
+sub Grind_AfkSit {
+	return 1 if $char && $char->{sitting};
+	# Prevent processSitAuto from standing us immediately (full HP in town)
+	$ai_v{sitAuto_forcedBySitCommand} = 1;
+	$ai_v{sitAuto_forceStop} = 0;
 	Commands::run("sit");
 	return 1;
 }
 
-# Pick random body dir and arm OpenKore sitAuto_look so facing applies on sit confirm.
-# Body 0-7 (0=N …); head unused by sitAuto_look but logged for shuffle macros.
 sub Grind_PickAfkLook {
-	my $body = int(rand(8));
-	my $head = int(rand(3));
-	Commands::run("conf sitAuto_look $body");
-	Commands::run("conf sitAuto_look_delay 1");
-	Log::message("[Grind] AFK sitAuto_look=$body (head=$head)\n", "success");
-	return $body;
+	return Grind_StepFace();
 }
 
-# Compat alias — prefer stand/sit with sitAuto_look armed (see ShuffleLook).
 sub Grind_RandomAfkLook {
-	return Grind_PickAfkLook();
+	return Grind_StepFace();
 }
 
 sub Grind_AfkSitAndLook {
-	Grind_PickAfkLook();
-	Commands::run("sit") if $char && !$char->{sitting};
+	Grind_StepFace();
 	return 1;
 }
 
