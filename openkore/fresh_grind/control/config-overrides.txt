@@ -172,6 +172,15 @@ buyAuto Manteau {
 	zeny > 32000
 	disabled 1
 }
+buyAuto Muffler {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 5000
+	disabled 1
+}
 # Magician
 buyAuto Rod [3] {
 	npc prt_in 172 130
