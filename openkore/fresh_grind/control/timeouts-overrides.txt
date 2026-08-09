@@ -9,3 +9,10 @@ reconnect_random 8
 
 # Prontera fountain spawn: walk packets are slow; 2s unstuck cancels every step
 ai_route_unstuck 12
+
+# play only resets on server sync packets — 40s is too tight on this server and
+# causes "Timeout on Map Server" mid-fight when sync is sparse / AI is busy
+play 180
+
+# Map-login handshake can exceed 12s after char select on this server
+maplogin 30
