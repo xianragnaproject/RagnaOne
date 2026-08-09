@@ -32,11 +32,22 @@ expect ~/openkore/scripts/create-char.exp Grind02 CharName M
 bash ~/openkore/scripts/start-bot.sh Grind02
 ```
 
+## Phase 1 macros (base 1–15)
+
+1. **Red Potion autobuy** @ Prontera tool dealer — Novice only, zeny > 2000, stock 0  
+2. **Autosell** at **30%** weight  
+3. **Random fountain AFK** — random tile, **5–10 min** breaks while grinding  
+4. **Auto stats / skills** (`statsAddAuto` / `skillsAddAuto` in config-shared)  
+5. **Job change at Job Level 10** (Novice, high priority, random 1st job)  
+
+After **base 15 + job change** → Prontera fountain AFK (`grindPhase1Done 1`).  
+Gear / `pay_fild03` stay off until `grindPhase2 1`.
+
 ## What macros own
 
 - `grindTargetJob random` → pick job at Job Master  
-- lockMap / hunt map (`prt_fild08` → `pay_fild03`)  
-- gear buy, skills, sell, unstuck, solo flags  
+- lockMap / hunt map (`prt_fild08`; phase2 later → `pay_fild03`)  
+- potions, skills, sell, AFK, unstuck, solo flags  
 
 ## Sync pack → control/
 

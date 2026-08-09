@@ -32,7 +32,7 @@ itemsGatherAuto_notInTown 1
 itemsGatherAutoMinPlayerDistance 3
 itemsGatherAutoMinPortalDistance 2
 itemsMaxWeight 89
-itemsMaxWeight_sellOrStore 40
+itemsMaxWeight_sellOrStore 30
 sellAuto 1
 sellAuto_npc prt_in 126 76
 # 130,72 is walkable; 126,74 often causes Stuck during route loops
@@ -51,7 +51,7 @@ dcOnStorageFull 0
 char 0
 aiChat 0
 
-# Defaults — macros own progression (do conf …). Accounts only set username/password.
+# Defaults — macros own progression. Accounts only set username/password.
 grindTargetJob random
 grindLeftTraining 0
 grindAfk 0
@@ -62,6 +62,8 @@ grindGearDone 0
 grindDone15 0
 grindDone25 0
 grindDone35 0
+grindPhase1Done 0
+grindPhase2 0
 # Solo grind — no party / no follow (each bot lockMaps the hunt field)
 grindPartyMode 0
 grindPartyRole solo
@@ -71,7 +73,7 @@ follow 0
 followBot 0
 followTarget
 attackAuto_followTarget 0
-# Start hunt map for fresh novices; macros switch to pay_fild03 at base 25
+# Start hunt map for fresh novices; macros switch later
 lockMap prt_fild08
 grindHuntMap prt_fild08
 
@@ -91,11 +93,12 @@ buyAuto Red Potion {
 	npc prt_in 126 76
 	standpoint prt_in 130 72
 	distance 5
-	minAmount 3
-	maxAmount 20
+	minAmount 1
+	maxAmount 10
 	price 50
-	zeny > 200
-	disabled 0
+	zeny > 2000
+	# Enabled by macro only while Novice + 0 potions + zeny
+	disabled 1
 }
 # Thief dagger
 buyAuto Knife [3] {
