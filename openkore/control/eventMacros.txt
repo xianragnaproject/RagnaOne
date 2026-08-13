@@ -238,7 +238,7 @@ automacro Grind_KeepAggressive08 {
 			do conf attackAuto 2
 			do conf attackRouteMaxPathDistance 50
 			do conf attackMinPlayerDistance 0
-			do conf attackChangeTarget 1
+			do conf attackChangeTarget 0
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
 		]
@@ -260,7 +260,7 @@ automacro Grind_FixAttackPathDistance {
 			log Grind: set attackRouteMaxPathDistance 50 - was ignoring mobs
 			do conf attackRouteMaxPathDistance 50
 			do conf attackMinPlayerDistance 0
-			do conf attackChangeTarget 1
+			do conf attackChangeTarget 0
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
@@ -770,16 +770,170 @@ macro grind_afk_face_sit {
 	]
 }
 
-# Still on field after phase1 — force portal (do not AFK on 170,375)
+# Still on a hunt/Phase2 map after Phase1 — only Swordman/Merchant continue to Phase2.
+# Everyone else must leave prt_fild08 / pay_fild* / Alberta and AFK in Prontera.
 automacro Grind_Phase1StillOnField {
 	exclusive 1
-	timeout 120
+	timeout 90
 	priority 0
 	InMap prt_fild08
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	call grind_phase1_afk_hold
+}
+
+# Wrong map after Phase1 (legacy pay_fild03 / Alberta leftovers) — not Phase2
+# Phase2 is Swordman/Merchant only (grindPhase2 1). Everyone else parks in Prontera.
+automacro Grind_Phase1WrongMapPayFild03 {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap pay_fild03
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_payfild03
+}
+
+automacro Grind_Phase1WrongMapAlberta {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap alberta
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_alberta
+}
+
+automacro Grind_Phase1WrongMapAlbertaIn {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap alberta_in
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_alberta
+}
+
+automacro Grind_Phase1WrongMapPayFild08 {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap pay_fild08
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_payon
+}
+
+automacro Grind_Phase1WrongMapPayon {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap payon
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_payon
+}
+
+automacro Grind_Phase1WrongMapPayonIn {
+	exclusive 1
+	timeout 45
+	priority 0
+	InMap payon_in01
+	ConfigKey grindPhase1Done 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase1_home_from_payon
+}
+
+# Safety: never keep Phase2 flags on Magician/Archer/Acolyte/Thief/etc.
+automacro Grind_Phase2AbortWrongJob {
+	exclusive 1
+	timeout 30
+	priority 0
+	ConfigKey grindPhase2 1
+	JobID 2, 3, 4, 6, 0
+	call {
+		[
+			log PHASE1: clear Phase2 flags - only Swordman/Merchant do Phase2
+			do conf grindPhase2 0
+			do conf grindP2Gear 0
+			do conf grindP2Guard 0
+			do conf grindP2Shops 0
+			do conf grindP2Buying 0
+			do conf grindPhase1Done 1
+			do conf grindAfk 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sellAuto 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack")
+		]
+	}
+}
+
+macro grind_phase1_home_from_payfild03 {
+	[
+		log PHASE1: non-SW/MC on pay_fild03 - portal to Alberta then kafra Prontera
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do move 392 63
+		pause 80
+	]
+	call grind_phase1_home_from_alberta
+}
+
+macro grind_phase1_home_from_alberta {
+	[
+		log PHASE1: Alberta kafra warp to Prontera then fountain AFK
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do move alberta 113 60
+		pause 50
+		do talknpc 113 60 c r2 c r2
+		pause 25
+	]
+	call grind_phase1_afk_hold
+}
+
+macro grind_phase1_home_from_payon {
+	[
+		log PHASE1: non-SW/MC in Payon area - kafra to Prontera
+		do conf grindAfk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do move payon 181 104
+		pause 60
+		do talknpc 181 104 c r2 c r0
+		pause 25
+	]
 	call grind_phase1_afk_hold
 }
 
@@ -2185,7 +2339,7 @@ sub Grind_ApplySoloHunt {
 	Commands::run("conf attackAuto_party 0");
 	Commands::run("conf attackRouteMaxPathDistance 50");
 	Commands::run("conf attackMinPlayerDistance 0");
-	Commands::run("conf attackChangeTarget 1");
+	Commands::run("conf attackChangeTarget 0");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf sellAuto 0");
 	Commands::run("conf runFromTarget 0");
@@ -2219,7 +2373,7 @@ sub Grind_StartHunt {
 	Commands::run("conf attackAuto_followTarget 0");
 	Commands::run("conf attackRouteMaxPathDistance 50");
 	Commands::run("conf attackMinPlayerDistance 0");
-	Commands::run("conf attackChangeTarget 1");
+	Commands::run("conf attackChangeTarget 0");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
 	Commands::run("conf sellAuto 0");
