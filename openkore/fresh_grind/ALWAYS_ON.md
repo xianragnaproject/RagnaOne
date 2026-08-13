@@ -1,5 +1,16 @@
 # FreshGrind 24/7 — Cursor vs VPS
 
+## This Cursor VM (locked down)
+
+On the live agent pod we run:
+
+1. `scripts/fleet-daemon.sh` — detached heal loop every ~45s (no systemd needed)
+2. `fleet-supervisor.sh` + `fleet-watchdog.sh` + tunnel watchdog
+3. user **cron** every minute: `fleet-daemon.sh heal`
+4. `.cursor/environment.json` `start` + `terminals` so new boots bring the fleet back
+
+**Keep this Cursor agent RUNNING** (do not archive/kill it). That is what keeps the VM (and bots) alive.
+
 ## Why bots go “all offline again”
 
 This fleet currently runs inside a **Cursor Cloud Agent VM**. That VM is **not** a dedicated always-on server:
@@ -60,4 +71,5 @@ That only helps when a **new** Cursor agent boots this repo. It does **not** kee
 
 ## Recommendation
 
-Use the **VPS systemd path** for production grinding. Keep Cursor agents for coding / macro fixes, not hosting.
+1. **Keep this agent RUNNING** (do not archive) — that is the 24/7 switch on Cursor.
+2. Optional: also run `sudo bash scripts/vps-install-fleet.sh` on a real VPS if you want uptime that survives Cursor archive.

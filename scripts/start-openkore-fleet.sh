@@ -53,6 +53,12 @@ if ! tmux -f "$TF" has-session -t '=ok-fleet-supervisor' 2>/dev/null; then
   echo "[start-fleet] supervisor started"
 fi
 
+# 5) Detached always-on daemon (no systemd on Cursor pods).
+# Skip when already inside the daemon heal path to avoid recursion.
+if [[ -z "${FLEET_DAEMON_ACTIVE:-}" && -x "$ROOT/scripts/fleet-daemon.sh" ]]; then
+  bash "$ROOT/scripts/fleet-daemon.sh" start || true
+fi
+
 n=$(tmux -f "$TF" ls 2>/dev/null | grep -c '^ok-Grind' || true)
 echo "[start-fleet] grind sessions=$n"
 echo "[start-fleet] ready"
