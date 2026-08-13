@@ -1,0 +1,4 @@
+{
+  "install": "./scripts/setup-openkore.sh",
+  "start": "./scripts/start-openkore-fleet.sh"
+}
