@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ring Rage — TikTok Gift Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="overlay">
+    <div class="atmosphere" aria-hidden="true"></div>
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-mark">RING RAGE</span>
+        <span class="brand-sub" id="statusPill">DEMO</span>
+      </div>
+      <div class="next-match" id="nextMatch">WAITING FOR FIGHTERS — TYPE JOIN</div>
+    </header>
+
+    <main class="stage">
+      <canvas id="arena" width="1280" height="720"></canvas>
+
+      <aside class="gift-board" id="giftBoard" aria-label="Gift menu">
+        <div class="gift-board-title">GIFTS</div>
+        <div class="gift-board-list" id="giftList"></div>
+        <div class="join-hints">
+          <div><strong>Chat</strong> JOIN</div>
+          <div><strong>Tap</strong> 30 JOIN</div>
+        </div>
+      </aside>
+
+      <div class="hud">
+        <div class="fighter-hud left" id="hudLeft">
+          <div class="fighter-name" id="nameLeft">—</div>
+          <div class="hp-track"><div class="hp-fill green" id="hpLeft"></div></div>
+          <div class="fighter-meta" id="metaLeft"></div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="fighter-hud right" id="hudRight">
+          <div class="fighter-name" id="nameRight">HOUSE</div>
+          <div class="hp-track"><div class="hp-fill gold" id="hpRight"></div></div>
+          <div class="fighter-meta" id="metaRight">0 wins</div>
+        </div>
+      </div>
+
+      <div class="queue-rail" id="queueRail"></div>
+      <div class="event-feed" id="eventFeed"></div>
+      <div class="toast" id="toast" hidden></div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

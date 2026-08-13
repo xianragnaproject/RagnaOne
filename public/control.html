@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ring Rage — Control Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="control-page">
+    <div class="control-wrap">
+      <header class="control-header">
+        <h1>RING RAGE</h1>
+        <p>Connect TikTok Live or drive the demo from here. Add the overlay URL as a Browser Source in OBS.</p>
+      </header>
+
+      <section class="panel">
+        <h2>TikTok Live</h2>
+        <div class="row">
+          <input id="tiktokUser" type="text" placeholder="username (no @)" />
+          <button id="btnConnect" class="btn primary">Connect</button>
+          <button id="btnDisconnect" class="btn">Disconnect</button>
+        </div>
+        <p class="muted" id="tiktokStatus">Not connected — demo mode</p>
+      </section>
+
+      <section class="panel">
+        <h2>Demo Controls</h2>
+        <div class="row">
+          <input id="joinName" type="text" placeholder="Fighter name" value="Challenger" />
+          <button id="btnJoin" class="btn primary">Join Queue</button>
+        </div>
+        <div class="gift-grid" id="giftButtons"></div>
+        <div class="row">
+          <button id="btnDemoOn" class="btn">Start Auto Demo</button>
+          <button id="btnDemoOff" class="btn">Stop Auto Demo</button>
+          <button id="btnReset" class="btn danger">Reset Ring</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>OBS Setup</h2>
+        <ol class="steps">
+          <li>Open <code id="overlayUrl"></code> as a Browser Source (1280×720).</li>
+          <li>Go live on TikTok, then connect your username above.</li>
+          <li>Viewers type <strong>join</strong> in chat or tap 30 likes to enter.</li>
+          <li>Gifts heal / arm the fighter currently in the ring.</li>
+        </ol>
+      </section>
+
+      <section class="panel">
+        <h2>Live Feed</h2>
+        <div class="control-feed" id="controlFeed"></div>
+      </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/control.js"></script>
+  </body>
+</html>
