@@ -169,7 +169,8 @@ buyAuto Magnifier {
 	minAmount 2
 	maxAmount 15
 	zeny > 200
-	disabled 0
+	# Fresh novices have no zeny — keep off (was causing buy loops)
+	disabled 1
 }
 buyAuto Apple {
 	npc prontera 104 49

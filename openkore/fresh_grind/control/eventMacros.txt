@@ -23,6 +23,33 @@
 # grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief | random
 ###############################################################################
 
+
+# Broke novice: disable shop spam (Magnifier/Fly Wing) until they have zeny
+automacro Grind_NoviceBrokeDisableBuys {
+	exclusive 1
+	timeout 60
+	priority 0
+	JobID 0
+	BaseLevel < 15
+	Zeny < 500
+	call {
+		[
+			log PHASE1: low zeny — disable shop buys
+			do conf buyAuto_0_disabled 1
+			do conf buyAuto_1_disabled 1
+			do conf buyAuto_2_disabled 1
+			do conf buyAuto_3_disabled 1
+			do conf buyAuto_4_disabled 1
+			do conf buyAuto_5_disabled 1
+			do conf buyAuto_6_disabled 1
+			do conf buyAuto_7_disabled 1
+			do eval AI::clear("buyAuto", "NPC")
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+		]
+	}
+}
+
 # ---- Leave novice training: new_1-1 -> new_1-2 ----
 automacro Grind_Leave_new11 {
 	exclusive 1
