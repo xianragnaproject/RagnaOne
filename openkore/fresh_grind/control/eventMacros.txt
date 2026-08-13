@@ -488,21 +488,49 @@ automacro Grind_JobDone {
 }
 
 ###############################################################################
-# Phase 1 complete — AFK until next phase
+# Phase 1 complete
+# - Swordman (1) / Merchant (5): auto-start Phase 2 (Alberta gear → pay_fild08)
+# - Other 1st jobs: Prontera fountain AFK
 ###############################################################################
+automacro Grind_Phase1Complete_ToPhase2_Swordman {
+	exclusive 1
+	timeout 20
+	priority 0
+	BaseLevel >= 15
+	JobID 1
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase2_begin
+}
+
+automacro Grind_Phase1Complete_ToPhase2_Merchant {
+	exclusive 1
+	timeout 20
+	priority 0
+	BaseLevel >= 15
+	JobID 5
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call grind_phase2_begin
+}
+
 automacro Grind_Phase1Complete {
 	exclusive 1
 	timeout 30
-	priority 0
+	priority 1
 	BaseLevel >= 15
-	JobIDNot 0
+	JobID 2, 3, 4, 6
 	ConfigKey grindJob1st 1
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log PHASE1 COMPLETE - Base15 + 1st job - fountain AFK
+			log PHASE1 COMPLETE - Base15 + 1st job - fountain AFK - not SW/MC
 			do conf grindDone15 1
 			do conf grindPhase1Done 1
 			do conf attackAuto 0
@@ -514,10 +542,54 @@ automacro Grind_Phase1Complete {
 	}
 }
 
+# Rescue: SW/MC finished Phase1 but stuck AFK — force Phase2
+automacro Grind_Phase2RescueAfk_Swordman {
+	exclusive 1
+	timeout 25
+	priority 0
+	JobID 1
+	BaseLevel >= 15
+	ConfigKey grindPhase1Done 1
+	ConfigKey grindAfk 1
+	ConfigKeyNot grindPhase2 1
+	call grind_phase2_begin
+}
+
+automacro Grind_Phase2RescueAfk_Merchant {
+	exclusive 1
+	timeout 25
+	priority 0
+	JobID 5
+	BaseLevel >= 15
+	ConfigKey grindPhase1Done 1
+	ConfigKey grindAfk 1
+	ConfigKeyNot grindPhase2 1
+	call grind_phase2_begin
+}
+
+macro grind_phase2_begin {
+	[
+		log PHASE2 START - Swordman/Merchant auto after Phase1
+		do conf grindDone15 1
+		do conf grindPhase1Done 1
+		do conf grindPhase2 1
+		do conf grindAfk 0
+		do conf sitAuto_idle 0
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
+		do eval Grind_ApplyClassStats()
+	]
+}
+
 automacro Grind_Phase1AfkHold {
 	exclusive 1
 	timeout 90
 	priority 0
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindAfk 1
@@ -530,7 +602,7 @@ automacro Grind_Phase1Redetect {
 	timeout 60
 	priority 0
 	BaseLevel >= 15
-	JobIDNot 0
+	JobID 2, 3, 4, 6
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindSelling 1
 	call {
@@ -544,11 +616,47 @@ automacro Grind_Phase1Redetect {
 	}
 }
 
+# SW/MC redetect at base15 without Phase2 yet → Phase2
+automacro Grind_Phase1Redetect_ToPhase2_Swordman {
+	exclusive 1
+	timeout 30
+	priority 0
+	BaseLevel >= 15
+	JobID 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	call {
+		[
+			do conf grindJob1st 1
+			do conf grindDone15 1
+		]
+		call grind_phase2_begin
+	}
+}
+
+automacro Grind_Phase1Redetect_ToPhase2_Merchant {
+	exclusive 1
+	timeout 30
+	priority 0
+	BaseLevel >= 15
+	JobID 5
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	call {
+		[
+			do conf grindJob1st 1
+			do conf grindDone15 1
+		]
+		call grind_phase2_begin
+	}
+}
+
 automacro Grind_Phase1AfkResit {
 	exclusive 1
 	timeout 90
 	priority 3
 	InMap prontera
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
@@ -777,6 +885,7 @@ automacro Grind_Phase1StillOnField {
 	timeout 90
 	priority 0
 	InMap prt_fild08
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -791,6 +900,7 @@ automacro Grind_Phase1WrongMapPayFild03 {
 	timeout 45
 	priority 0
 	InMap pay_fild03
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -803,6 +913,7 @@ automacro Grind_Phase1WrongMapAlberta {
 	timeout 45
 	priority 0
 	InMap alberta
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -815,6 +926,7 @@ automacro Grind_Phase1WrongMapAlbertaIn {
 	timeout 45
 	priority 0
 	InMap alberta_in
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -827,6 +939,7 @@ automacro Grind_Phase1WrongMapPayFild08 {
 	timeout 45
 	priority 0
 	InMap pay_fild08
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -839,6 +952,7 @@ automacro Grind_Phase1WrongMapPayon {
 	timeout 45
 	priority 0
 	InMap payon
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -851,6 +965,7 @@ automacro Grind_Phase1WrongMapPayonIn {
 	timeout 45
 	priority 0
 	InMap payon_in01
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
@@ -943,6 +1058,7 @@ automacro Grind_Phase1ToFountain {
 	timeout 45
 	priority 0
 	InMap prontera
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
@@ -985,6 +1101,7 @@ automacro Grind_Phase1ShuffleLook {
 	timeout 180
 	priority 4
 	InMap prontera
+	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
@@ -1003,37 +1120,21 @@ automacro Grind_Phase1ShuffleLook {
 ###############################################################################
 
 
-# Kick off Phase 2 once Swordman/Merchant + base 15
+# Kick off Phase 2 once Swordman/Merchant + base 15 (JobID — Eval is unreliable)
 automacro Grind_Phase2Start {
 	exclusive 1
 	timeout 20
 	priority 0
-	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
+	JobID 1
 	BaseLevel >= 15
 	ConfigKey grindJob1st 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	call {
-		[
-			log PHASE2 START - base15+ Swordman/Merchant - Alberta then Payon
-			do conf grindPhase1Done 1
-			do conf grindPhase2 1
-			do conf grindAfk 0
-			do conf sitAuto_idle 0
-			do conf attackAuto 0
-			do conf route_randomWalk 0
-			do conf lockMap none
-			do conf sellAuto 0
-			do stand
-			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
-			do eval Grind_ApplyClassStats()
-		]
-	}
+	call grind_phase2_begin
 }
 
-
-# Merchant-specific Phase2 kick (JobID 5) — JobIDIs unsupported on this OpenKore
+# Merchant-specific Phase2 kick (JobID 5)
 automacro Grind_Phase2StartMerchant {
 	exclusive 1
 	timeout 20
@@ -1044,22 +1145,7 @@ automacro Grind_Phase2StartMerchant {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	call {
-		[
-			log PHASE2 START - Merchant base15+ - Alberta armor then Axe
-			do conf grindPhase1Done 1
-			do conf grindPhase2 1
-			do conf grindAfk 0
-			do conf sitAuto_idle 0
-			do conf attackAuto 0
-			do conf route_randomWalk 0
-			do conf lockMap none
-			do conf sellAuto 0
-			do stand
-			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
-			do eval Grind_ApplyClassStats()
-		]
-	}
+	call grind_phase2_begin
 }
 
 # Prontera kafra → Alberta
@@ -2207,6 +2293,21 @@ sub Grind_AfterJobChange {
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
 	my $base = $char ? ($char->{lv} // 0) : 0;
+	my $jid = $char ? ($char->{jobID} // 0) : 0;
+	if ($base >= 15 && ($jid == 1 || $jid == 5)) {
+		Log::message("[Grind] PHASE1 COMPLETE — Base $base SW/MC — auto Phase2\n", "success");
+		Commands::run("conf grindDone15 1");
+		Commands::run("conf grindPhase1Done 1");
+		Commands::run("conf grindPhase2 1");
+		Commands::run("conf grindAfk 0");
+		Commands::run("conf sitAuto_idle 0");
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		Commands::run("conf sellAuto 0");
+		Grind_ApplyClassStats();
+		return 1;
+	}
 	if ($base >= 15) {
 		Log::message("[Grind] PHASE1 COMPLETE — Base $base + jobbed — Prontera AFK\n", "success");
 		Commands::run("conf grindDone15 1");
