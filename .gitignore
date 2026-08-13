@@ -42,3 +42,4 @@ openkore/OpenKore Help*
 # Fleet panel secrets
 openkore/fleet_panel/panel.pass
 openkore/fleet_panel/*.pass
+openkore/fleet_panel/PUBLIC_URL.txt
