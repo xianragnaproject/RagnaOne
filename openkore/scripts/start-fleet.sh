@@ -47,8 +47,11 @@ done
 
 SESSION=ok-fleet-watchdog
 if ! tmux -f "$TF" has-session -t "=$SESSION" 2>/dev/null; then
-  tmux -f "$TF" new-session -d -s "$SESSION" -c "$OK" -- bash -lc 'bash ~/openkore/scripts/fleet-watchdog.sh'
-  echo "Started watchdog → tmux attach -t $SESSION"
+  tmux -f "$TF" new-session -d -s "$SESSION" -c "$OK" -- bash -l
+  sleep 1
+  tmux -f "$TF" send-keys -t "${SESSION}:0.0" \
+    "export OPENKORE_HOME='$OK' TMUX_CONF='$TF' FLEET_SHARD='${FLEET_SHARD:-}' FLEET_SHARD_FILE='${SHARD_FILE:-}'; bash '$OK/scripts/fleet-watchdog.sh'" C-m
+  echo "Started watchdog → tmux attach -t $SESSION (shard=${SHARD_FILE:-all})"
 else
   echo "Watchdog already running: $SESSION"
 fi
