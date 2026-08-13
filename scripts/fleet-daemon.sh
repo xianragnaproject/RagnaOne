@@ -38,13 +38,16 @@ heal_once() {
       "bash '$ROOT/scripts/fleet-supervisor.sh'" C-m
   fi
 
-  if ! pgrep -f 'fleet-tunnel-watchdog\.sh' >/dev/null 2>&1; then
-    log "spawn fleet-tunnel-watchdog"
-    tmux -f "$TF" kill-session -t fleet-tunnel-watchdog 2>/dev/null || true
-    tmux -f "$TF" new-session -d -s fleet-tunnel-watchdog -c "$OK" -- bash -l
-    sleep 1
-    tmux -f "$TF" send-keys -t 'fleet-tunnel-watchdog:0.0' \
-      "bash '$OK/scripts/fleet-tunnel-watchdog.sh'" C-m
+  # Tunnel/panel only on shard 0 (or FLEET_SHARD_PANEL=1)
+  if [[ "${FLEET_SHARD:-0}" == "0" || "${FLEET_SHARD_PANEL:-0}" == "1" ]]; then
+    if ! pgrep -f 'fleet-tunnel-watchdog\.sh' >/dev/null 2>&1; then
+      log "spawn fleet-tunnel-watchdog"
+      tmux -f "$TF" kill-session -t fleet-tunnel-watchdog 2>/dev/null || true
+      tmux -f "$TF" new-session -d -s fleet-tunnel-watchdog -c "$OK" -- bash -l
+      sleep 1
+      tmux -f "$TF" send-keys -t 'fleet-tunnel-watchdog:0.0' \
+        "bash '$OK/scripts/fleet-tunnel-watchdog.sh'" C-m
+    fi
   fi
 
   date -u +%Y-%m-%dT%H:%M:%SZ >"$HEARTBEAT"
