@@ -3,6 +3,8 @@
 **Per account `config.txt` = username + password only.**  
 Everything else is shared (`control/` + `config-shared.txt`) and **macros** change runtime state with `do conf …`.
 
+> **24/7:** Cursor Cloud Agents are **not** always-on. When the agent idles/archives, every bot goes offline. For real uptime see [`ALWAYS_ON.md`](ALWAYS_ON.md) and run `sudo bash scripts/vps-install-fleet.sh` on a VPS.
+
 ## Layout
 
 ```

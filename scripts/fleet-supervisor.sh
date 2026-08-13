@@ -25,6 +25,23 @@ while true; do
     bash "$OK/scripts/start-fleet-panel.sh" >>"$LOG" 2>&1 || true
   fi
 
+  # Public Cloudflare quick tunnel + its watchdog (panel looks "offline" when these die)
+  if ! pgrep -f 'fleet-tunnel-watchdog\.sh' >/dev/null 2>&1; then
+    log "restart fleet-tunnel-watchdog"
+    tmux -f "$TF" kill-session -t fleet-tunnel-watchdog 2>/dev/null || true
+    tmux -f "$TF" new-session -d -s fleet-tunnel-watchdog -c "$OK" -- bash -l
+    sleep 1
+    tmux -f "$TF" send-keys -t 'fleet-tunnel-watchdog:0.0' \
+      "bash '$OK/scripts/fleet-tunnel-watchdog.sh'" C-m
+  fi
+  if ! pgrep -f '^(/tmp|/usr/local/bin)/cloudflared tunnel' >/dev/null 2>&1 \
+     && ! pgrep -f 'cloudflared tunnel --url' >/dev/null 2>&1; then
+    # tunnel watchdog will recreate; nudge if session missing
+    if ! tmux -f "$TF" has-session -t '=fleet-cf-tunnel' 2>/dev/null; then
+      log "missing fleet-cf-tunnel session (watchdog should recreate)"
+    fi
+  fi
+
   # Ensure every Grind* profile has a session (watchdog also does this; belt+suspenders)
   if [[ -d "$OK/profiles" ]]; then
     while IFS= read -r p; do
