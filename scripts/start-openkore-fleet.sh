@@ -27,20 +27,26 @@ fi
 
 chmod +x "$OK"/scripts/*.sh 2>/dev/null || true
 
-# 1) Start all Grind* bots + fleet watchdog
+# 1) Start shard bots + fleet watchdog (default shard 0 on this primary VM)
+export FLEET_SHARD="${FLEET_SHARD:-0}"
+export FLEET_SHARD_FILE="${FLEET_SHARD_FILE:-$OK/fleet_shards/shard${FLEET_SHARD}.txt}"
 bash "$OK/scripts/start-fleet.sh" || true
 
-# 2) Fleet control panel (password-protected web UI)
-bash "$OK/scripts/start-fleet-panel.sh" || true
+# 2) Fleet control panel (password-protected web UI) — shard 0 only unless forced
+if [[ "${FLEET_SHARD}" == "0" || "${FLEET_SHARD_PANEL:-0}" == "1" ]]; then
+  bash "$OK/scripts/start-fleet-panel.sh" || true
+fi
 
-# 3) Cloudflare tunnel + tunnel watchdog (public link when possible)
-if [[ -x /tmp/cloudflared || -x "$OK/bin/cloudflared" ]]; then
-  if ! tmux -f "$TF" has-session -t '=fleet-tunnel-watchdog' 2>/dev/null; then
-    tmux -f "$TF" new-session -d -s fleet-tunnel-watchdog -c "$OK" -- bash -l
-    sleep 1
-    tmux -f "$TF" send-keys -t 'fleet-tunnel-watchdog:0.0' \
-      "bash '$OK/scripts/fleet-tunnel-watchdog.sh'" C-m
-    echo "[start-fleet] tunnel watchdog started"
+# 3) Cloudflare tunnel + tunnel watchdog (public link when possible) — panel shards only
+if [[ "${FLEET_SHARD:-0}" == "0" || "${FLEET_SHARD_PANEL:-0}" == "1" ]]; then
+  if [[ -x /tmp/cloudflared || -x "$OK/bin/cloudflared" ]]; then
+    if ! tmux -f "$TF" has-session -t '=fleet-tunnel-watchdog' 2>/dev/null; then
+      tmux -f "$TF" new-session -d -s fleet-tunnel-watchdog -c "$OK" -- bash -l
+      sleep 1
+      tmux -f "$TF" send-keys -t 'fleet-tunnel-watchdog:0.0' \
+        "bash '$OK/scripts/fleet-tunnel-watchdog.sh'" C-m
+      echo "[start-fleet] tunnel watchdog started"
+    fi
   fi
 fi
 

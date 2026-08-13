@@ -13,7 +13,12 @@ LOG="$LOG_DIR/fleet-watchdog.log"
 INTERVAL="${WATCHDOG_INTERVAL:-45}"
 
 # Default fleet: all FreshGrind (Grind*) profiles on disk, minus pending registration
+# Optional shard: FLEET_SHARD_FILE or FLEET_SHARD=0..3
 PENDING_FILE="${PENDING_FILE:-/tmp/fresh-grind-n-pending.txt}"
+SHARD_FILE="${FLEET_SHARD_FILE:-}"
+if [[ -z "$SHARD_FILE" && -n "${FLEET_SHARD:-}" ]]; then
+  SHARD_FILE="$OK/fleet_shards/shard${FLEET_SHARD}.txt"
+fi
 load_profiles() {
   local dir="${OK}/profiles"
   local pending=""
@@ -26,6 +31,9 @@ load_profiles() {
       [[ -n "$p" ]] || continue
       if echo "$pending" | grep -qx "$p"; then
         continue
+      fi
+      if [[ -n "$SHARD_FILE" && -f "$SHARD_FILE" ]]; then
+        grep -qx "$p" "$SHARD_FILE" || continue
       fi
       PROFILES+=("$p")
     done < <(find "$dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -E '^Grind' | sort)

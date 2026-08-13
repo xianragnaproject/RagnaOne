@@ -43,9 +43,17 @@ while true; do
   fi
 
   # Ensure every Grind* profile has a session (watchdog also does this; belt+suspenders)
+  # Honor FLEET_SHARD / FLEET_SHARD_FILE when set.
+  SHARD_FILE="${FLEET_SHARD_FILE:-}"
+  if [[ -z "$SHARD_FILE" && -n "${FLEET_SHARD:-}" ]]; then
+    SHARD_FILE="$OK/fleet_shards/shard${FLEET_SHARD}.txt"
+  fi
   if [[ -d "$OK/profiles" ]]; then
     while IFS= read -r p; do
       [[ -n "$p" ]] || continue
+      if [[ -n "$SHARD_FILE" && -f "$SHARD_FILE" ]]; then
+        grep -qx "$p" "$SHARD_FILE" || continue
+      fi
       sess=$(printf 'ok-%s' "$p" | tr -c 'A-Za-z0-9_-' '_')
       if ! tmux -f "$TF" has-session -t "=$sess" 2>/dev/null; then
         log "restart missing bot $p"
