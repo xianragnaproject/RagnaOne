@@ -1,0 +1,20 @@
+{
+  "name": "tiktok-wrestle-gift-game",
+  "version": "1.0.0",
+  "description": "Live TikTok gift wrestling game — stickman arena driven by chat, likes, and gifts",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "tiktok-live-connector": "^1.2.3"
+  }
+}
