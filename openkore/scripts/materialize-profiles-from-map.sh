@@ -3,7 +3,16 @@
 # Map columns: label ProfileDir CharName username password sex
 set -euo pipefail
 OK="${OPENKORE_HOME:-$HOME/openkore}"
-MAP="${1:-$OK/profiles/ACCOUNT_MAP.txt}"
+MAP="${1:-}"
+if [[ -z "$MAP" ]]; then
+  if [[ -f "$OK/profiles/ACCOUNT_MAP.txt" ]]; then
+    MAP="$OK/profiles/ACCOUNT_MAP.txt"
+  elif [[ -f "$OK/fresh_grind/ACCOUNT_MAP.txt" ]]; then
+    MAP="$OK/fresh_grind/ACCOUNT_MAP.txt"
+  else
+    MAP="$OK/profiles/ACCOUNT_MAP.txt"
+  fi
+fi
 SHARD_FILE="${FLEET_SHARD_FILE:-}"
 
 if [[ ! -f "$MAP" ]]; then
