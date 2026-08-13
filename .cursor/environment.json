@@ -1,6 +1,6 @@
 {
-  "install": "./scripts/setup-openkore.sh",
-  "start": "./scripts/start-openkore-fleet.sh",
+  "install": "bash ./scripts/setup-openkore.sh",
+  "start": "bash ./scripts/start-openkore-fleet.sh",
   "ports": [
     {
       "name": "fleet-panel",
@@ -10,7 +10,7 @@
   "terminals": [
     {
       "name": "fleet-daemon",
-      "command": "./scripts/fleet-daemon.sh foreground",
+      "command": "bash ./scripts/fleet-daemon.sh foreground",
       "description": "Always-on FreshGrind OpenKore fleet supervisor (bots + panel + tunnel). Keep this agent RUNNING for 24/7."
     }
   ]
