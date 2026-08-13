@@ -299,6 +299,15 @@ equipAuto {
 	disabled 1
 }
 equipAuto {
+	rightHand Axe
+	leftHand Guard
+	armor Wooden Mail
+	robe Muffler
+	shoes Shoes
+	isJob Merchant
+	disabled 1
+}
+equipAuto {
 	rightHand Axe [3]
 	armor Cotton Shirt
 	isJob Merchant
