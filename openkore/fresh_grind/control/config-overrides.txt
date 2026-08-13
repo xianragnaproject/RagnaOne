@@ -11,8 +11,10 @@ attackAuto_routeToLock 0
 attackAuto_followTarget 0
 attackAuto_allowKS 1
 attackAuto_inLockOnly 1
+# CRITICAL: if unset, OpenKore treats this as 0 and skips every mob not on your cell
+attackRouteMaxPathDistance 50
 teleportAuto_deadly 1
-attackChangeTarget 0
+attackChangeTarget 1
 attackCheckLOS 1
 attackMinPlayerDistance 0
 attackMinPortalDistance 0

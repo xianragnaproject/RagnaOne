@@ -236,8 +236,33 @@ automacro Grind_KeepAggressive08 {
 		[
 			log Grind: restore attackAuto 2 on field
 			do conf attackAuto 2
+			do conf attackRouteMaxPathDistance 50
+			do conf attackMinPlayerDistance 0
+			do conf attackChangeTarget 1
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
+		]
+	}
+}
+
+# If path-distance was never set, bots walk past every mob (OpenKore treats unset as 0)
+automacro Grind_FixAttackPathDistance {
+	exclusive 1
+	timeout 20
+	priority 7
+	InMap prt_fild08,pay_fild08,pay_fild03
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot attackRouteMaxPathDistance 50
+	call {
+		[
+			log Grind: set attackRouteMaxPathDistance 50 - was ignoring mobs
+			do conf attackRouteMaxPathDistance 50
+			do conf attackMinPlayerDistance 0
+			do conf attackChangeTarget 1
+			do conf attackAuto 2
+			do conf route_randomWalk 1
 		]
 	}
 }
@@ -2158,6 +2183,9 @@ sub Grind_ApplySoloHunt {
 	Commands::run("conf attackAuto_inLockOnly 1");
 	Commands::run("conf attackAuto_followTarget 0");
 	Commands::run("conf attackAuto_party 0");
+	Commands::run("conf attackRouteMaxPathDistance 50");
+	Commands::run("conf attackMinPlayerDistance 0");
+	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf sellAuto 0");
 	Commands::run("conf runFromTarget 0");
@@ -2189,6 +2217,9 @@ sub Grind_StartHunt {
 	Commands::run("conf attackAuto 2");
 	Commands::run("conf attackAuto_inLockOnly 1");
 	Commands::run("conf attackAuto_followTarget 0");
+	Commands::run("conf attackRouteMaxPathDistance 50");
+	Commands::run("conf attackMinPlayerDistance 0");
+	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
 	Commands::run("conf sellAuto 0");
