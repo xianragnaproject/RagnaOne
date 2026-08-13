@@ -1,5 +1,5 @@
 ###############################################################################
-# Fresh grind macros — PHASE 1 (base 1-15) + PHASE 2 (Swordman)
+# Fresh grind macros — PHASE 1 (base 1-15) + PHASE 2 (Swordman / Merchant)
 #
 # Phase 1:
 # 1) Leave training -> Prontera -> lock prt_fild08
@@ -7,14 +7,18 @@
 # 3) Sell @ 30% OW (portal-first)
 # 4) Fountain AFK breaks while grinding
 # 5) Job Level 10 Novice -> random 1st job
-# 6) Base 15 + job -> Prontera AFK (grindPhase1Done) — non-Swordman stay here
+# 6) Base 15 + job -> Prontera AFK (grindPhase1Done) — non-Swordman/Merchant stay here
 #
-# Phase 2 (JobID 1 Swordman, base >= 15):
-# 1) Alberta buy Guard
+# Phase 2 (JobID 1 Swordman OR JobID 5 Merchant, base >= 15):
+# 1) Alberta buy Guard (+ Shoes / Muffler / Wooden Mail)
 # 2) Payon savepoint (Kafra 181,104)
-# 3) Payon buy Blade / Manteau / Shoes / Wooden Mail
+# 3) Weapon: Swordman Blade @ Payon; Merchant Axe @ Alberta weapon shop idx 6
 # 4) Hunt pay_fild08; buy potions + sell in Payon
 # 5) AFK near Payon Kafra
+#
+# Class statsAddAuto (Grind_ApplyClassStats):
+#   1 SW: STR/VIT (+dex) | 2 MG: INT/DEX | 3 AC: AGI/DEX
+#   4 AL: INT/VIT | 5 MC: STR/DEX | 6 TF: AGI/DEX
 #
 # grindTargetJob: Swordman | Magician | Archer | Acolyte | Merchant | Thief | random
 ###############################################################################
@@ -248,7 +252,7 @@ automacro Grind_ClearStuckJobbing {
 	ConfigKeyNot grindPhase1Done 1
 	call {
 		[
-			log Grind: clear stuck grindJobbing after job change
+			log Grind: clear stuck grindJobbing after jobbing
 			do eval Grind_AfterJobChange()
 		]
 	}
@@ -298,8 +302,40 @@ automacro Grind_Jobbed_DisablePotionBuy {
 	JobIDNot 0
 	call {
 		[
-			log PHASE1: disable Red Potion buy after job change
+			log PHASE1: disable Red Potion buy after jobbing
 			do eval Grind_DisableBuyItem("Red Potion")
+		]
+	}
+}
+
+# After 1st job change the server grants a free stat reset — keep statsAddAuto off
+# (Phase2 re-enables class lists via Grind_ApplyClassStats / EnsureClassStats)
+automacro Grind_Jobbed_DisableStatsAddAuto {
+	exclusive 1
+	timeout 60
+	priority 1
+	JobIDNot 0
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot statsAddAuto 0
+	call {
+		[
+			log PHASE1: disable statsAddAuto after jobbing (server reset)
+			do conf statsAddAuto 0
+		]
+	}
+}
+
+# Phase2: ensure class-based statsAddAuto stays on
+automacro Grind_Phase2_EnsureClassStats {
+	exclusive 1
+	timeout 90
+	priority 2
+	ConfigKey grindPhase2 1
+	ConfigKeyNot statsAddAuto 1
+	call {
+		[
+			log PHASE2: ensure class statsAddAuto
+			do eval Grind_ApplyClassStats()
 		]
 	}
 }
@@ -756,16 +792,16 @@ automacro Grind_Phase1ShuffleLook {
 }
 
 ###############################################################################
-# PHASE 2 — Swordman (JobID 1) base >= 15
-# Alberta Guard → Payon save → Payon gear → pay_fild08 hunt + Payon buy/sell/AFK
+# PHASE 2 — Swordman (JobID 1) OR Merchant (JobID 5), base >= 15
+# Alberta Guard/armor → Payon save → weapon (Blade@Payon / Axe@Alberta) → pay_fild08
 ###############################################################################
 
-# Kick off Phase 2 from Prontera AFK (or anywhere) once Swordman + base 15
+# Kick off Phase 2 once Swordman/Merchant + base 15
 automacro Grind_Phase2Start {
 	exclusive 1
 	timeout 45
 	priority 0
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	BaseLevel >= 15
 	ConfigKey grindJob1st 1
 	ConfigKeyNot grindPhase2 1
@@ -773,7 +809,7 @@ automacro Grind_Phase2Start {
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log PHASE2 START - Swordman base15+ - Alberta Guard then Payon
+			log PHASE2 START - base15+ Swordman/Merchant - Alberta then Payon
 			do conf grindPhase1Done 1
 			do conf grindPhase2 1
 			do conf grindAfk 0
@@ -784,6 +820,7 @@ automacro Grind_Phase2Start {
 			do conf sellAuto 0
 			do stand
 			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
+			do eval Grind_ApplyClassStats()
 		]
 	}
 }
@@ -793,7 +830,7 @@ automacro Grind_Phase2ToAlberta {
 	exclusive 1
 	timeout 60
 	priority 1
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
 	ConfigKeyNot grindAfk 1
@@ -820,13 +857,13 @@ automacro Grind_Phase2BuyGuard {
 	exclusive 1
 	timeout 90
 	priority 1
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindAfk 1
 	InMapRegex /^(alberta|alberta_in)$/
-	InInventory "Guard" < 1
+	Eval Grind_Phase2MissingGuard()
 	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
 	call {
 		[
@@ -843,9 +880,10 @@ automacro Grind_Phase2BuyGuard {
 			pause 40
 			do eval AI::queue("buyAuto")
 			pause 40
-			# Direct shop buy fallback (store slot 0 = Guard @ alberta_in 180,15)
-			do talknpc 180 15 b 0,1 e
-			pause 8
+			# Direct shop buy: only missing Guard/Shoes/Muffler/Wooden Mail
+			do eval Grind_Phase2TalkBuyAlbertaArmor()
+			pause 20
+			do eval Grind_Phase2Equip()
 			# leave buyAuto enabled — Grind_Phase2GuardDone finishes the step
 			do conf grindP2Buying 0
 		]
@@ -856,10 +894,10 @@ automacro Grind_Phase2GuardDone {
 	exclusive 1
 	timeout 15
 	priority 0
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
-	InInventory "Guard" > 0
+	Eval Grind_Phase2HasGuard()
 	call {
 		[
 			log PHASE2: Guard acquired
@@ -877,7 +915,7 @@ automacro Grind_Phase2AlbertaToPayon {
 	exclusive 1
 	timeout 60
 	priority 2
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Guard 1
 	ConfigKeyNot grindP2SavePayon 1
@@ -903,7 +941,7 @@ automacro Grind_Phase2SavePayon {
 	exclusive 1
 	timeout 50
 	priority 1
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Guard 1
 	ConfigKeyNot grindP2SavePayon 1
@@ -939,96 +977,424 @@ automacro Grind_Phase2BuyPayonGear {
 	exclusive 1
 	timeout 120
 	priority 1
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2SavePayon 1
 	ConfigKeyNot grindP2Gear 1
 	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot grindAfk 1
 	InMapRegex /^(payon|payon_in01)$/
 	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
 	call grind_phase2_buy_payon_gear
 }
 
-# Already marked gear-done but missing Shoes / Wooden Mail / Muffler — go buy them
-automacro Grind_Phase2BuyMissingShoes {
+# Wake AFK if Blade / Guard / armor still incomplete (flags alone are not enough)
+automacro Grind_Phase2WakeIncompleteGear {
 	exclusive 1
-	timeout 75
+	timeout 45
 	priority 0
-	JobID 1
-	InventoryReady
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindAfk 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindSelling 1
+	Eval Grind_Phase2NeedsFullGear()
+	call {
+		[
+			log PHASE2: incomplete gear — leave AFK to restock
+			do conf grindAfk 0
+			do conf sitAuto_idle 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting")
+		]
+	}
+}
+
+# Missing Blade while still in Alberta — kafra back to Payon first
+automacro Grind_Phase2AlbertaReturnForBlade {
+	exclusive 1
+	timeout 60
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2NeedPayonBlade 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindSelling 1
+	InMapRegex /^(alberta|alberta_in)$/
+	call {
+		[
+			log PHASE2: have armor but no Blade — Alberta kafra → Payon
+			do conf grindAfk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "buyAuto", "NPC")
+			do move alberta 113 60
+			pause 45
+			do talknpc 113 60 c r2 c r0
+			pause 25
+			do conf -f grindP2NeedPayonBlade 0
+		]
+	}
+}
+
+# Missing Blade — Payon weapon dealer (portal-first; talknpc only after arriving indoors)
+# After Merchant Axe (or full gear return flag) — kafra Alberta → Payon then hunt
+automacro Grind_Phase2AlbertaReturnForHunt {
+	exclusive 1
+	timeout 60
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2NeedPayonReturn 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingAxe 1
+	ConfigKeyNot grindSelling 1
+	InMapRegex /^(alberta|alberta_in)$/
+	call {
+		[
+			log PHASE2: Alberta kafra → Payon for hunt/gear
+			do conf grindAfk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "buyAuto", "NPC")
+			do move alberta 113 60
+			pause 45
+			do talknpc 113 60 c r2 c r0
+			pause 25
+			do conf -f grindP2NeedPayonReturn 0
+			do eval Grind_Phase2MarkGearIfComplete()
+		]
+	}
+}
+
+automacro Grind_Phase2BuyMissingBlade {
+	exclusive 1
+	timeout 90
+	priority 0
+	Eval Grind_Phase2IsSwordman()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
-	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	InInventory "Shoes" < 1
+	ConfigKeyNot grindP2BuyingBlade 1
+	Eval Grind_Phase2MissingBlade()
+	Zeny > 2900
+	InMapRegex /^(payon|payon_in01)$/
+	call grind_phase2_start_blade_buy
+}
+
+# On Payon outdoor while buying Blade — walk to weapon/armor wing portal (do not clear routes repeatedly)
+automacro Grind_Phase2EnterWeaponWing {
+	exclusive 1
+	timeout 35
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2BuyingBlade 1
+	InMap payon
+	Eval Grind_Phase2FarFromWeaponPortal()
+	call {
+		[
+			log PHASE2: walk to Payon weapon wing portal 135,158
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do stand
+			do move 135 158
+		]
+	}
+}
+
+# Near portal — step into payon_in01 weapon/armor wing
+automacro Grind_Phase2EnterWeaponWingPortal {
+	exclusive 1
+	timeout 20
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2BuyingBlade 1
+	InMap payon
+	Eval Grind_Phase2NearWeaponPortal()
+	call {
+		[
+			log PHASE2: enter portal into Payon weapon wing
+			do conf attackAuto 0
+			do stand
+			do move payon_in01 20 129
+			pause 25
+			do move payon_in01 15 117
+		]
+	}
+}
+
+# Inside payon_in01 near weapon dealer — buy Blade (arrival-gated)
+automacro Grind_Phase2TalkBuyBladeNow {
+	exclusive 1
+	timeout 45
+	priority 0
+	Eval Grind_Phase2IsSwordman()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2BuyingBlade 1
+	InMap payon_in01
+	Eval Grind_Phase2MissingBlade()
+	Eval Grind_Phase2NearWeaponDealer()
+	call {
+		[
+			log PHASE2: at weapon dealer — buy Blade
+			do conf attackAuto 0
+			do stand
+			do eval AI::clear("NPC", "buyAuto")
+			do talknpc 15 119 b b4,1 e
+			pause 20
+			do eval Grind_Phase2Equip()
+			do conf -f grindP2BuyingBlade 0
+			do conf grindP2Buying 0
+			do eval Grind_Phase2MarkGearIfComplete()
+			do move payon 181 100
+			pause 15
+			log PHASE2: Blade buy attempt done
+		]
+	}
+}
+
+# If indoors but not near shop yet while buying Blade
+automacro Grind_Phase2WalkToWeaponDealer {
+	exclusive 1
+	timeout 30
+	priority 1
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2BuyingBlade 1
+	InMap payon_in01
+	Eval Grind_Phase2MissingBlade()
+	Eval Grind_Phase2FarFromWeaponDealer()
+	call {
+		[
+			log PHASE2: walk to weapon dealer 15,117
+			do conf attackAuto 0
+			do stand
+			do move 15 117
+		]
+	}
+}
+
+# If Blade buy flag stuck while already owning Blade, clear it
+automacro Grind_Phase2ClearBladeBuyFlag {
+	exclusive 1
+	timeout 30
+	priority 5
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2BuyingBlade 1
+	Eval Grind_Phase2HasBlade()
+	call {
+		[
+			do conf -f grindP2BuyingBlade 0
+			do conf grindP2Buying 0
+			do eval Grind_Phase2MarkGearIfComplete()
+		]
+	}
+}
+
+# Missing Guard — Alberta armor dealer (same trip as Shoes/Muffler/Wooden Mail)
+automacro Grind_Phase2BuyMissingGuard {
+	exclusive 1
+	timeout 90
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	Eval Grind_Phase2MissingGuard()
+	Zeny > 500
+	call grind_phase2_go_alberta_armor
+}
+
+# Missing Shoes / Wooden Mail / Muffler — buy at Alberta armor dealer
+# (same NPC as Guard). Payon_in01 wings are disconnected; MapRoute cannot reach 7,119.
+automacro Grind_Phase2BuyMissingShoes {
+	exclusive 1
+	timeout 90
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Shops 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	Eval Grind_Phase2MissingShoes()
 	Zeny > 3500
-	call grind_phase2_buy_missing_armor
+	call grind_phase2_go_alberta_armor
 }
 
 automacro Grind_Phase2BuyMissingMail {
 	exclusive 1
-	timeout 75
+	timeout 90
 	priority 0
-	JobID 1
-	InventoryReady
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
-	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	InInventory "Wooden Mail" < 1
+	Eval Grind_Phase2MissingWoodenMail()
 	Zeny > 5500
-	call grind_phase2_buy_missing_armor
+	call grind_phase2_go_alberta_armor
 }
 
 automacro Grind_Phase2BuyMissingMuffler {
 	exclusive 1
-	timeout 75
+	timeout 90
 	priority 0
-	JobID 1
-	InventoryReady
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
-	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	InInventory "Muffler" < 1
-	InInventory "Manteau" < 1
+	Eval Grind_Phase2MissingRobe()
 	Zeny > 5000
-	call grind_phase2_buy_missing_armor
+	call grind_phase2_go_alberta_armor
 }
 
-macro grind_phase2_buy_missing_armor {
+# Payon kafra → Alberta (arrival-gated talk — do not talknpc before reaching kafra)
+macro grind_phase2_go_alberta_armor {
 	[
-		log PHASE2: missing Shoes/Wooden Mail/Muffler — buy at Payon armor shop
+		log PHASE2: missing armor/Guard — walk to Payon kafra for Alberta warp
+		do conf grindAfk 0
 		do conf grindP2Buying 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
-		do conf lockMap none
+		do conf sitAuto_idle 0
 		do stand
-		do eval AI::clear("move", "route", "mapRoute", "attack", "NPC")
-		do move payon_in01 10 119
-		pause 45
-		do eval Grind_Phase2TalkBuyArmor()
-		pause 10
+		do eval AI::clear("move", "route", "mapRoute", "attack", "buyAuto", "NPC")
+		do conf lockMap payon
+		do conf lockMap_x 181
+		do conf lockMap_y 100
+		pause 3
+	]
+}
+
+# At Payon while buying armor — walk to kafra then warp to Alberta
+automacro Grind_Phase2KafraToAlberta {
+	exclusive 1
+	timeout 50
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Buying 1
+	ConfigKeyNot grindP2BuyingBlade 1
+	ConfigKeyNot grindAfk 1
+	InMap payon
+	call {
+		[
+			log PHASE2: in Payon — kafra warp to Alberta
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "NPC")
+			do move 181 100
+			pause 45
+			do talknpc 181 104 c r2 c r1
+			pause 25
+		]
+	}
+}
+
+automacro Grind_Phase2BuyAlbertaArmor {
+	exclusive 1
+	timeout 75
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval Grind_Phase2MissingShoes()
+	call grind_phase2_buy_alberta_armor
+}
+
+automacro Grind_Phase2BuyAlbertaArmorMail {
+	exclusive 1
+	timeout 75
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval Grind_Phase2MissingWoodenMail()
+	call grind_phase2_buy_alberta_armor
+}
+
+automacro Grind_Phase2BuyAlbertaArmorMuffler {
+	exclusive 1
+	timeout 75
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval !Grind_Phase2HasRobe()
+	call grind_phase2_buy_alberta_armor
+}
+
+automacro Grind_Phase2BuyAlbertaArmorGuard {
+	exclusive 1
+	timeout 75
+	priority 0
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKey grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval Grind_Phase2MissingGuard()
+	call grind_phase2_buy_alberta_armor
+}
+
+macro grind_phase2_buy_alberta_armor {
+	[
+		log PHASE2: Alberta armor dealer — buy only missing Guard/Shoes/Muffler/Wooden Mail
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "buyAuto", "NPC")
+		do move alberta_in 180 18
+		pause 55
+		do eval Grind_Phase2TalkBuyAlbertaArmor()
+		pause 25
 		do eval Grind_Phase2Equip()
 		do conf grindP2Buying 0
-		do conf -f grindHuntMap pay_fild08
-		do conf lockMap pay_fild08
-		do conf attackAuto 2
-		do conf route_randomWalk 1
-		do move payon 267 89
-		pause 45
-		log PHASE2: armor restock done — resume pay_fild08
+		do conf grindP2Guard 1
+		do conf grindP2Armor 1
+		do eval Grind_Phase2MarkGearIfComplete()
+		do eval Grind_Phase2FinishArmorBuyFromAlberta()
+	]
+}
+
+macro grind_phase2_start_blade_buy {
+	[
+		log PHASE2: start Blade buy — walk to Payon weapon wing
+		do conf grindAfk 0
+		do conf grindP2Buying 0
+		do conf -f grindP2BuyingBlade 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf sitAuto_idle 0
+		do conf lockMap none
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "buyAuto", "NPC")
+		do move payon 136 158
 	]
 }
 
 macro grind_phase2_buy_payon_gear {
 	[
-		log PHASE2: Payon buy Blade + Shoes + Wooden Mail + Muffler
-		do conf grindP2Buying 1
+		log PHASE2: Payon buy Blade — armor bought at Alberta if missing
+		do conf grindP2Buying 0
+		do conf -f grindP2BuyingBlade 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
 		do conf lockMap none
@@ -1036,37 +1402,93 @@ macro grind_phase2_buy_payon_gear {
 		do eval AI::clear("move", "route", "mapRoute", "buyAuto", "NPC")
 		do eval Grind_ApplyPayonShops()
 		do conf grindP2Shops 1
-		# Weapon dealer — Blade (store idx 4 = item 1107)
-		do move payon_in01 15 117
-		pause 40
-		do eval Grind_Phase2TalkBuyBlade()
-		pause 6
-		# Armor dealer — Shoes(1) Muffler(4) Wooden Mail(13)
-		do move payon_in01 10 119
-		pause 30
-		do eval Grind_Phase2TalkBuyArmor()
-		pause 8
-		do eval Grind_EnableBuyItem("Red Potion")
-		do eval Grind_Phase2Equip()
-		do conf grindP2Buying 0
-		do conf grindP2Gear 1
-		do conf grindGearDone 1
-		do move payon 181 100
-		pause 15
-		log PHASE2: Payon gear done — hunt pay_fild08
+		do move payon 136 158
+		log PHASE2: Blade route started — EnterWeaponWing / TalkBuyBladeNow finish buy
 	]
 }
 
-# Hunt pay_fild08 after gear
+# After Alberta armor buy: kafra back to Payon, then hunt (only when full gear owned)
+automacro Grind_Phase2AlbertaArmorReturn {
+	exclusive 1
+	timeout 60
+	priority 1
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingAxe 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval Grind_Phase2HasGuard()
+	Eval Grind_Phase2HasShoes()
+	Eval Grind_Phase2HasWoodenMail()
+	Eval !Grind_Phase2NeedsArmor()
+	Eval !Grind_Phase2IsMerchant() || Grind_Phase2HasWeapon()
+	call {
+		[
+			log PHASE2: Alberta armor/Guard owned — kafra back to Payon
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move alberta 113 60
+			pause 40
+			do talknpc 113 60 c r2 c r0
+			pause 25
+			do eval Grind_Phase2MarkGearIfComplete()
+		]
+	}
+}
+
+# Stop competing Swordsman equipAuto blocks (Muffler vs Manteau vs Cotton Shirt)
+automacro Grind_Phase2FixEquipAuto {
+	exclusive 1
+	timeout 180
+	priority 6
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	Eval Grind_Phase2HasWoodenMail()
+	call {
+		[
+			do eval Grind_Phase2Equip()
+		]
+	}
+}
+
+# Log gear; non-exclusive so hunt/field macros can run
+automacro Grind_Phase2GearAudit {
+	timeout 45
+	priority 9
+	Eval Grind_Phase2IsEligible()
+	ConfigKey grindPhase2 1
+	call {
+		[
+			do eval Grind_Phase2LogGear()
+			do eval Grind_Phase2MaybeFinishBladeBuy()
+			do eval Grind_Phase2MarkGearIfComplete()
+			do eval Grind_Phase2MaybeReturnFromAlbertaForBlade()
+			do eval Grind_Phase2MaybeStartBladeBuy()
+			do eval Grind_Phase2MaybeProgressBladeBuy()
+			do eval Grind_Phase2MaybeBuyAlbertaArmor()
+			do eval Grind_Phase2MaybeProgressAlbertaArmor()
+			do eval Grind_Phase2MaybeProgressAlbertaAxe()
+		]
+	}
+}
+
+# Hunt pay_fild08 after full gear (grindP2Gear only set when Blade+Guard+armor owned)
 automacro Grind_Phase2HuntPay08 {
 	exclusive 1
 	timeout 40
-	priority 2
-	JobID 1
+	priority 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingBlade 1
+	ConfigKeyNot grindP2BuyingAxe 1
 	ConfigKeyNot lockMap pay_fild08
 	call {
 		[
@@ -1089,12 +1511,15 @@ automacro Grind_Phase2ToFieldPortal {
 	exclusive 1
 	timeout 50
 	priority 1
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKey lockMap pay_fild08
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindP2BuyingBlade 1
+	ConfigKeyNot grindP2BuyingAxe 1
 	InMapRegex /^(payon|payon_in01)$/
 	call {
 		[
@@ -1116,12 +1541,13 @@ automacro Grind_Phase2KeepAggressive {
 	exclusive 1
 	timeout 35
 	priority 8
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	InMap pay_fild08
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot attackAuto 2
 	call {
 		[
@@ -1138,7 +1564,7 @@ automacro Grind_Phase2SellLoot {
 	exclusive 1
 	timeout 60
 	priority 2
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindAfk 1
@@ -1180,20 +1606,20 @@ macro grind_phase2_sell_payon {
 	]
 }
 
-# AFK break near Payon Kafra while hunting phase 2 (only after armor bought)
+# AFK break near Payon Kafra only after full gear
 automacro Grind_Phase2PayonAfk {
 	exclusive 1
 	timeout 900
 	priority 3
 	InMap pay_fild08
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
-	InInventory "Wooden Mail" > 0
-	InInventory "Shoes" > 0
+	ConfigKeyNot grindP2BuyingBlade 1
+	ConfigKeyNot grindP2BuyingAxe 1
 	call grind_phase2_payon_afk
 }
 
@@ -1460,6 +1886,9 @@ sub Grind_TalkJobMaster {
 sub Grind_AfterJobChange {
 	Commands::run("conf grindJob1st 1");
 	Commands::run("conf grindJobbing 0");
+	# Server grants a free stat reset on job change — stop auto-allocating
+	# so the reset points are not burned by the novice statsAddAuto list.
+	Commands::run("conf statsAddAuto 0");
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
 	my $base = $char ? ($char->{lv} // 0) : 0;
@@ -1601,7 +2030,7 @@ sub Grind_ApplySoloHunt {
 
 sub Grind_StartHunt {
 	return 1 if $config{grindAfk};
-	# Phase1 park: no hunt unless Phase2 Swordman path is active
+	# Phase1 park: no hunt unless Phase2 Swordman/Merchant path is active
 	if ($config{grindPhase1Done} && !$config{grindPhase2}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
@@ -1657,6 +2086,7 @@ sub Grind_ResumeHuntLock {
 }
 
 # Remap sell + potion buy + gear buy NPCs to Payon shops
+# Merchant Axe stays at Alberta weapon dealer (not Payon).
 sub Grind_ApplyPayonShops {
 	Commands::run("conf sellAuto_npc payon_in01 5 49");
 	Commands::run("conf sellAuto_standpoint payon_in01 7 49");
@@ -1671,7 +2101,10 @@ sub Grind_ApplyPayonShops {
 		} elsif ($item =~ /^(Shoes|Wooden Mail|Manteau|Muffler|Cotton Shirt|Guard)$/i) {
 			$npc = "payon_in01 7 119";
 			$stand = "payon_in01 10 119";
-		} elsif ($item =~ /^(Blade|Sword|Knife|Rod|Bow|Axe)/i) {
+		} elsif ($item =~ /^Axe/i) {
+			$npc = "alberta_in 188 21";
+			$stand = "alberta_in 188 24";
+		} elsif ($item =~ /^(Blade|Sword|Knife|Rod|Bow)/i) {
 			$npc = "payon_in01 15 119";
 			$stand = "payon_in01 15 117";
 		} else {
@@ -1680,7 +2113,7 @@ sub Grind_ApplyPayonShops {
 		Commands::run("conf buyAuto_${i}_npc $npc");
 		Commands::run("conf buyAuto_${i}_standpoint $stand");
 	}
-	Log::message("[Grind] Payon shops applied (tool/armor/weapon)\n", "success");
+	Log::message("[Grind] Payon shops applied (tool/armor/weapon; Axe@Alberta)\n", "success");
 	return 1;
 }
 
@@ -1696,54 +2129,536 @@ sub Grind_SetBuyNpc {
 	return 0;
 }
 
-sub Grind_Phase2Equip {
-	my $inv = $char && $char->inventory;
-	for my $name ("Blade", "Guard", "Wooden Mail", "Muffler", "Manteau", "Shoes") {
-		next unless $inv && $inv->getByName($name);
-		Commands::run("eq $name");
+# Class-based statsAddAuto after Phase2 starts (post job-reset).
+sub Grind_ApplyClassStats {
+	return 0 unless $char;
+	my $jid = $char->{jobID} // 0;
+	my %lists = (
+		# 1 SW: STR/VIT (+dex)
+		1 => '10 str, 10 vit, 10 dex, 20 str, 20 vit, 15 dex, 30 str, 30 vit, 20 dex, 40 str, 40 vit, 25 dex, 50 str, 50 vit, 30 dex, 60 str, 60 vit, 40 dex, 70 str, 70 vit, 50 dex, 80 str, 80 vit, 60 dex, 90 str, 90 vit, 70 dex, 99 str, 99 vit, 80 dex',
+		# 2 MG: INT/DEX
+		2 => '10 int, 10 dex, 20 int, 20 dex, 30 int, 25 dex, 40 int, 30 dex, 50 int, 40 dex, 60 int, 50 dex, 70 int, 60 dex, 80 int, 70 dex, 90 int, 80 dex, 99 int, 99 dex',
+		# 3 AC: AGI/DEX
+		3 => '10 agi, 10 dex, 20 agi, 20 dex, 30 agi, 25 dex, 40 agi, 30 dex, 50 agi, 40 dex, 60 agi, 50 dex, 70 agi, 60 dex, 80 agi, 70 dex, 90 agi, 80 dex, 99 agi, 99 dex',
+		# 4 AL: INT/VIT
+		4 => '10 int, 10 vit, 20 int, 20 vit, 30 int, 25 vit, 40 int, 30 vit, 50 int, 40 vit, 60 int, 50 vit, 70 int, 60 vit, 80 int, 70 vit, 90 int, 80 vit, 99 int, 99 vit',
+		# 5 MC: STR/DEX
+		5 => '10 str, 10 dex, 20 str, 20 dex, 30 str, 25 dex, 40 str, 30 dex, 50 str, 40 dex, 60 str, 50 dex, 70 str, 60 dex, 80 str, 70 dex, 90 str, 80 dex, 99 str, 99 dex',
+		# 6 TF: AGI/DEX
+		6 => '10 agi, 10 dex, 20 agi, 20 dex, 30 agi, 25 dex, 40 agi, 30 dex, 50 agi, 40 dex, 60 agi, 50 dex, 70 agi, 60 dex, 80 agi, 70 dex, 90 agi, 80 dex, 99 agi, 99 dex',
+	);
+	my $list = $lists{$jid};
+	unless ($list) {
+		Log::message("[Grind] ApplyClassStats: unsupported jobID=$jid\n", "system");
+		return 0;
 	}
-	for (my $i = 0; exists $config{"equipAuto_$i"}; $i++) {
-		my $job = $config{"equipAuto_${i}_isJob"} || "";
-		next unless $job =~ /Swordsman/i;
-		Commands::run("conf equipAuto_${i}_disabled 0");
-	}
-	Log::message("[Grind] PHASE2 equip Blade/Guard/Wooden Mail/Muffler/Shoes\n", "success");
+	Commands::run("conf statsAddAuto 1");
+	Commands::run("conf statsAddAuto_list $list");
+	Commands::run("conf statsAddAuto_dontUseBonus 0");
+	Commands::run("conf statsAdd_over_99 1");
+	Log::message("[Grind] Class statsAddAuto enabled for jobID=$jid\n", "success");
 	return 1;
 }
 
-# True if any core Payon armor piece is missing (inventory includes equipped).
-sub Grind_Phase2NeedsArmor {
-	return 0 unless $char && $char->inventory;
-	my $inv = $char->inventory;
-	return 1 unless $inv->getByName("Shoes");
-	return 1 unless $inv->getByName("Wooden Mail");
-	return 1 unless ($inv->getByName("Muffler") || $inv->getByName("Manteau"));
+sub Grind_Phase2IsSwordman {
+	return ($char && (($char->{jobID} // -1) == 1)) ? 1 : 0;
+}
+
+sub Grind_Phase2IsMerchant {
+	return ($char && (($char->{jobID} // -1) == 5)) ? 1 : 0;
+}
+
+sub Grind_Phase2IsEligible {
+	return (Grind_Phase2IsSwordman() || Grind_Phase2IsMerchant()) ? 1 : 0;
+}
+
+sub Grind_Phase2WeaponName {
+	return 'Axe' if Grind_Phase2IsMerchant();
+	return 'Blade';
+}
+
+sub Grind_Phase2HasWeapon {
+	return Grind_Phase2HasItem(Grind_Phase2WeaponName());
+}
+
+sub Grind_Phase2MissingWeapon {
+	return Grind_Phase2HasWeapon() ? 0 : 1;
+}
+
+sub Grind_Phase2Equip {
+	my $inv = $char && $char->inventory;
+	my $weapon = Grind_Phase2WeaponName();
+	for my $name ($weapon, "Guard", "Wooden Mail", "Muffler", "Shoes") {
+		next unless $inv;
+		my $item = $inv->getByName($name);
+		unless ($item) {
+			for my $it (@{$inv->getItems}) {
+				my $n = $it->name // next;
+				if ($n eq $name || $n =~ /^\Q$name\E(?:\s*\[|$)/) {
+					$item = $it;
+					last;
+				}
+			}
+		}
+		next unless $item;
+		next if $item->{equipped};
+		Commands::run("eq " . $item->name);
+	}
+	# Enable full Phase2 set; disable competing same-job equipAuto blocks
+	for (my $i = 0; exists $config{"equipAuto_$i"}; $i++) {
+		my $job = $config{"equipAuto_${i}_isJob"} || "";
+		my $robe = $config{"equipAuto_${i}_robe"} || "";
+		my $armor = $config{"equipAuto_${i}_armor"} || "";
+		my $rh = $config{"equipAuto_${i}_rightHand"} || "";
+		if (Grind_Phase2IsSwordman() && $job =~ /Swordsman/i) {
+			if ($robe eq "Muffler" && $armor eq "Wooden Mail") {
+				Commands::run("conf equipAuto_${i}_disabled 0");
+			} else {
+				Commands::run("conf equipAuto_${i}_disabled 1");
+			}
+		} elsif (Grind_Phase2IsMerchant() && $job =~ /Merchant/i) {
+			if ($rh =~ /^Axe$/i && $armor eq "Wooden Mail" && $robe eq "Muffler") {
+				Commands::run("conf equipAuto_${i}_disabled 0");
+			} elsif ($rh =~ /^Axe/i && $armor eq "Cotton Shirt") {
+				# Keep starter Axe [3] set only until full armor is owned
+				my $disable = (Grind_Phase2HasItem("Wooden Mail") && Grind_Phase2HasRobe()) ? 1 : 0;
+				Commands::run("conf equipAuto_${i}_disabled $disable");
+			} else {
+				Commands::run("conf equipAuto_${i}_disabled 1");
+			}
+		}
+	}
+	Log::message("[Grind] PHASE2 equip $weapon/Guard/Wooden Mail/Muffler/Shoes\n", "success");
+	return 1;
+}
+
+
+sub Grind_Phase2HasItem {
+	my ($name) = @_;
+	return 0 unless $name && $char && $char->inventory;
+	return 1 if $char->inventory->getByName($name);
+	# Match slotted shop variants: "Blade [3]", "Guard [0]", etc.
+	for my $item (@{$char->inventory->getItems}) {
+		my $n = $item->name // next;
+		return 1 if $n eq $name;
+		return 1 if $n =~ /^\Q$name\E(?:\s*\[|$)/;
+	}
 	return 0;
 }
 
-# payon_in01 15,119 weapon shop: idx 4 = Blade (1107)
-sub Grind_Phase2TalkBuyBlade {
-	return 1 if $char && $char->inventory && $char->inventory->getByName("Blade");
-	Commands::run('talknpc 15 119 b 4,1 e');
-	Log::message("[Grind] PHASE2 talknpc buy Blade\n", "success");
+
+sub Grind_Phase2FarFromWeaponPortal {
+	return 0 unless $char && $field && $field->baseName eq 'payon';
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	return (abs($x - 135) > 4 || abs($y - 158) > 4) ? 1 : 0;
+}
+
+sub Grind_Phase2NearWeaponPortal {
+	return 0 unless $char && $field && $field->baseName eq 'payon';
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	return (abs($x - 135) <= 4 && abs($y - 158) <= 4) ? 1 : 0;
+}
+
+sub Grind_Phase2NearWeaponDealer {
+	return 0 unless $char && $field && $field->baseName eq 'payon_in01';
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	return (abs($x - 15) <= 15 && abs($y - 117) <= 15) ? 1 : 0;
+}
+
+sub Grind_Phase2FarFromWeaponDealer {
+	return 0 unless $char && $field && $field->baseName eq 'payon_in01';
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	return (abs($x - 15) > 15 || abs($y - 117) > 15) ? 1 : 0;
+}
+
+sub Grind_Phase2HasBlade { return Grind_Phase2HasItem("Blade"); }
+sub Grind_Phase2HasGuard { return Grind_Phase2HasItem("Guard"); }
+sub Grind_Phase2HasShoes { return Grind_Phase2HasItem("Shoes"); }
+sub Grind_Phase2HasWoodenMail { return Grind_Phase2HasItem("Wooden Mail"); }
+sub Grind_Phase2MissingBlade { return Grind_Phase2HasBlade() ? 0 : 1; }
+sub Grind_Phase2MissingGuard { return Grind_Phase2HasGuard() ? 0 : 1; }
+sub Grind_Phase2MissingShoes { return Grind_Phase2HasShoes() ? 0 : 1; }
+sub Grind_Phase2MissingWoodenMail { return Grind_Phase2HasWoodenMail() ? 0 : 1; }
+sub Grind_Phase2HasRobe {
+	return 1 if Grind_Phase2HasItem("Muffler");
+	return 1 if Grind_Phase2HasItem("Manteau");
+	return 0;
+}
+
+sub Grind_Phase2MissingRobe { return Grind_Phase2HasRobe() ? 0 : 1; }
+
+# Armor+Guard owned, Blade still missing (Swordman only; Alberta → Payon for weapon shop)
+sub Grind_Phase2NeedsBladeOnly {
+	return 0 unless Grind_Phase2IsSwordman();
+	return 0 unless Grind_Phase2HasItem("Guard");
+	return 0 unless Grind_Phase2HasItem("Shoes");
+	return 0 unless Grind_Phase2HasItem("Wooden Mail");
+	return 0 unless Grind_Phase2HasRobe();
+	return 0 if Grind_Phase2HasWeapon();
 	return 1;
 }
 
-# payon_in01 7,119 armor shop indices:
+# From Alberta with full armor but no Blade: kafra warp to Payon
+sub Grind_Phase2MaybeReturnFromAlbertaForBlade {
+	return 0 unless $field;
+	my $m = $field->baseName;
+	return 0 unless ($m eq 'alberta' || $m eq 'alberta_in');
+	return 0 unless Grind_Phase2NeedsBladeOnly();
+	return 0 if ($config{grindP2Buying} || "") eq "1";
+	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
+	return 0 if ($config{grindSelling} || "") eq "1";
+	return 0 if ($config{grindP2NeedPayonBlade} || "") eq "1";
+	Log::message("[Grind] PHASE2: armor OK, no Blade — flag Alberta→Payon for Blade\n", "success");
+	Commands::run("conf grindAfk 0");
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("conf lockMap none");
+	Commands::run("conf -f grindP2NeedPayonBlade 1");
+	return 1;
+}
+
+# In Payon with armor but no Blade: start weapon-wing Blade buy
+sub Grind_Phase2MaybeStartBladeBuy {
+	return 0 unless $field;
+	my $m = $field->baseName;
+	return 0 unless ($m eq 'payon' || $m eq 'payon_in01');
+	return 0 unless Grind_Phase2NeedsBladeOnly();
+	return 0 if ($config{grindP2BuyingBlade} || "") eq "1";
+	return 0 if ($config{grindP2Buying} || "") eq "1";
+	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
+	return 0 if ($config{grindSelling} || "") eq "1";
+	my $zeny = $char->{zeny} // 0;
+	return 0 if $zeny < 2900;
+	Log::message("[Grind] PHASE2: start Blade buy from gear audit\n", "success");
+	Commands::run("conf grindAfk 0");
+	Commands::run("conf grindP2Buying 0");
+	Commands::run("conf -f grindP2BuyingBlade 1");
+	Commands::run("conf -f grindP2Shops 1");
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("conf lockMap none");
+	Commands::run("stand") if $char && $char->{sitting};
+	return 1;
+}
+
+# Progress Blade buy: walk portal → shop → talknpc (called from gear audit)
+sub Grind_Phase2MaybeProgressBladeBuy {
+	return 0 unless ($config{grindP2BuyingBlade} || "") eq "1";
+	return 0 unless $field && $char;
+	return 0 if Grind_Phase2HasWeapon();
+	# Don't yank an in-progress walk every audit tick
+	return 0 if AI::inQueue("move") || AI::inQueue("route") || AI::inQueue("mapRoute") || AI::is("move", "route", "mapRoute");
+	my $m = $field->baseName;
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("stand") if $char->{sitting};
+
+	if ($m eq 'payon') {
+		if (abs($x - 135) > 3 || abs($y - 158) > 3) {
+			Log::message("[Grind] PHASE2 Blade progress: walk to portal 135,158\n", "success");
+			Commands::run("move 135 158");
+			return 1;
+		}
+		Log::message("[Grind] PHASE2 Blade progress: enter payon_in01 weapon wing\n", "success");
+		Commands::run("move payon_in01 20 129");
+		return 1;
+	}
+
+	if ($m eq 'payon_in01') {
+		if (abs($x - 15) > 8 || abs($y - 117) > 8) {
+			Log::message("[Grind] PHASE2 Blade progress: walk to weapon dealer 15,117\n", "success");
+			Commands::run("move 15 117");
+			return 1;
+		}
+		Log::message("[Grind] PHASE2 Blade progress: talknpc buy Blade\n", "success");
+		AI::clear("NPC", "buyAuto");
+		Commands::run('talknpc 15 119 b b4,1 e');
+		return 1;
+	}
+
+	Log::message("[Grind] PHASE2 Blade progress: unexpected map $m — clear blade buy flag\n", "success");
+	Commands::run("conf -f grindP2BuyingBlade 0");
+	return 0;
+}
+
+# After Blade appears, clear flag + mark gear
+sub Grind_Phase2MaybeFinishBladeBuy {
+	return 0 unless ($config{grindP2BuyingBlade} || "") eq "1";
+	return 0 unless Grind_Phase2HasWeapon();
+	my $w = Grind_Phase2WeaponName();
+	Log::message("[Grind] PHASE2 $w owned — finish blade buy\n", "success");
+	Commands::run("conf -f grindP2BuyingBlade 0");
+	Commands::run("conf grindP2Buying 0");
+	Grind_Phase2Equip();
+	Grind_Phase2MarkGearIfComplete();
+	return 1;
+}
+
+# In Alberta missing Guard/armor: buy missing pieces at armor dealer
+sub Grind_Phase2MaybeBuyAlbertaArmor {
+	return 0 unless $field;
+	my $m = $field->baseName;
+	return 0 unless ($m eq 'alberta' || $m eq 'alberta_in');
+	return 0 if Grind_Phase2HasItem("Guard") && !Grind_Phase2NeedsArmor();
+	return 0 if ($config{grindP2BuyingBlade} || "") eq "1";
+	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
+	return 0 if ($config{grindSelling} || "") eq "1";
+	return 0 if ($config{grindP2Buying} || "") eq "1";
+	my $zeny = $char->{zeny} // 0;
+	return 0 if $zeny < 500;
+	Log::message("[Grind] PHASE2: start Alberta armor/Guard buy from gear audit\n", "success");
+	Commands::run("conf grindAfk 0");
+	Commands::run("conf -f grindP2Buying 1");
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("conf lockMap none");
+	Commands::run("stand") if $char && $char->{sitting};
+	return 1;
+}
+
+# Progress Alberta armor buy when grindP2Buying is set
+sub Grind_Phase2MaybeProgressAlbertaArmor {
+	return 0 unless ($config{grindP2Buying} || "") eq "1";
+	return 0 if ($config{grindP2BuyingBlade} || "") eq "1";
+	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
+	return 0 unless $field && $char;
+
+	# Armor/Guard done — next weapon step (Blade@Payon or Axe@Alberta)
+	if (Grind_Phase2HasItem("Guard") && !Grind_Phase2NeedsArmor()) {
+		Commands::run("conf grindP2Buying 0");
+		if (Grind_Phase2IsMerchant()) {
+			if (Grind_Phase2MissingWeapon()) {
+				Commands::run("conf -f grindP2BuyingAxe 1");
+				Log::message("[Grind] PHASE2 Alberta armor done — next Axe @ Alberta weapon shop\n", "success");
+			} else {
+				Commands::run("conf -f grindP2NeedPayonReturn 1");
+				Log::message("[Grind] PHASE2 Alberta armor+Axe done — return Payon\n", "success");
+			}
+		} elsif (Grind_Phase2NeedsBladeOnly()) {
+			Commands::run("conf -f grindP2NeedPayonBlade 1");
+			Log::message("[Grind] PHASE2 Alberta armor done — next Blade in Payon\n", "success");
+		}
+		return 1;
+	}
+
+	my $m = $field->baseName;
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("stand") if $char->{sitting};
+
+	if ($m eq 'alberta') {
+		Log::message("[Grind] PHASE2 Alberta progress: walk to armor shop\n", "success");
+		Commands::run("move alberta_in 180 18");
+		return 1;
+	}
+	if ($m eq 'alberta_in') {
+		if (abs($x - 180) > 6 || abs($y - 18) > 6) {
+			Commands::run("move 180 18");
+			return 1;
+		}
+		Log::message("[Grind] PHASE2 Alberta progress: buy missing armor/Guard\n", "success");
+		AI::clear("NPC", "buyAuto");
+		Grind_Phase2TalkBuyAlbertaArmor();
+		return 1;
+	}
+	return 0;
+}
+
+# Merchant: buy Axe at Alberta weapon dealer (188,21) idx 6
+sub Grind_Phase2MaybeProgressAlbertaAxe {
+	return 0 unless ($config{grindP2BuyingAxe} || "") eq "1";
+	return 0 unless Grind_Phase2IsMerchant();
+	return 0 unless $field && $char;
+
+	if (Grind_Phase2HasWeapon()) {
+		Commands::run("conf -f grindP2BuyingAxe 0");
+		Commands::run("conf -f grindP2NeedPayonReturn 1");
+		Grind_Phase2Equip();
+		Log::message("[Grind] PHASE2 Axe owned — flag Alberta→Payon return\n", "success");
+		return 1;
+	}
+
+	return 0 if AI::inQueue("move") || AI::inQueue("route") || AI::inQueue("mapRoute") || AI::is("move", "route", "mapRoute");
+	my $m = $field->baseName;
+	my $x = $char->{pos}{x} || 0;
+	my $y = $char->{pos}{y} || 0;
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
+	Commands::run("stand") if $char->{sitting};
+
+	if ($m eq 'alberta') {
+		Log::message("[Grind] PHASE2 Axe progress: walk to Alberta weapon shop\n", "success");
+		Commands::run("move alberta_in 188 24");
+		return 1;
+	}
+	if ($m eq 'alberta_in') {
+		if (abs($x - 188) > 6 || abs($y - 24) > 6) {
+			Commands::run("move 188 24");
+			return 1;
+		}
+		Log::message("[Grind] PHASE2 Axe progress: talknpc buy Axe idx6\n", "success");
+		AI::clear("NPC", "buyAuto");
+		Commands::run('talknpc 188 21 b b6,1 e');
+		return 1;
+	}
+	Log::message("[Grind] PHASE2 Axe progress: unexpected map $m — clear axe buy flag\n", "success");
+	Commands::run("conf -f grindP2BuyingAxe 0");
+	return 0;
+}
+
+# True if any core armor piece is missing (inventory includes equipped).
+sub Grind_Phase2NeedsArmor {
+	return 1 unless Grind_Phase2HasItem("Shoes");
+	return 1 unless Grind_Phase2HasItem("Wooden Mail");
+	return 1 unless Grind_Phase2HasRobe();
+	return 0;
+}
+
+# True if class weapon, Guard, or armor is still missing.
+sub Grind_Phase2NeedsFullGear {
+	return 1 unless $char && $char->inventory;
+	return 1 unless Grind_Phase2HasWeapon();
+	return 1 unless Grind_Phase2HasItem("Guard");
+	return 1 if Grind_Phase2NeedsArmor();
+	return 0;
+}
+
+# Set grindP2Gear only when weapon + Guard + armor are all owned.
+sub Grind_Phase2MarkGearIfComplete {
+	return 0 unless $char && $char->inventory;
+	my $weapon = Grind_Phase2WeaponName();
+	if (Grind_Phase2NeedsFullGear()) {
+		my @miss;
+		push @miss, $weapon unless Grind_Phase2HasWeapon();
+		push @miss, "Guard" unless Grind_Phase2HasItem("Guard");
+		push @miss, "Shoes" unless Grind_Phase2HasItem("Shoes");
+		push @miss, "Wooden Mail" unless Grind_Phase2HasItem("Wooden Mail");
+		push @miss, "Muffler/Manteau" unless Grind_Phase2HasRobe();
+		Log::message("[Grind] PHASE2 gear incomplete — missing: " . join(", ", @miss) . "\n", "success");
+		Commands::run("conf grindP2Gear 0") if ($config{grindP2Gear} || "") eq "1";
+		Commands::run("conf grindGearDone 0") if ($config{grindGearDone} || "") eq "1";
+		return 0;
+	}
+	Commands::run("conf grindP2Gear 1");
+	Commands::run("conf grindGearDone 1");
+	Commands::run("conf grindP2Guard 1");
+	Commands::run("conf -f grindP2Armor 1");
+	Commands::run("conf -f grindP2BuyingBlade 0");
+	Commands::run("conf -f grindP2BuyingAxe 0");
+	Commands::run("conf grindP2Buying 0");
+	# Kick hunt immediately when gear completes
+	Commands::run("conf grindAfk 0");
+	Commands::run("conf -f grindHuntMap pay_fild08");
+	Commands::run("conf lockMap pay_fild08");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf lockMap_y none");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf route_randomWalk 1");
+	Log::message("[Grind] PHASE2 full gear OK — $weapon Guard Shoes Muffler Wooden Mail\n", "success");
+	return 1;
+}
+
+# Periodic console audit of Phase2 gear ownership
+sub Grind_Phase2LogGear {
+	return 0 unless $char && $char->inventory;
+	my $inv = $char->inventory;
+	my @parts;
+	for my $item (@{$inv->getItems}) {
+		my $n = $item->name // next;
+		next unless $n =~ /Blade|Axe|Guard|Shoes|Muffler|Manteau|Wooden Mail|Knife|Sword|Cotton Shirt/;
+		push @parts, $n . ($item->{equipped} ? "*" : "");
+	}
+	my $z = $char->{zeny} // 0;
+	my $map = $field ? $field->baseName : "?";
+	Log::message("[Grind] PHASE2 GEAR ".$char->{name}." z=$z map=$map [".join(",", @parts)."]\n", "success");
+	return 1;
+}
+
+# Alberta armor dealer (180,15) idxs: 0=Guard 3=Shoes 6=Muffler 16=Wooden Mail
+# Buy only pieces still missing to avoid burning zeny / "Buy failed".
+sub Grind_Phase2TalkBuyAlbertaArmor {
+	my @buys;
+	push @buys, 'b0,1' unless Grind_Phase2HasItem("Guard");
+	push @buys, 'b3,1' unless Grind_Phase2HasItem("Shoes");
+	push @buys, 'b6,1' unless Grind_Phase2HasRobe();
+	push @buys, 'b16,1' unless Grind_Phase2HasItem("Wooden Mail");
+	unless (@buys) {
+		Log::message("[Grind] PHASE2 Alberta armor already owned — skip buy\n", "success");
+		return 1;
+	}
+	my $seq = 'b ' . join(' ', @buys) . ' e';
+	Commands::run("talknpc 180 15 $seq");
+	Log::message("[Grind] PHASE2 Alberta buy: $seq\n", "success");
+	return 1;
+}
+
+# payon_in01 15,119 weapon shop: idx 4 = Blade (1107)
+# Sequence: b = open buy, bN,A = buy store index N amount A (MUST be bN,A not "b N,A")
+sub Grind_Phase2TalkBuyBlade {
+	return 1 if $char && $char->inventory && $char->inventory->getByName("Blade");
+	Commands::run('talknpc 15 119 b b4,1 e');
+	Log::message("[Grind] PHASE2 talknpc buy Blade: b b4,1 e\n", "success");
+	return 1;
+}
+
+# payon_in01 7,119 armor shop indices (from npc_shops.txt):
 # 1=Shoes(2403) 4=Muffler(2503) 13=Wooden Mail(2328)
+# Prefer one-item talknpc from macros; this helper buys only still-missing pieces.
 sub Grind_Phase2TalkBuyArmor {
 	my $inv = $char && $char->inventory;
-	my @buys;
-	push @buys, "1,1" unless $inv && $inv->getByName("Shoes");
-	push @buys, "4,1" unless $inv && ($inv->getByName("Muffler") || $inv->getByName("Manteau"));
-	push @buys, "13,1" unless $inv && $inv->getByName("Wooden Mail");
-	unless (@buys) {
+	my @seqs;
+	push @seqs, 'b b1,1 e' unless $inv && $inv->getByName("Shoes");
+	push @seqs, 'b b4,1 e' unless $inv && ($inv->getByName("Muffler") || $inv->getByName("Manteau"));
+	push @seqs, 'b b13,1 e' unless $inv && $inv->getByName("Wooden Mail");
+	unless (@seqs) {
 		Log::message("[Grind] PHASE2 armor already owned\n", "success");
 		return 1;
 	}
-	my $seq = join(" ", map { "b $_" } @buys);
-	Commands::run("talknpc 7 119 $seq e");
+	# Queue first missing piece only — macros call this repeatedly / buy one-by-one
+	my $seq = $seqs[0];
+	Commands::run("talknpc 7 119 $seq");
 	Log::message("[Grind] PHASE2 talknpc buy armor: $seq\n", "success");
+	return 1;
+}
+
+# After armor talknpc: resume hunt only if Shoes + Wooden Mail + (Muffler|Manteau) owned
+sub Grind_Phase2FinishArmorBuy {
+	if (Grind_Phase2NeedsArmor()) {
+		Log::message("[Grind] PHASE2 armor STILL missing after buy — stay in Payon to retry\n", "success");
+		Commands::run("conf lockMap none");
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		return 0;
+	}
+	Log::message("[Grind] PHASE2 armor OK — resume pay_fild08\n", "success");
+	Commands::run("conf -f grindHuntMap pay_fild08");
+	Commands::run("conf lockMap pay_fild08");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf route_randomWalk 1");
+	Commands::run("move payon 267 89");
+	return 1;
+}
+
+# After Alberta armor buy: leave buying flag; return automacro warps to Payon
+sub Grind_Phase2FinishArmorBuyFromAlberta {
+	if (Grind_Phase2NeedsArmor()) {
+		Log::message("[Grind] PHASE2 Alberta armor STILL missing — retry buy\n", "success");
+		Commands::run("conf grindP2Buying 1");
+		Commands::run("conf lockMap none");
+		Commands::run("conf attackAuto 0");
+		return 0;
+	}
+	Log::message("[Grind] PHASE2 Alberta armor OK — ready to return to Payon\n", "success");
+	Commands::run("conf attackAuto 0");
+	Commands::run("conf route_randomWalk 0");
 	return 1;
 }
 
@@ -1768,7 +2683,7 @@ automacro Grind_ReportZeny {
 	exclusive 1
 	timeout 15
 	priority 9
-	JobID 1
+	Eval Grind_Phase2IsEligible()
 	ConfigKeyNot grindZenyReported 1
 	call {
 		[
