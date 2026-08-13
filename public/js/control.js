@@ -90,6 +90,23 @@ els.btnDemoOff.addEventListener("click", () => post("/api/demo/stop"));
 els.btnReset.addEventListener("click", () => post("/api/reset"));
 
 const socket = io();
+let seeded = false;
+
+socket.on("state", (state) => {
+  if (seeded) return;
+  seeded = true;
+  for (const evt of [...(state.events || [])].reverse()) {
+    pushFeed(
+      evt.message || evt.type,
+      evt.type === "gift" || evt.type === "effect"
+        ? "gift"
+        : evt.type === "join"
+          ? "join"
+          : ""
+    );
+  }
+});
+
 socket.on("tiktok", (s) => {
   if (s.connected) {
     els.tiktokStatus.textContent = `LIVE @${s.username} · room ${s.roomId || "?"}`;
