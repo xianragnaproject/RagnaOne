@@ -54,18 +54,29 @@ fi
 
 # User cron heal (Cursor pods have no systemd; cron keeps fleet alive while VM lives)
 if command -v crontab >/dev/null 2>&1; then
+  # Prefer fleet.env shard pin when present
+  if [[ -f "$OK_HOME/logs/fleet.env" ]]; then
+    # shellcheck disable=SC1090
+    set -a; source "$OK_HOME/logs/fleet.env"; set +a
+  fi
   CRON_TMP=$(mktemp)
   {
     echo "SHELL=/bin/bash"
     echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     echo "OPENKORE_HOME=$OK_HOME"
     echo "TMUX_CONF=${TMUX_CONF:-/exec-daemon/tmux.portal.conf}"
+    if [[ -n "${FLEET_SHARD:-}" ]]; then
+      echo "FLEET_SHARD=$FLEET_SHARD"
+    fi
+    if [[ -n "${FLEET_SHARD_FILE:-}" ]]; then
+      echo "FLEET_SHARD_FILE=$FLEET_SHARD_FILE"
+    fi
     echo "* * * * * $ROOT/scripts/fleet-daemon.sh heal >>$OK_HOME/logs/fleet-cron.log 2>&1"
     echo "*/5 * * * * $ROOT/scripts/fleet-daemon.sh start >>$OK_HOME/logs/fleet-cron.log 2>&1"
   } >"$CRON_TMP"
   crontab "$CRON_TMP" || true
   rm -f "$CRON_TMP"
-  echo "[setup-openkore] installed fleet heal crontab"
+  echo "[setup-openkore] installed fleet heal crontab (shard=${FLEET_SHARD:-default})"
 fi
 
 echo "[setup-openkore] done"
