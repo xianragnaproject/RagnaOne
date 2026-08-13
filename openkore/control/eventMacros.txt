@@ -271,7 +271,7 @@ automacro Grind_RestoreHunt {
 	Eval !($char->{jobID} == 0 && $char->{lv_job} >= 10)
 	call {
 		[
-			log Grind: restore hunt (attackAuto was off)
+			log Grind: restore hunt - attackAuto was off -
 			do conf -f grindHuntMap prt_fild08
 			do eval Grind_StartHunt()
 		]
@@ -319,8 +319,8 @@ automacro Grind_Jobbed_DisableStatsAddAuto {
 	ConfigKeyNot statsAddAuto 0
 	call {
 		[
-			log PHASE1: disable statsAddAuto after jobbing (server reset)
 			do conf statsAddAuto 0
+			log PHASE1: statsAddAuto disabled
 		]
 	}
 }
@@ -793,15 +793,16 @@ automacro Grind_Phase1ShuffleLook {
 
 ###############################################################################
 # PHASE 2 — Swordman (JobID 1) OR Merchant (JobID 5), base >= 15
-# Alberta Guard/armor → Payon save → weapon (Blade@Payon / Axe@Alberta) → pay_fild08
+# Alberta Guard/armor → Payon save → weapon (Blade at Payon / Axe at Alberta) → pay_fild08
 ###############################################################################
+
 
 # Kick off Phase 2 once Swordman/Merchant + base 15
 automacro Grind_Phase2Start {
 	exclusive 1
-	timeout 45
+	timeout 20
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	BaseLevel >= 15
 	ConfigKey grindJob1st 1
 	ConfigKeyNot grindPhase2 1
@@ -825,12 +826,69 @@ automacro Grind_Phase2Start {
 	}
 }
 
+
+# Merchant-specific Phase2 kick (JobID 5) — JobIDIs unsupported on this OpenKore
+automacro Grind_Phase2StartMerchant {
+	exclusive 1
+	timeout 20
+	priority 0
+	JobID 5
+	BaseLevel >= 15
+	ConfigKey grindJob1st 1
+	ConfigKeyNot grindPhase2 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log PHASE2 START - Merchant base15+ - Alberta armor then Axe
+			do conf grindPhase1Done 1
+			do conf grindPhase2 1
+			do conf grindAfk 0
+			do conf sitAuto_idle 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sellAuto 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack", "sitting", "standing")
+			do eval Grind_ApplyClassStats()
+		]
+	}
+}
+
 # Prontera kafra → Alberta
+
+automacro Grind_Phase2ToAlbertaMerchant {
+	exclusive 1
+	timeout 60
+	priority 1
+	JobID 5
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Guard 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindSelling 1
+	InMapRegex /^(prontera|prt_in|prt_fild08)$/
+	call {
+		[
+			log PHASE2: Merchant kafra warp Prontera to Alberta
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move prontera 146 89
+			pause 40
+			do talknpc 146 89 c r2 c r5
+			pause 20
+		]
+	}
+}
+
 automacro Grind_Phase2ToAlberta {
 	exclusive 1
 	timeout 60
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
 	ConfigKeyNot grindAfk 1
@@ -853,11 +911,62 @@ automacro Grind_Phase2ToAlberta {
 }
 
 # Alberta: buy Guard at alberta_in armor dealer (180,15)
+
+# Merchant: buy Guard/armor at Alberta (JobID 5 — Eval jobID checks unreliable here)
+automacro Grind_Phase2BuyGuardMerchant {
+	exclusive 1
+	timeout 90
+	priority 1
+	JobID 5
+	ConfigKey grindPhase2 1
+	ConfigKeyNot grindP2Guard 1
+	ConfigKeyNot grindP2Buying 1
+	ConfigKeyNot grindAfk 1
+	InMapRegex /^(alberta|alberta_in)$/
+	Eval Grind_Phase2MissingGuard()
+	Eval !(AI::inQueue("buyAuto") || AI::is("buyAuto","NPC"))
+	call {
+		[
+			log PHASE2: Merchant buy Guard and armor at Alberta
+			do conf grindP2Buying 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "buyAuto")
+			do move alberta_in 180 18
+			pause 40
+			do eval Grind_Phase2TalkBuyAlbertaArmor()
+			pause 20
+			do eval Grind_Phase2Equip()
+			do conf grindP2Buying 0
+			do eval Grind_Phase2MarkGearIfComplete()
+		]
+	}
+}
+
+# Merchant gear audit / Axe progress (JobID 5)
+automacro Grind_Phase2GearAuditMerchant {
+	timeout 30
+	priority 9
+	JobID 5
+	ConfigKey grindPhase2 1
+	call {
+		[
+			do eval Grind_Phase2LogGear()
+			do eval Grind_Phase2MarkGearIfComplete()
+			do eval Grind_Phase2MaybeBuyAlbertaArmor()
+			do eval Grind_Phase2MaybeProgressAlbertaArmor()
+			do eval Grind_Phase2MaybeProgressAlbertaAxe()
+		]
+	}
+}
+
 automacro Grind_Phase2BuyGuard {
 	exclusive 1
 	timeout 90
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
 	ConfigKeyNot grindP2Buying 1
@@ -894,7 +1003,7 @@ automacro Grind_Phase2GuardDone {
 	exclusive 1
 	timeout 15
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Guard 1
 	Eval Grind_Phase2HasGuard()
@@ -915,7 +1024,7 @@ automacro Grind_Phase2AlbertaToPayon {
 	exclusive 1
 	timeout 60
 	priority 2
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Guard 1
 	ConfigKeyNot grindP2SavePayon 1
@@ -941,7 +1050,7 @@ automacro Grind_Phase2SavePayon {
 	exclusive 1
 	timeout 50
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Guard 1
 	ConfigKeyNot grindP2SavePayon 1
@@ -977,7 +1086,7 @@ automacro Grind_Phase2BuyPayonGear {
 	exclusive 1
 	timeout 120
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2SavePayon 1
 	ConfigKeyNot grindP2Gear 1
@@ -994,7 +1103,7 @@ automacro Grind_Phase2WakeIncompleteGear {
 	exclusive 1
 	timeout 45
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindAfk 1
 	ConfigKeyNot grindP2Buying 1
@@ -1016,7 +1125,7 @@ automacro Grind_Phase2AlbertaReturnForBlade {
 	exclusive 1
 	timeout 60
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2NeedPayonBlade 1
 	ConfigKeyNot grindP2Buying 1
@@ -1046,7 +1155,7 @@ automacro Grind_Phase2AlbertaReturnForHunt {
 	exclusive 1
 	timeout 60
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2NeedPayonReturn 1
 	ConfigKeyNot grindP2Buying 1
@@ -1076,7 +1185,7 @@ automacro Grind_Phase2BuyMissingBlade {
 	exclusive 1
 	timeout 90
 	priority 0
-	Eval Grind_Phase2IsSwordman()
+	Eval $char && ($char->{jobID} == 1)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindSelling 1
@@ -1093,7 +1202,7 @@ automacro Grind_Phase2EnterWeaponWing {
 	exclusive 1
 	timeout 35
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2BuyingBlade 1
 	InMap payon
@@ -1114,7 +1223,7 @@ automacro Grind_Phase2EnterWeaponWingPortal {
 	exclusive 1
 	timeout 20
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2BuyingBlade 1
 	InMap payon
@@ -1136,7 +1245,7 @@ automacro Grind_Phase2TalkBuyBladeNow {
 	exclusive 1
 	timeout 45
 	priority 0
-	Eval Grind_Phase2IsSwordman()
+	Eval $char && ($char->{jobID} == 1)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2BuyingBlade 1
 	InMap payon_in01
@@ -1166,7 +1275,7 @@ automacro Grind_Phase2WalkToWeaponDealer {
 	exclusive 1
 	timeout 30
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2BuyingBlade 1
 	InMap payon_in01
@@ -1187,7 +1296,7 @@ automacro Grind_Phase2ClearBladeBuyFlag {
 	exclusive 1
 	timeout 30
 	priority 5
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2BuyingBlade 1
 	Eval Grind_Phase2HasBlade()
@@ -1205,7 +1314,7 @@ automacro Grind_Phase2BuyMissingGuard {
 	exclusive 1
 	timeout 90
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindSelling 1
@@ -1221,7 +1330,7 @@ automacro Grind_Phase2BuyMissingShoes {
 	exclusive 1
 	timeout 90
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindSelling 1
@@ -1235,7 +1344,7 @@ automacro Grind_Phase2BuyMissingMail {
 	exclusive 1
 	timeout 90
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindSelling 1
@@ -1249,7 +1358,7 @@ automacro Grind_Phase2BuyMissingMuffler {
 	exclusive 1
 	timeout 90
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindSelling 1
@@ -1282,7 +1391,7 @@ automacro Grind_Phase2KafraToAlberta {
 	exclusive 1
 	timeout 50
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Buying 1
 	ConfigKeyNot grindP2BuyingBlade 1
@@ -1306,7 +1415,7 @@ automacro Grind_Phase2BuyAlbertaArmor {
 	exclusive 1
 	timeout 75
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Buying 1
 	ConfigKeyNot grindAfk 1
@@ -1319,7 +1428,7 @@ automacro Grind_Phase2BuyAlbertaArmorMail {
 	exclusive 1
 	timeout 75
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Buying 1
 	ConfigKeyNot grindAfk 1
@@ -1332,7 +1441,7 @@ automacro Grind_Phase2BuyAlbertaArmorMuffler {
 	exclusive 1
 	timeout 75
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Buying 1
 	ConfigKeyNot grindAfk 1
@@ -1345,7 +1454,7 @@ automacro Grind_Phase2BuyAlbertaArmorGuard {
 	exclusive 1
 	timeout 75
 	priority 0
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Buying 1
 	ConfigKeyNot grindAfk 1
@@ -1412,7 +1521,7 @@ automacro Grind_Phase2AlbertaArmorReturn {
 	exclusive 1
 	timeout 60
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindP2BuyingAxe 1
@@ -1422,7 +1531,7 @@ automacro Grind_Phase2AlbertaArmorReturn {
 	Eval Grind_Phase2HasShoes()
 	Eval Grind_Phase2HasWoodenMail()
 	Eval !Grind_Phase2NeedsArmor()
-	Eval !Grind_Phase2IsMerchant() || Grind_Phase2HasWeapon()
+	Eval !($char && $char->{jobID} == 5) || Grind_Phase2HasWeapon()
 	call {
 		[
 			log PHASE2: Alberta armor/Guard owned — kafra back to Payon
@@ -1445,7 +1554,7 @@ automacro Grind_Phase2FixEquipAuto {
 	exclusive 1
 	timeout 180
 	priority 6
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	Eval Grind_Phase2HasWoodenMail()
 	call {
@@ -1459,7 +1568,7 @@ automacro Grind_Phase2FixEquipAuto {
 automacro Grind_Phase2GearAudit {
 	timeout 45
 	priority 9
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	call {
 		[
@@ -1481,7 +1590,7 @@ automacro Grind_Phase2HuntPay08 {
 	exclusive 1
 	timeout 40
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
@@ -1511,7 +1620,7 @@ automacro Grind_Phase2ToFieldPortal {
 	exclusive 1
 	timeout 50
 	priority 1
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKey lockMap pay_fild08
@@ -1541,7 +1650,7 @@ automacro Grind_Phase2KeepAggressive {
 	exclusive 1
 	timeout 35
 	priority 8
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	InMap pay_fild08
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
@@ -1564,7 +1673,7 @@ automacro Grind_Phase2SellLoot {
 	exclusive 1
 	timeout 60
 	priority 2
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Shops 1
 	ConfigKeyNot grindAfk 1
@@ -1612,7 +1721,7 @@ automacro Grind_Phase2PayonAfk {
 	timeout 900
 	priority 3
 	InMap pay_fild08
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot grindAfk 1
@@ -2113,7 +2222,7 @@ sub Grind_ApplyPayonShops {
 		Commands::run("conf buyAuto_${i}_npc $npc");
 		Commands::run("conf buyAuto_${i}_standpoint $stand");
 	}
-	Log::message("[Grind] Payon shops applied (tool/armor/weapon; Axe@Alberta)\n", "success");
+	Log::message("[Grind] Payon shops applied (tool/armor/weapon; Axe at Alberta)\n", "success");
 	return 1;
 }
 
@@ -2161,15 +2270,27 @@ sub Grind_ApplyClassStats {
 }
 
 sub Grind_Phase2IsSwordman {
-	return ($char && (($char->{jobID} // -1) == 1)) ? 1 : 0;
+	return 0 unless $char;
+	my $jid = $char->{jobID} // -1;
+	return 1 if $jid == 1;
+	my $jn = $char->{job} // $char->{job_name} // '';
+	return 1 if $jn =~ /Sword(?:s)?man/i;
+	return 0;
 }
 
 sub Grind_Phase2IsMerchant {
-	return ($char && (($char->{jobID} // -1) == 5)) ? 1 : 0;
+	return 0 unless $char;
+	my $jid = $char->{jobID} // -1;
+	return 1 if $jid == 5;
+	my $jn = $char->{job} // $char->{job_name} // '';
+	return 1 if $jn =~ /Merchant/i;
+	return 0;
 }
 
 sub Grind_Phase2IsEligible {
-	return (Grind_Phase2IsSwordman() || Grind_Phase2IsMerchant()) ? 1 : 0;
+	return 1 if Grind_Phase2IsSwordman();
+	return 1 if Grind_Phase2IsMerchant();
+	return 0;
 }
 
 sub Grind_Phase2WeaponName {
@@ -2312,7 +2433,7 @@ sub Grind_Phase2MaybeReturnFromAlbertaForBlade {
 	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
 	return 0 if ($config{grindSelling} || "") eq "1";
 	return 0 if ($config{grindP2NeedPayonBlade} || "") eq "1";
-	Log::message("[Grind] PHASE2: armor OK, no Blade — flag Alberta→Payon for Blade\n", "success");
+	Log::message("[Grind] PHASE2: armor OK, no Blade — flag Alberta to Payon for Blade\n", "success");
 	Commands::run("conf grindAfk 0");
 	Commands::run("conf attackAuto 0");
 	Commands::run("conf route_randomWalk 0");
@@ -2429,7 +2550,7 @@ sub Grind_Phase2MaybeProgressAlbertaArmor {
 	return 0 if ($config{grindP2BuyingAxe} || "") eq "1";
 	return 0 unless $field && $char;
 
-	# Armor/Guard done — next weapon step (Blade@Payon or Axe@Alberta)
+	# Armor/Guard done — next weapon step (Blade at Payon or Axe at Alberta)
 	if (Grind_Phase2HasItem("Guard") && !Grind_Phase2NeedsArmor()) {
 		Commands::run("conf grindP2Buying 0");
 		if (Grind_Phase2IsMerchant()) {
@@ -2482,7 +2603,7 @@ sub Grind_Phase2MaybeProgressAlbertaAxe {
 		Commands::run("conf -f grindP2BuyingAxe 0");
 		Commands::run("conf -f grindP2NeedPayonReturn 1");
 		Grind_Phase2Equip();
-		Log::message("[Grind] PHASE2 Axe owned — flag Alberta→Payon return\n", "success");
+		Log::message("[Grind] PHASE2 Axe owned — flag Alberta to Payon return\n", "success");
 		return 1;
 	}
 
@@ -2683,7 +2804,7 @@ automacro Grind_ReportZeny {
 	exclusive 1
 	timeout 15
 	priority 9
-	Eval Grind_Phase2IsEligible()
+	Eval $char && ($char->{jobID} == 1 || $char->{jobID} == 5)
 	ConfigKeyNot grindZenyReported 1
 	call {
 		[
