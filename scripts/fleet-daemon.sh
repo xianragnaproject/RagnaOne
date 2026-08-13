@@ -7,6 +7,11 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OK="${OPENKORE_HOME:-$HOME/openkore}"
 TF="${TMUX_CONF:-/exec-daemon/tmux.portal.conf}"
+# Prefer persisted shard env when present
+if [[ -f "$OK/logs/fleet.env" ]]; then
+  # shellcheck disable=SC1090
+  set -a; source "$OK/logs/fleet.env"; set +a
+fi
 RUNDIR="${OK}/logs"
 mkdir -p "$RUNDIR"
 PIDFILE="${RUNDIR}/fleet-daemon.pid"
