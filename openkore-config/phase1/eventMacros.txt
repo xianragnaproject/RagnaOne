@@ -374,6 +374,21 @@ macro phase1_afk_face_sit {
 ###############################################################################
 # 6) Job change - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job @ Job Master
 ###############################################################################
+
+# Unstick: phase1Jobbing left on while not actually ready (or already jobbed)
+automacro Phase1_UnstickJobbing {
+	exclusive 1
+	timeout 30
+	priority 9
+	ConfigKey phase1Jobbing 1
+	ConfigKeyNot phase1Done 1
+	call {
+		[
+			do eval Phase1_ClearStuckJobbing()
+		]
+	}
+}
+
 automacro Phase1_Job_BasicSkill {
 	exclusive 1
 	timeout 15
@@ -828,6 +843,23 @@ sub Phase1_TalkJobMaster {
 	Commands::run("stand");
 	Commands::run("talknpc 155 180 c c c $r c r0");
 	return 1;
+}
+
+sub Phase1_ClearStuckJobbing {
+	return 0 unless ($config{phase1Jobbing} // 0);
+	my $jobbed = $char && ($char->{jobID} // 0) != 0;
+	my $ready = $char
+		&& ($char->{jobID} // 0) == 0
+		&& ($char->{lv_job} // 0) >= 10
+		&& ($char->{lv} // 0) >= 15;
+	if ($jobbed || !$ready) {
+		Log::message("[PHASE1] Clear stuck phase1Jobbing (jobbed=$jobbed ready=$ready)\n", "system");
+		Commands::run("conf phase1Jobbing 0");
+		Commands::run("conf phase1Afk 0") if $config{phase1Afk};
+		Phase1_ResumeHunt() unless $config{phase1Done};
+		return 1;
+	}
+	return 0;
 }
 
 sub Phase1_ApplyJobBuild {
