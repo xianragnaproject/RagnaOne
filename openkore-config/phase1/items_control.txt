@@ -1,0 +1,39 @@
+# Phase 1 items_control — sell junk; keep potions/wings
+# <item> <minKeep> <autoStore> <autoSell>
+
+all 0 0 1
+
+# Keep Red Potion stock (buyAuto tops up to 50 when empty + zeny>=5000)
+Red Potion 50 0 1
+Green Potion 10 0 1
+Orange Potion 5 0 1
+Fly Wing 5 0 1
+Butterfly Wing 2 0 1
+Novice Potion 10 0 1
+
+# Keep starter / class gear
+Knife 1 0 0
+Knife [3] 1 0 0
+Sword 1 0 0
+Guard 1 0 0
+Cotton Shirt 1 0 0
+Rod 1 0 0
+Bow 1 0 0
+Club 1 0 0
+Axe 1 0 0
+
+# Common prt_fild08 junk (also covered by all)
+Jellopy 0 0 1
+Empty Bottle 0 0 1
+Fluff 0 0 1
+Feather 0 0 1
+Sticky Mucus 0 0 1
+Shell 0 0 1
+Apple 0 0 1
+Clover 0 0 1
+Chrysalis 0 0 1
+Grasshopper's Leg 0 0 1
+Worm Peeling 0 0 1
+Feather of Birds 0 0 1
+Talon 0 0 1
+Stone 0 0 1

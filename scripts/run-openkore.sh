@@ -40,5 +40,5 @@ PY
 
 export PERL5LIB="${HOME}/perl5/lib/perl5:${PERL5LIB:-}"
 cd "$OK"
-# Console interface; AI off until login is confirmed
-exec perl ./openkore.pl --config="$TMP_CONFIG" --interface=Console --ai=manual
+# Console interface; AI on so Phase1 eventMacros can drive config/actions
+exec perl ./openkore.pl --config="$TMP_CONFIG" --interface=Console --ai=on

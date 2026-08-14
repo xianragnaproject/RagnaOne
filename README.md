@@ -60,6 +60,24 @@ sendCryptKeys 0x00000000, 0x00000000, 0x00000000
 
 In `openkore/control/config.txt`: `master RagnaOne`
 
+## Phase 1 macros (Novice 1–15)
+
+```bash
+bash ./scripts/install-phase1.sh
+```
+
+Macros set their own config (lockMap, save, sellAuto, buyAuto). See `openkore-config/phase1/README.md`.
+
+| # | Macro does | When |
+|---|---|---|
+| 1 | Lock `prt_fild08` | Novice base 1–15 |
+| 2 | Save Prontera south | Novice base 1–15 |
+| 3 | Sell @ tool dealer | Novice, OW ≥ 50% |
+| 4 | Buy 50 Red Potion | Novice, zeny ≥ 5000, stock 0 |
+| 5 | Fountain AFK 5–15 min | ~every 30 min |
+| 6 | Random 1st job change | Job level ≥ 10 |
+| 7 | Sit by fountain | Base ≥ 15 and jobbed |
+
 ### Verified
 
 Fresh OpenKore install connected to RagnaOne and entered the game:

@@ -1,0 +1,57 @@
+######## Phase 1 — macros own progression; these are safe defaults ########
+# Hunt / combat
+attackAuto 2
+attackAuto_inLockOnly 1
+attackAuto_notInTown 1
+attackRouteMaxPathDistance 50
+attackMinPlayerDistance 0
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+itemsTakeAuto 2
+itemsGatherAuto 2
+itemsGatherAuto_notInTown 1
+itemsMaxWeight 89
+# Built-in auto-sell threshold; Phase1 macros own the actual sell trip at 50% OW
+itemsMaxWeight_sellOrStore 50
+sellAuto 0
+sellAuto_npc prt_in 126 76
+sellAuto_standpoint prt_in 130 72
+sellAuto_distance 10
+sellAuto_maxDistance 14
+sellAuto_npc_steps s
+
+# Save defaults (macro Phase1_SetSave_* finalizes)
+saveMap prontera
+saveMap_x 155
+saveMap_y 50
+saveMap_warpToBuyOrSell 1
+
+# Start unlocked — Phase1_SetLockMap sets prt_fild08
+lockMap
+grindHuntMap prt_fild08
+grindTargetJob random
+
+# Phase1 flags
+phase1SaveDone 0
+phase1ShopDone 0
+phase1Selling 0
+phase1Jobbing 0
+phase1JobDone 0
+phase1Afk 0
+phase1Done 0
+
+# Red Potion buyAuto (disabled until macro enables: Novice + zeny>=5000 + stock 0)
+buyAuto_0 Red Potion
+buyAuto_0_npc prt_in 126 76
+buyAuto_0_standpoint prt_in 130 72
+buyAuto_0_distance 5
+buyAuto_0_minAmount 0
+buyAuto_0_maxAmount 50
+buyAuto_0_zeny >= 5000
+buyAuto_0_disabled 1
+buyAuto_0_npc_steps b
+
+# Sit look randomized by macros (do not force north)
+sitAuto_look
+sitAuto_look_delay 0
+sitAuto_idle 1

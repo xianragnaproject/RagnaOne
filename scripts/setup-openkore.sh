@@ -103,4 +103,8 @@ PY
 
 cd "$OK"
 scons -j"$(nproc)"
+
+# Install Phase 1 novice macros (lockmap / save / sell / buy / AFK / job / sit)
+bash "$ROOT/scripts/install-phase1.sh"
+
 echo "OpenKore ready. Run: RO_USERNAME=... RO_PASSWORD=... ./scripts/run-openkore.sh"
