@@ -21,6 +21,7 @@ cleanup() { rm -f "$TMP_CONFIG"; }
 trap cleanup EXIT
 
 cp "$BASE_CONFIG" "$TMP_CONFIG"
+# rAthena auto-reg uses name_M / name_F once; later logins drop the sex suffix
 python3 - "$TMP_CONFIG" <<'PY'
 import os, re, sys
 path = sys.argv[1]
@@ -30,10 +31,13 @@ def set_key(text, key, value):
     if pat.search(text):
         return pat.sub(f'{key} {value}', text, count=1)
     return text + f'\n{key} {value}\n'
+user = os.environ['RO_USERNAME']
+if re.search(r'_[MmFf]$', user):
+    user = user[:-2]
 text = set_key(text, 'master', 'RagnaOne')
 text = set_key(text, 'server', os.environ.get('RO_SERVER', '0'))
 text = set_key(text, 'char', os.environ.get('RO_CHAR', '0'))
-text = set_key(text, 'username', os.environ['RO_USERNAME'])
+text = set_key(text, 'username', user)
 text = set_key(text, 'password', os.environ['RO_PASSWORD'])
 open(path, 'w').write(text)
 PY
