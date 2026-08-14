@@ -1,15 +1,15 @@
 ###############################################################################
 # RagnaOne Phase 1 macros (Novice base 1-15)
 #
-# Macros own config — they set lockMap / sellAuto / buyAuto / saveMap themselves.
+# Macros own config - they set lockMap / sellAuto / buyAuto / saveMap themselves.
 #
-# 1) LockMap prt_fild08          — Novice base 1-15
-# 2) Save Prontera south Kafra   — Novice base 1-15
-# 3) Sell @ Prontera tool dealer — Novice base 1-15, OW >= 50%
-# 4) Buy 50 Red Potion           — Novice, zeny >= 5000, stock 0
-# 5) Fountain AFK break          — ~every 30 min, sit 5-15 min, random facing
-# 6) Job change @ Job Lv 10      — random 1st job at Prontera Job Master
-# 7) Base 15 + jobbed            — park/sit near Prontera fountain (random face)
+# 1) LockMap prt_fild08          - Novice base 1-15
+# 2) Save Prontera south Kafra   - Novice base 1-15
+# 3) Sell @ Prontera tool dealer - Novice base 1-15, OW >= 50%
+# 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
+# 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
+# 6) Job change @ Job Lv 10      - random 1st job at Prontera Job Master
+# 7) Base 15 + jobbed            - park/sit near Prontera fountain (random face)
 #
 # Flags (set by macros):
 #   phase1LockDone  phase1SaveDone  phase1ShopDone  phase1Jobbing
@@ -18,7 +18,7 @@
 
 
 ###############################################################################
-# 1) LockMap -> prt_fild08 (Novice base 1-15) — RUN ONCE
+# 1) LockMap -> prt_fild08 (Novice base 1-15) - RUN ONCE
 ###############################################################################
 automacro Phase1_SetLockMap {
 	exclusive 1
@@ -78,7 +78,7 @@ automacro Phase1_KeepHunt {
 
 
 ###############################################################################
-# 2) Save point — Prontera south Kafra (Novice base 1-15) — RUN ONCE
+# 2) Save point - Prontera south Kafra (Novice base 1-15) - RUN ONCE
 ###############################################################################
 automacro Phase1_SetSave_Go {
 	exclusive 1
@@ -137,7 +137,7 @@ automacro Phase1_SetSave_Talk {
 			do conf saveMap_x 155
 			do conf saveMap_y 50
 			do conf saveMap_warpToBuyOrSell 1
-			log PHASE1: save set Prontera south — resume hunt
+			log PHASE1: save set Prontera south - resume hunt
 			do eval Phase1_ResumeHunt()
 		]
 	}
@@ -189,7 +189,7 @@ automacro Phase1_SellLoot {
 
 macro phase1_sell_loot {
 	[
-		log PHASE1: OW>=50% — portal to Prontera tool dealer sell
+		log PHASE1: OW>=50% - portal to Prontera tool dealer sell
 		do conf phase1Selling 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -216,7 +216,7 @@ macro phase1_sell_loot {
 		pause 10
 		do conf phase1Selling 0
 		do eval Phase1_ResumeHunt()
-		log PHASE1: sell done — resume hunt
+		log PHASE1: sell done - resume hunt
 	]
 }
 
@@ -239,7 +239,7 @@ automacro Phase1_BuyPots_Enable {
 	ConfigKeyNot phase1Selling 1
 	call {
 		[
-			log PHASE1: Novice, 0 Red Potion, zeny>=5000 — enable buy 50
+			log PHASE1: Novice, 0 Red Potion, zeny>=5000 - enable buy 50
 			do conf buyAuto_0 Red Potion
 			do conf buyAuto_0_npc prt_in 126 76
 			do conf buyAuto_0_standpoint prt_in 130 72
@@ -262,7 +262,7 @@ automacro Phase1_BuyPots_DisableHasStock {
 	ConfigKeyNot buyAuto_0_disabled 1
 	call {
 		[
-			log PHASE1: have Red Potion — disable buyAuto
+			log PHASE1: have Red Potion - disable buyAuto
 			do conf buyAuto_0_disabled 1
 			do eval AI::clear("buyAuto")
 		]
@@ -278,7 +278,7 @@ automacro Phase1_BuyPots_DisableBroke {
 	ConfigKeyNot buyAuto_0_disabled 1
 	call {
 		[
-			log PHASE1: zeny < 5000 — disable Red Potion buy
+			log PHASE1: zeny < 5000 - disable Red Potion buy
 			do conf buyAuto_0_disabled 1
 			do eval AI::clear("buyAuto")
 		]
@@ -293,7 +293,7 @@ automacro Phase1_BuyPots_DisableJobbed {
 	ConfigKeyNot buyAuto_0_disabled 1
 	call {
 		[
-			log PHASE1: jobbed — disable Red Potion buy
+			log PHASE1: jobbed - disable Red Potion buy
 			do conf buyAuto_0_disabled 1
 			do eval AI::clear("buyAuto")
 		]
@@ -302,7 +302,7 @@ automacro Phase1_BuyPots_DisableJobbed {
 
 
 ###############################################################################
-# 5) Fountain AFK — ~every 30 min, sit 5-15 min, random facing (not always N)
+# 5) Fountain AFK - ~every 30 min, sit 5-15 min, random facing (not always N)
 ###############################################################################
 automacro Phase1_FountainAFK {
 	exclusive 1
@@ -340,7 +340,7 @@ macro phase1_fountain_afk {
 	[
 		pause $secs
 		do stand
-		log PHASE1: AFK done — resume hunt
+		log PHASE1: AFK done - resume hunt
 		do conf sitAuto_idle 1
 		do conf phase1Afk 0
 		do eval Phase1_ResumeHunt()
@@ -359,11 +359,11 @@ macro phase1_afk_face_sit {
 
 
 ###############################################################################
-# 6) Job change — Job Level 10 Novice → random 1st job @ Job Master
+# 6) Job change - Job Level 10 Novice → random 1st job @ Job Master
 ###############################################################################
 automacro Phase1_Job_BasicSkill {
 	exclusive 1
-	timeout 20
+	timeout 15
 	priority 0
 	JobID 0
 	JobLevel >= 10
@@ -376,38 +376,71 @@ automacro Phase1_Job_BasicSkill {
 			do conf phase1Jobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
-			do skills add 1
+			do conf sitAuto_idle 0
+			do stand
 			pause 1
+			do skills add 1
+			pause 2
 		]
 	}
 }
 
-automacro Phase1_JobChange_Go {
+# On field at Job10 with Basic Skill 9 - walk portal only (do NOT move 155,180 here)
+automacro Phase1_JobChange_GoField {
 	exclusive 1
-	timeout 50
+	timeout 60
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	InMap prt_fild08
 	ConfigKeyNot phase1JobDone 1
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Selling 1
 	SkillLevel NV_BASIC >= 9
-	NpcNotNear /Job Master/
 	call {
 		[
-			log PHASE1: Job10 - go Prontera Job Master random 1st job
+			log PHASE1: Job10 on field - portal to Prontera
 			do conf phase1Jobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
+			do conf sitAuto_idle 0
 			do stand
 			do eval AI::clear("move", "route", "mapRoute", "attack")
+			do move 170 375
+			pause 55
+			do move 170 377
+			pause 12
 		]
-		call phase1_to_prontera
+	}
+}
+
+# Already in Prontera - walk to Job Master
+automacro Phase1_JobChange_GoTown {
+	exclusive 1
+	timeout 40
+	priority 0
+	JobID 0
+	JobLevel >= 10
+	InMap prontera
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	SkillLevel NV_BASIC >= 9
+	NpcNotNear /Job Master/
+	call {
 		[
+			log PHASE1: in Prontera - walk to Job Master
+			do conf phase1Jobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sitAuto_idle 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
 			do move 155 180
-			pause 30
+			pause 35
 		]
 	}
 }
@@ -425,7 +458,7 @@ automacro Phase1_JobChange_Talk {
 	NpcNear /Job Master/
 	call {
 		[
-			log PHASE1: talk Job Master — random 1st job
+			log PHASE1: talk Job Master - random 1st job
 			do conf phase1Jobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
@@ -451,6 +484,7 @@ automacro Phase1_JobDone {
 			do conf phase1Jobbing 0
 			do conf buyAuto_0_disabled 1
 			do conf statsAddAuto 0
+			do conf sitAuto_idle 1
 			do eval Phase1_AfterJobChange()
 		]
 	}
@@ -458,7 +492,7 @@ automacro Phase1_JobDone {
 
 
 ###############################################################################
-# 7) Base 15 + jobbed — sit near Prontera fountain (random spot + facing)
+# 7) Base 15 + jobbed - sit near Prontera fountain (random spot + facing)
 ###############################################################################
 automacro Phase1_Done_SitFountain {
 	exclusive 1
@@ -724,7 +758,7 @@ sub Phase1_TalkJobMaster {
 sub Phase1_AfterJobChange {
 	my $base = $char ? ($char->{lv} // 0) : 0;
 	if ($base >= 15) {
-		Log::message("[PHASE1] Base $base + jobbed — park at fountain\n", "success");
+		Log::message("[PHASE1] Base $base + jobbed - park at fountain\n", "success");
 		Commands::run("conf phase1Done 1");
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
@@ -732,7 +766,7 @@ sub Phase1_AfterJobChange {
 		Commands::run("conf sellAuto 0");
 		return 1;
 	}
-	Log::message("[PHASE1] Base $base < 15 — resume prt_fild08 as 1st job\n", "success");
+	Log::message("[PHASE1] Base $base < 15 - resume prt_fild08 as 1st job\n", "success");
 	Commands::run("conf -f grindHuntMap prt_fild08");
 	Phase1_ResumeHunt();
 	return 1;
