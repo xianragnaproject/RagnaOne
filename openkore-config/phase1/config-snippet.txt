@@ -79,3 +79,6 @@ dcOnPM 0
 dcOnPlayer 0
 dcOnEmptyArrow 0
 autoRestart 0
+ignoreInvalidLogin 0
+# Keep AI on after map load
+aiManual 0

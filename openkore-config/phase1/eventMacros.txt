@@ -120,7 +120,7 @@ automacro Phase1_SetSave_Talk {
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Jobbing 1
 	NpcNear /Kafra Employee/
-	InMapList prontera
+	InMap prontera
 	call {
 		[
 			log PHASE1: set save @ Prontera south Kafra once

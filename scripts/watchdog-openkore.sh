@@ -66,14 +66,22 @@ session_has_openkore() {
   local session="$1"
   tmux_cmd has-session -t "=$session" 2>/dev/null || return 1
   local pane
-  pane="$(tmux_cmd capture-pane -t "$session:0.0" -p -S -5 2>/dev/null || true)"
+  pane="$(tmux_cmd capture-pane -t "$session:0.0" -p -S -12 2>/dev/null || true)"
   # Dead shell / exited
   if ! tmux_cmd list-panes -t "$session:0.0" -F '#{pane_current_command}' 2>/dev/null | grep -qiE 'perl|bash|tee'; then
     return 1
   fi
-  # If pane shows password prompt stuck, treat as down for restart
-  if echo "$pane" | grep -qE 'Enter your Ragnarok Online password again'; then
+  # Stuck password prompt / bad login
+  if echo "$pane" | grep -qE 'Enter your Ragnarok Online password again|Password Error for account'; then
     return 1
+  fi
+  # Reconnect backoff got huge — treat as inactive so we restart fresh
+  if echo "$pane" | grep -qE 'connecting to Account Server in ([0-9]+) seconds'; then
+    local wait_s
+    wait_s="$(echo "$pane" | sed -n 's/.*connecting to Account Server in \([0-9][0-9]*\) seconds.*/\1/p' | tail -1)"
+    if [[ -n "$wait_s" && "$wait_s" -gt 90 ]]; then
+      return 1
+    fi
   fi
   # Prefer detecting perl in the session's process tree
   local pid

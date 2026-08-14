@@ -14,6 +14,11 @@ mkdir -p "$OK/control"
 cp -a "$SRC/eventMacros.txt" "$OK/control/eventMacros.txt"
 cp -a "$SRC/items_control.txt" "$OK/control/items_control.txt"
 
+# Prefer 24/7 reconnect timeouts when present
+if [[ -f "$ROOT/openkore-config/timeouts-24x7.txt" ]]; then
+  cp -a "$ROOT/openkore-config/timeouts-24x7.txt" "$OK/control/timeouts.txt"
+fi
+
 # Merge config-snippet keys into control/config.txt (do not wipe credentials)
 python3 - "$OK/control/config.txt" "$SRC/config-snippet.txt" <<'PY'
 from pathlib import Path
