@@ -1,1 +1,70 @@
 # RagnaOne
+
+Hercules / rAthena pre-renewal Episode 4 private server + OpenKore client setup.
+
+| Setting | Value |
+|---|---|
+| Host | `173.208.138.84` |
+| Login port | `6900` |
+| Char port | `6121` |
+| Map port | `5121` |
+| Client / PACKETVER | `20180620` (`kRO_RagexeRE_2018_06_20e`) |
+| Type | Pre-renewal Ep4 |
+| MD5 passwords | OFF |
+| PIN | OFF |
+| Packet obfuscation | OFF |
+
+Web client: http://173.208.138.84/
+
+## OpenKore
+
+### Setup
+
+```bash
+bash ./scripts/setup-openkore.sh
+```
+
+Clones [OpenKore](https://github.com/OpenKore/openkore), installs build deps if needed, compiles `XSTools`, and adds the **RagnaOne** entry to `tables/servers.txt`.
+
+### Connect one account
+
+```bash
+export RO_USERNAME='your_account'
+export RO_PASSWORD='your_password'
+# optional: RO_CHAR=0  RO_SERVER=0
+bash ./scripts/run-openkore.sh
+```
+
+Credentials are injected at runtime and are **not** written into tracked config.
+
+New accounts on this server can usually be created by logging in with a username ending in `_M` or `_F` (sex) if auto-registration is enabled.
+
+### Manual config (applied by setup)
+
+In `openkore/tables/servers.txt`:
+
+```
+[RagnaOne]
+ip 173.208.138.84
+port 6900
+master_version 1
+version 55
+serverType kRO_RagexeRE_2018_06_20e
+serverEncoding Western
+charBlockSize 155
+addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
+private 1
+pinCode 0
+sendCryptKeys 0x00000000, 0x00000000, 0x00000000
+```
+
+In `openkore/control/config.txt`: `master RagnaOne`
+
+### Verified
+
+Fresh OpenKore install connected to RagnaOne and entered the game:
+
+- Account auto-created via `_M` suffix registration
+- Character: **OKFresh1** (Novice, Male, Base/Job 1/1)
+- Spawn: Prontera `(155, 183)`
+- Login `6900` → Char `6121` → Map `5121`
