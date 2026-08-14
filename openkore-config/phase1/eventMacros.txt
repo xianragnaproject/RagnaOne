@@ -12,29 +12,30 @@
 # 7) Base 15 + jobbed            — park/sit near Prontera fountain (random face)
 #
 # Flags (set by macros):
-#   phase1SaveDone  phase1ShopDone  phase1Jobbing  phase1JobDone
-#   phase1Afk  phase1Done  grindTargetJob
+#   phase1LockDone  phase1SaveDone  phase1ShopDone  phase1Jobbing
+#   phase1JobDone  phase1Afk  phase1Done  grindTargetJob
 ###############################################################################
 
 
 ###############################################################################
-# 1) LockMap -> prt_fild08 (Novice base 1-15)
+# 1) LockMap -> prt_fild08 (Novice base 1-15) — RUN ONCE
 ###############################################################################
 automacro Phase1_SetLockMap {
 	exclusive 1
+	run-once 1
 	timeout 30
 	priority 4
 	JobID 0
 	BaseLevel 1..15
+	ConfigKeyNot phase1LockDone 1
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Jobbing 1
 	ConfigKeyNot phase1Selling 1
-	ConfigKeyNot lockMap prt_fild08
 	Eval !($char->{lv_job} >= 10)
 	call {
 		[
-			log PHASE1: set lockMap prt_fild08 (Novice 1-15)
+			log PHASE1: set lockMap prt_fild08 Novice 1-15 once
 			do conf lockMap prt_fild08
 			do conf lockMap_x none
 			do conf lockMap_y none
@@ -45,6 +46,7 @@ automacro Phase1_SetLockMap {
 			do conf attackMinPlayerDistance 0
 			do conf route_randomWalk 1
 			do conf route_randomWalk_inLockOnly 1
+			do conf -f phase1LockDone 1
 		]
 	}
 }
@@ -76,10 +78,11 @@ automacro Phase1_KeepHunt {
 
 
 ###############################################################################
-# 2) Save point — Prontera south Kafra (Novice base 1-15)
+# 2) Save point — Prontera south Kafra (Novice base 1-15) — RUN ONCE
 ###############################################################################
 automacro Phase1_SetSave_Go {
 	exclusive 1
+	run-once 1
 	timeout 90
 	priority 2
 	JobID 0
@@ -92,7 +95,7 @@ automacro Phase1_SetSave_Go {
 	NpcNotNear /Kafra/
 	call {
 		[
-			log PHASE1: walk Prontera south Kafra to set save
+			log PHASE1: walk Prontera south Kafra to set save once
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
@@ -109,6 +112,7 @@ automacro Phase1_SetSave_Go {
 
 automacro Phase1_SetSave_Talk {
 	exclusive 1
+	run-once 1
 	timeout 60
 	priority 2
 	JobID 0
@@ -121,7 +125,7 @@ automacro Phase1_SetSave_Talk {
 	NpcNear /Kafra/
 	call {
 		[
-			log PHASE1: set save @ Prontera south Kafra
+			log PHASE1: set save @ Prontera south Kafra once
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do stand
@@ -155,7 +159,7 @@ automacro Phase1_ConfigureSell {
 	ConfigKeyNot phase1Done 1
 	call {
 		[
-			log PHASE1: configure sellAuto @ Prontera tool dealer (OW 50%)
+			log PHASE1: configure sellAuto @ Prontera tool dealer OW 50pct
 			do conf sellAuto 0
 			do conf sellAuto_npc prt_in 126 76
 			do conf sellAuto_standpoint prt_in 130 72
@@ -318,7 +322,7 @@ automacro Phase1_FountainAFK {
 macro phase1_fountain_afk {
 	$secs = &rand(300, 900)
 	[
-		log PHASE1: AFK break — fountain for $secs sec (5-15 min)
+		log PHASE1: AFK break - fountain for $secs sec 5-15 min
 		do conf phase1Afk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -392,7 +396,7 @@ automacro Phase1_JobChange_Go {
 	NpcNotNear /Job Master/
 	call {
 		[
-			log PHASE1: Job10 — go Prontera Job Master (random 1st job)
+			log PHASE1: Job10 - go Prontera Job Master random 1st job
 			do conf phase1Jobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
@@ -523,7 +527,7 @@ automacro Phase1_Done_ToFountain {
 
 macro phase1_done_sit {
 	[
-		log PHASE1 DONE — Base15 + jobbed — sit fountain (random face)
+		log PHASE1 DONE - Base15 + jobbed - sit fountain random face
 		do conf phase1Done 1
 		do conf phase1Afk 1
 		do conf attackAuto 0

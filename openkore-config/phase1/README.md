@@ -5,8 +5,8 @@ Installed into `openkore/control/eventMacros.txt` by `scripts/setup-openkore.sh`
 
 | # | Behavior | Trigger |
 |---|---|---|
-| 1 | `lockMap prt_fild08` | Novice, base 1–15 |
-| 2 | Save @ Prontera south Kafra `151,29` | Novice, base 1–15 |
+| 1 | `lockMap prt_fild08` (**run-once**, `phase1LockDone`) | Novice, base 1–15 |
+| 2 | Save @ Prontera south Kafra `151,29` (**run-once**, `phase1SaveDone`) | Novice, base 1–15 |
 | 3 | Sell @ tool dealer `prt_in 126,76` | Novice 1–15, OW ≥ 50% |
 | 4 | Buy **50 Red Potion** | Novice, zeny ≥ 5000, stock 0 |
 | 5 | Fountain AFK 5–15 min | ~every 30 min while hunting |

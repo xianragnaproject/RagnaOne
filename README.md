@@ -70,8 +70,8 @@ Macros set their own config (lockMap, save, sellAuto, buyAuto). See `openkore-co
 
 | # | Macro does | When |
 |---|---|---|
-| 1 | Lock `prt_fild08` | Novice base 1–15 |
-| 2 | Save Prontera south | Novice base 1–15 |
+| 1 | Lock `prt_fild08` (run-once) | Novice base 1–15 |
+| 2 | Save Prontera south (run-once) | Novice base 1–15 |
 | 3 | Sell @ tool dealer | Novice, OW ≥ 50% |
 | 4 | Buy 50 Red Potion | Novice, zeny ≥ 5000, stock 0 |
 | 5 | Fountain AFK 5–15 min | ~every 30 min |

@@ -31,7 +31,8 @@ lockMap
 grindHuntMap prt_fild08
 grindTargetJob random
 
-# Phase1 flags
+# Phase1 flags (LockMap + Save are run-once)
+phase1LockDone 0
 phase1SaveDone 0
 phase1ShopDone 0
 phase1Selling 0
