@@ -3,9 +3,11 @@
 
 # Runtime / secrets
 **/config.runtime.*.txt
+**/config.create.*.txt
 **/*.log
 **/logs/
 **/ACCOUNT_MAP.txt
+/accounts/
 .env
 .env.*
 !.env.example

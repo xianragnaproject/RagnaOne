@@ -1,117 +1,169 @@
 #!/usr/bin/env bash
-# Keep one OpenKore account online 24/7 (restart on crash / exit).
+# Keep all mapped OpenKore bots online 24/7 (restart on crash / exit).
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OK="${OPENKORE_HOME:-$ROOT/openkore}"
-SESSION="${OK_TMUX_SESSION:-ok-connect}"
+MAP="$ROOT/accounts/ACCOUNT_MAP.txt"
+# Legacy single-bot session still supported
+LEGACY_SESSION="${OK_TMUX_SESSION:-ok-connect}"
 LOG_DIR="${OK_LOG_DIR:-/tmp/ok-run}"
 LOG="$LOG_DIR/watchdog.log"
-BOT_LOG="$LOG_DIR/phase1.log"
 TMUX_CFG="/exec-daemon/tmux.portal.conf"
 [[ -f "$TMUX_CFG" ]] || TMUX_CFG=""
 
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR" "$ROOT/accounts"
 ts() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 log() { echo "$(ts) $*" | tee -a "$LOG"; }
 
 tmux_cmd() {
-  if [[ -n "$TMUX_CFG" ]]; then
-    tmux -f "$TMUX_CFG" "$@"
-  else
-    tmux "$@"
+  if [[ -n "$TMUX_CFG" ]]; then tmux -f "$TMUX_CFG" "$@"; else tmux "$@"; fi
+}
+
+list_bots() {
+  local bots=()
+  if [[ -f "$MAP" ]]; then
+    while IFS=$'\t' read -r name session user pass char sex; do
+      [[ "$name" =~ ^#.*$ || -z "$name" ]] && continue
+      bots+=("$name")
+    done < "$MAP"
   fi
+  # Include legacy .env bot as Fresh1 if map empty / missing
+  if [[ ${#bots[@]} -eq 0 && -f "$ROOT/.env" ]]; then
+    bots+=("Fresh1")
+    if [[ ! -f "$ROOT/accounts/Fresh1.env" ]]; then
+      cp "$ROOT/.env" "$ROOT/accounts/Fresh1.env"
+      chmod 600 "$ROOT/accounts/Fresh1.env"
+      if [[ ! -f "$MAP" ]]; then
+        printf '%s\n' '# bot_name	session	username	password	char_name	sex' > "$MAP"
+      fi
+      # shellcheck disable=SC1091
+      set -a; source "$ROOT/.env"; set +a
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "Fresh1" "ok-fresh1" "${RO_USERNAME}" "${RO_PASSWORD}" "OKFresh1" "M" >> "$MAP"
+    fi
+  fi
+  printf '%s\n' "${bots[@]}"
 }
 
-bot_pid() {
-  pgrep -f 'perl ./openkore.pl' 2>/dev/null | head -1 || true
+session_for() {
+  local name="$1"
+  if [[ -f "$MAP" ]]; then
+    local s
+    s="$(awk -F'\t' -v n="$name" '$1==n{print $2; exit}' "$MAP")"
+    if [[ -n "$s" ]]; then echo "$s"; return; fi
+  fi
+  echo "ok-$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')"
 }
 
-session_alive() {
-  tmux_cmd has-session -t "=$SESSION" 2>/dev/null
+bot_pid_for_session() {
+  local session="$1"
+  # Match openkore.pl whose parent tmux pane belongs to session — approximate via log/runtime
+  # Fallback: any openkore is fine for status; ensure uses start-bot.
+  pgrep -af 'perl ./openkore.pl' 2>/dev/null | grep -c . || true
 }
 
-start_bot() {
-  mkdir -p "$LOG_DIR"
-  if [[ ! -f "$ROOT/.env" ]]; then
-    log "ERROR: missing $ROOT/.env (RO_USERNAME / RO_PASSWORD)"
+session_has_openkore() {
+  local session="$1"
+  tmux_cmd has-session -t "=$session" 2>/dev/null || return 1
+  local pane
+  pane="$(tmux_cmd capture-pane -t "$session:0.0" -p -S -5 2>/dev/null || true)"
+  # Dead shell / exited
+  if ! tmux_cmd list-panes -t "$session:0.0" -F '#{pane_current_command}' 2>/dev/null | grep -qiE 'perl|bash|tee'; then
     return 1
   fi
-  if [[ ! -f "$OK/openkore.pl" ]]; then
-    log "OpenKore missing — running setup"
-    bash "$ROOT/scripts/setup-openkore.sh" >>"$LOG" 2>&1 || true
+  # If pane shows password prompt stuck, treat as down for restart
+  if echo "$pane" | grep -qE 'Enter your Ragnarok Online password again'; then
+    return 1
   fi
-  # Ensure Phase1 macros present
-  if [[ ! -f "$OK/control/eventMacros.txt" ]]; then
-    bash "$ROOT/scripts/install-phase1.sh" >>"$LOG" 2>&1 || true
-  fi
-
-  if session_alive; then
-    tmux_cmd kill-session -t "$SESSION" 2>/dev/null || true
-    sleep 1
-  fi
-
-  log "Starting OpenKore in tmux session '$SESSION'"
-  tmux_cmd new-session -d -s "$SESSION" -c "$ROOT" -- \
-    bash -lc "set -a; source '$ROOT/.env'; set +a; bash '$ROOT/scripts/connect-account.sh' 2>&1 | tee -a '$BOT_LOG'"
-  sleep 5
-  if [[ -n "$(bot_pid)" ]]; then
-    log "OpenKore up pid=$(bot_pid)"
-    return 0
-  fi
-  log "WARN: OpenKore did not stay up after start"
-  return 1
-}
-
-# One-shot ensure (safe for cron): start only if down
-ensure_once() {
+  # Prefer detecting perl in the session's process tree
   local pid
-  pid="$(bot_pid)"
-  if [[ -n "$pid" ]]; then
-    # Recover if AI was accidentally toggled off
-    if session_alive; then
-      # Best-effort: only nudge if map timeout / password prompt not present
-      if ! tmux_cmd capture-pane -t "$SESSION:0.0" -p -S -15 2>/dev/null | grep -qE 'Enter your Ragnarok Online password|Enter your answer:'; then
-        :
-      fi
-    fi
-    echo "online pid=$pid"
+  pid="$(tmux_cmd list-panes -t "$session:0.0" -F '#{pane_pid}' 2>/dev/null || true)"
+  [[ -n "$pid" ]] || return 1
+  if pstree -p "$pid" 2>/dev/null | grep -q 'openkore.pl'; then
     return 0
   fi
-  log "OpenKore not running — restarting"
-  start_bot
+  # pstree may be missing — check pane still active and recent log activity
+  pgrep -f 'perl ./openkore.pl' >/dev/null 2>&1
 }
 
-# Forever supervisor loop
-watch_loop() {
-  log "Watchdog loop starting (session=$SESSION)"
-  while true; do
-    if [[ -z "$(bot_pid)" ]]; then
-      log "Bot process missing — restart"
-      start_bot || true
+start_bot_name() {
+  local name="$1"
+  log "Starting bot $name"
+  bash "$ROOT/scripts/start-bot.sh" "$name" >>"$LOG" 2>&1 || log "WARN: failed to start $name"
+}
+
+ensure_once() {
+  local name session
+  local any=0
+  while read -r name; do
+    [[ -z "$name" ]] && continue
+    any=1
+    session="$(session_for "$name")"
+    if session_has_openkore "$session"; then
+      echo "online $name session=$session"
+    else
+      log "Bot $name down — restarting"
+      start_bot_name "$name"
     fi
+  done < <(list_bots)
+
+  # Also keep legacy ok-connect if it exists and map includes nothing for it
+  if [[ $any -eq 0 ]]; then
+    if pgrep -f 'perl ./openkore.pl' >/dev/null 2>&1; then
+      echo "online legacy"
+    else
+      log "No bots mapped and none running"
+      return 1
+    fi
+  fi
+}
+
+watch_loop() {
+  log "Watchdog multi-bot loop starting"
+  while true; do
+    ensure_once >>"$LOG" 2>&1 || true
     sleep "${OK_WATCHDOG_INTERVAL:-30}"
   done
 }
 
+status_all() {
+  local name session
+  local n=0
+  while read -r name; do
+    [[ -z "$name" ]] && continue
+    n=$((n+1))
+    session="$(session_for "$name")"
+    if session_has_openkore "$session"; then
+      echo "online  $name  tmux=$session"
+    else
+      echo "offline $name  tmux=$session"
+    fi
+  done < <(list_bots)
+  echo "openkore_procs=$(pgrep -c -f 'perl ./openkore.pl' 2>/dev/null || echo 0)"
+  [[ $n -gt 0 ]]
+}
+
 case "${1:-ensure}" in
   ensure|once) ensure_once ;;
-  start) start_bot ;;
-  loop|watch) watch_loop ;;
-  status)
-    pid="$(bot_pid)"
-    if [[ -n "$pid" ]]; then
-      echo "online pid=$pid etime=$(ps -o etime= -p "$pid" 2>/dev/null | tr -d ' ')"
-      session_alive && echo "tmux session: $SESSION" || echo "tmux session: missing"
-    else
-      echo "offline"
-      exit 1
-    fi
+  start)
+    while read -r name; do
+      [[ -z "$name" ]] && continue
+      start_bot_name "$name"
+    done < <(list_bots)
     ;;
+  loop|watch) watch_loop ;;
+  status) status_all ;;
   stop)
-    log "Stopping bot + session"
+    log "Stopping all bots"
+    while read -r name; do
+      [[ -z "$name" ]] && continue
+      session="$(session_for "$name")"
+      tmux_cmd send-keys -t "$session:0.0" 'quit' C-m 2>/dev/null || true
+      sleep 1
+      tmux_cmd kill-session -t "$session" 2>/dev/null || true
+    done < <(list_bots)
+    tmux_cmd kill-session -t "$LEGACY_SESSION" 2>/dev/null || true
     pkill -f 'perl ./openkore.pl' 2>/dev/null || true
-    session_alive && tmux_cmd kill-session -t "$SESSION" 2>/dev/null || true
     ;;
   *)
     echo "Usage: $0 {ensure|start|loop|status|stop}"
