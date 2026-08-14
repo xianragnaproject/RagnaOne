@@ -8,8 +8,9 @@
 # 3) Sell @ Prontera tool dealer - Novice base 1-15, OW >= 50%
 # 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
 # 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
-# 6) Job change @ Job Lv 10      - random 1st job at Prontera Job Master
+# 6) Job change                  - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job
 # 7) Base 15 + jobbed            - park/sit near Prontera fountain (random face)
+# Auto: skillsAddAuto Basic Skill 9; statsAddAuto novice hunt build (class build after job)
 #
 # Flags (set by macros):
 #   phase1LockDone  phase1SaveDone  phase1ShopDone  phase1Jobbing
@@ -32,7 +33,7 @@ automacro Phase1_SetLockMap {
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Jobbing 1
 	ConfigKeyNot phase1Selling 1
-	Eval !($char->{lv_job} >= 10)
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
 	call {
 		[
 			log PHASE1: set lockMap prt_fild08 Novice 1-15 once
@@ -64,7 +65,7 @@ automacro Phase1_KeepHunt {
 	ConfigKeyNot phase1Jobbing 1
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot attackAuto 2
-	Eval !($char->{lv_job} >= 10)
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
 	call {
 		[
 			log PHASE1: restore attackAuto 2 on prt_fild08
@@ -315,7 +316,7 @@ automacro Phase1_FountainAFK {
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot phase1Jobbing 1
-	Eval !($char && $char->{lv_job} >= 10)
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
 	call phase1_fountain_afk
 }
 
@@ -371,7 +372,7 @@ macro phase1_afk_face_sit {
 
 
 ###############################################################################
-# 6) Job change - Job Level 10 Novice → random 1st job @ Job Master
+# 6) Job change - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job @ Job Master
 ###############################################################################
 automacro Phase1_Job_BasicSkill {
 	exclusive 1
@@ -379,6 +380,7 @@ automacro Phase1_Job_BasicSkill {
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	BaseLevel >= 15
 	ConfigKeyNot phase1JobDone 1
 	ConfigKeyNot phase1Done 1
 	SkillLevel NV_BASIC < 9
@@ -397,13 +399,14 @@ automacro Phase1_Job_BasicSkill {
 	}
 }
 
-# On field at Job10 with Basic Skill 9 - walk portal only (do NOT move 155,180 here)
+# On field ready for job change - map-route to Prontera Job Master area
 automacro Phase1_JobChange_GoField {
 	exclusive 1
 	timeout 60
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	BaseLevel >= 15
 	InMap prt_fild08
 	ConfigKeyNot phase1JobDone 1
 	ConfigKeyNot phase1Done 1
@@ -412,7 +415,7 @@ automacro Phase1_JobChange_GoField {
 	SkillLevel NV_BASIC >= 9
 	call {
 		[
-			log PHASE1: Job10 on field - portal to Prontera
+			log PHASE1: Job10+Base15 on field - go Prontera Job Master
 			do conf phase1Jobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
@@ -420,11 +423,14 @@ automacro Phase1_JobChange_GoField {
 			do conf sitAuto_idle 0
 			do stand
 			do eval AI::clear("move", "route", "mapRoute", "attack")
-			do move 170 375
-			pause 55
-			do move 170 377
-			pause 12
+			do eval Phase1_GoPronteraPortal()
 		]
+		pause 120
+		[
+			do stand
+			do move 155 180
+		]
+		pause 60
 	}
 }
 
@@ -435,6 +441,7 @@ automacro Phase1_JobChange_GoTown {
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	BaseLevel >= 15
 	InMap prontera
 	ConfigKeyNot phase1JobDone 1
 	ConfigKeyNot phase1Done 1
@@ -452,8 +459,8 @@ automacro Phase1_JobChange_GoTown {
 			do stand
 			do eval AI::clear("move", "route", "mapRoute")
 			do move 155 180
-			pause 35
 		]
+		pause 45
 	}
 }
 
@@ -463,6 +470,7 @@ automacro Phase1_JobChange_Talk {
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	BaseLevel >= 15
 	ConfigKeyNot phase1JobDone 1
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Afk 1
@@ -495,8 +503,8 @@ automacro Phase1_JobDone {
 			do conf phase1JobDone 1
 			do conf phase1Jobbing 0
 			do conf buyAuto_0_disabled 1
-			do conf statsAddAuto 0
 			do conf sitAuto_idle 1
+			do eval Phase1_ApplyJobBuild()
 			do eval Phase1_AfterJobChange()
 		]
 	}
@@ -822,8 +830,50 @@ sub Phase1_TalkJobMaster {
 	return 1;
 }
 
+sub Phase1_ApplyJobBuild {
+	# Map jobID → class name when grindTargetJob not set
+	my %id_to_job = (
+		1 => 'swordman', 2 => 'magician', 3 => 'archer',
+		4 => 'acolyte', 5 => 'merchant', 6 => 'thief',
+	);
+	my $job = lc($config{grindTargetJob} || '');
+	if ($job eq '' || $job eq 'random' || $job eq 'none' || $job eq 'auto') {
+		$job = $id_to_job{ $char->{jobID} // -1 } // 'swordman';
+		Commands::run("conf grindTargetJob $job");
+	}
+	$job = 'swordman' if $job eq 'swordsman';
+	$job = 'magician' if $job eq 'mage';
+
+	my %skills = (
+		swordman => 'Basic Skill 9, Bash 10, Provoke 5, Endure 1',
+		magician => 'Basic Skill 9, Cold Bolt 5, Fire Bolt 5, Lightning Bolt 5, Increase SP Recovery 5',
+		archer   => 'Basic Skill 9, Owl\'s Eye 10, Vulture\'s Eye 5, Double Strafe 5',
+		acolyte  => 'Basic Skill 9, Divine Protection 5, Heal 10, Increase AGI 5, Blessing 5',
+		merchant => 'Basic Skill 9, Enlarge Weight Limit 5, Discount 5, Overcharge 5, Pushcart 4',
+		thief    => 'Basic Skill 9, Double Attack 10, Improve Dodge 10, Envenom 5',
+	);
+	my %stats = (
+		swordman => '15 str, 15 dex, 15 agi, 25 dex, 15 vit, 30 str, 30 agi, 20 vit, 40 str, 40 agi, 35 dex',
+		magician => '15 dex, 15 int, 20 dex, 40 int, 30 dex, 50 int, 20 vit, 60 int, 40 dex',
+		archer   => '15 dex, 15 agi, 30 dex, 30 agi, 40 dex, 40 agi, 50 dex, 50 agi, 60 dex',
+		acolyte  => '15 str, 15 dex, 25 str, 25 dex, 15 vit, 30 dex, 40 str, 20 vit, 20 int, 50 str',
+		merchant => '15 dex, 15 str, 20 agi, 25 str, 25 dex, 30 vit, 40 str, 30 dex, 40 agi',
+		thief    => '10 str, 10 agi, 20 dex, 20 str, 40 agi, 30 dex, 30 str, 50 agi, 40 dex, 60 agi',
+	);
+
+	my $sk = $skills{$job} // $skills{swordman};
+	my $st = $stats{$job} // $stats{swordman};
+	Commands::run("conf -f skillsAddAuto_list $sk");
+	Commands::run("conf -f skillsAddAuto 1");
+	Commands::run("conf -f statsAddAuto_list $st");
+	Commands::run("conf -f statsAddAuto 1");
+	Log::message("[PHASE1] Auto skill/stat build for $job\n", "success");
+	return 1;
+}
+
 sub Phase1_AfterJobChange {
 	my $base = $char ? ($char->{lv} // 0) : 0;
+	# Job change now requires base ≥ 15, so park at fountain
 	if ($base >= 15) {
 		Log::message("[PHASE1] Base $base + jobbed - park at fountain\n", "success");
 		Commands::run("conf phase1Done 1");
@@ -833,6 +883,7 @@ sub Phase1_AfterJobChange {
 		Commands::run("conf sellAuto 0");
 		return 1;
 	}
+	# Safety: if somehow jobbed below 15, keep hunting
 	Log::message("[PHASE1] Base $base < 15 - resume prt_fild08 as 1st job\n", "success");
 	Commands::run("conf -f grindHuntMap prt_fild08");
 	Phase1_ResumeHunt();
@@ -846,7 +897,8 @@ sub Phase1_ResumeHunt {
 		Commands::run("conf lockMap none");
 		return 1;
 	}
-	if ($char && $char->{jobID} == 0 && $char->{lv_job} >= 10) {
+	# Ready for job change — stop hunting so job macros can run
+	if ($char && $char->{jobID} == 0 && ($char->{lv_job} // 0) >= 10 && ($char->{lv} // 0) >= 15) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
