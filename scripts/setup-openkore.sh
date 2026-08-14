@@ -13,7 +13,8 @@ fi
 if command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update -qq
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus expect
+    build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus expect cron
+  sudo service cron start 2>/dev/null || true
 fi
 
 # Apply RagnaOne server definition if missing

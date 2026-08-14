@@ -8,10 +8,17 @@ mkdir -p "$LOG_DIR"
 # Install deps / OpenKore / Phase1 if needed (idempotent)
 bash "$ROOT/scripts/setup-openkore.sh" >>"$LOG_DIR/boot.log" 2>&1 || true
 
+# Install cron if missing (Cursor pods often omit it)
+if ! command -v crontab >/dev/null 2>&1; then
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq cron >/dev/null 2>&1 || true
+fi
+sudo service cron start 2>/dev/null || sudo systemctl start cron 2>/dev/null || true
+
 # Cron every minute as belt-and-suspenders
 CRON_LINE="* * * * * cd $ROOT && bash ./scripts/watchdog-openkore.sh ensure >>$LOG_DIR/cron.log 2>&1"
-(crontab -l 2>/dev/null | grep -v 'watchdog-openkore.sh' || true; echo "$CRON_LINE") | crontab -
-sudo service cron start 2>/dev/null || sudo systemctl start cron 2>/dev/null || true
+if command -v crontab >/dev/null 2>&1; then
+  (crontab -l 2>/dev/null | grep -v 'watchdog-openkore.sh' || true; echo "$CRON_LINE") | crontab -
+fi
 
 # Foreground-ish supervisor in tmux (survives start script exit)
 SESSION="${OK_WATCHDOG_TMUX:-ok-watchdog}"
