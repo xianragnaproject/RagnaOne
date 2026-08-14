@@ -95,4 +95,15 @@ bash ./scripts/watchdog-openkore.sh status
 bash ./scripts/watchdog-openkore.sh ensure   # restart if down
 ```
 
-Requires gitignored `.env` with `RO_USERNAME` / `RO_PASSWORD`. Cloud `start` runs `start-24x7.sh` automatically.
+## Multi-bot
+
+```bash
+# Create + start another account (auto-reg, char, Phase1 macros)
+bash ./scripts/create-and-start-bot.sh Fresh4 FreshFour M
+
+# Status / keep-alive for all mapped bots
+bash ./scripts/watchdog-openkore.sh status
+bash ./scripts/start-24x7.sh
+```
+
+Credentials live in gitignored `accounts/*.env` + `accounts/ACCOUNT_MAP.txt`.
