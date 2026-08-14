@@ -56,3 +56,17 @@ buyAuto_0_npc_steps b
 sitAuto_look
 sitAuto_look_delay 0
 sitAuto_idle 1
+
+# Stay online 24/7 — never DC for routine events; reconnect aggressively
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnDualLogin 0
+dcOnMaxReconnections 0
+dcOnServerShutDown 0
+dcOnServerClose 0
+dcOnStorageFull 0
+dcOnMute 0
+dcOnPM 0
+dcOnPlayer 0
+dcOnEmptyArrow 0
+autoRestart 0

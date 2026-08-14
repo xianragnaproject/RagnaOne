@@ -83,6 +83,16 @@ Macros set their own config (lockMap, save, sellAuto, buyAuto). See `openkore-co
 Fresh OpenKore install connected to RagnaOne and entered the game:
 
 - Account auto-created via `_M` suffix registration
-- Character: **OKFresh1** (Novice, Male, Base/Job 1/1)
-- Spawn: Prontera `(155, 183)`
+- Character: **OKFresh1** (now Mage after Phase1 job change)
+- Spawn / hunt: Prontera → `prt_fild08`
 - Login `6900` → Char `6121` → Map `5121`
+
+## 24/7 keep-alive
+
+```bash
+bash ./scripts/start-24x7.sh          # cron every minute + tmux watchdog loop
+bash ./scripts/watchdog-openkore.sh status
+bash ./scripts/watchdog-openkore.sh ensure   # restart if down
+```
+
+Requires gitignored `.env` with `RO_USERNAME` / `RO_PASSWORD`. Cloud `start` runs `start-24x7.sh` automatically.
