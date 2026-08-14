@@ -622,33 +622,33 @@ macro phase1_done_sit {
 ###############################################################################
 macro phase1_to_prontera {
 	[
-		log PHASE1: exit field via north portal to Prontera
+		log PHASE1: go Prontera for town chores
 		do conf lockMap none
 		do conf route_randomWalk 0
 		do conf attackAuto 0
 		do conf sitAuto_idle 0
 		do stand
 		do eval AI::clear("move", "route", "mapRoute", "attack")
-	]
-	# Already in town — nothing to do
-	call phase1_to_prontera_from_field
-}
-
-macro phase1_to_prontera_from_field {
-	[
 		do eval Phase1_GoPronteraPortal()
 	]
-	pause 120
+	# Already in town? skip multi-minute portal waits (avoids GM idle kicks)
+	if (&config(phase1InProntera) == 1) goto phase1_town_ready
+	pause 90
 	[
 		do stand
 		do eval Phase1_GoPronteraPortal()
 	]
-	pause 90
+	if (&config(phase1InProntera) == 1) goto phase1_town_ready
+	pause 60
 	[
 		do stand
 		do eval Phase1_ForceProntera()
 	]
-	pause 90
+	pause 60
+	:phase1_town_ready
+	[
+		log PHASE1: Prontera ready
+	]
 }
 
 sub Phase1_ForceProntera {
@@ -681,7 +681,11 @@ sub Phase1_ApproachFieldPortal {
 
 # Combined portal helper: approach + enter. Safe to call repeatedly.
 sub Phase1_GoPronteraPortal {
-	return 1 if Phase1_IsInPronteraTown();
+	if (Phase1_IsInPronteraTown()) {
+		Commands::run("conf -f phase1InProntera 1");
+		return 1;
+	}
+	Commands::run("conf -f phase1InProntera 0");
 	return 1 unless $field && $char;
 	Commands::run("stand") if $char->{sitting};
 	# Use OpenKore map-route (knows portals) — more reliable than manual lip bump
