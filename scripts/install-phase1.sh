@@ -31,6 +31,16 @@ def set_key(text, key, value):
         return pat.sub(line, text, count=1)
     return text.rstrip() + '\n' + line + '\n'
 
+# Progress flags: never reset a completed (1) flag back to 0 on reinstall
+PROGRESS_KEYS = {
+    'phase1LockDone', 'phase1SaveDone', 'phase1ShopDone',
+    'phase1JobDone', 'phase1Done',
+}
+
+def get_key(text, key):
+    m = re.search(rf'^{re.escape(key)}\s+(\S+)', text, re.M)
+    return m.group(1) if m else None
+
 # Parse snippet: skip comments/blank; support "key value" and bare "key"
 for raw in snip.splitlines():
     line = raw.strip()
@@ -40,6 +50,8 @@ for raw in snip.splitlines():
         key, value = line.split(None, 1)
     else:
         key, value = line, ''
+    if key in PROGRESS_KEYS and value in ('0', '') and get_key(text, key) == '1':
+        continue
     text = set_key(text, key, value)
 
 # Ensure eventMacro plugin is loaded

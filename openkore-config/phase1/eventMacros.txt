@@ -320,9 +320,8 @@ automacro Phase1_FountainAFK {
 }
 
 macro phase1_fountain_afk {
-	$secs = &rand(300, 900)
 	[
-		log PHASE1: AFK break - fountain for $secs sec 5-15 min
+		log PHASE1: AFK break - go fountain then sit
 		do conf phase1Afk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -334,11 +333,16 @@ macro phase1_fountain_afk {
 	call phase1_to_prontera
 	[
 		do eval Phase1_WalkFountain()
-		pause 50
 	]
+	# pause MUST be outside [...] — macro_block runs lines in one tick and skips waits
+	pause 55
 	call phase1_afk_face_sit
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	$secs = &rand(300, 900)
+	log PHASE1: AFK sit-idle for $secs sec
+	pause $secs
 	[
-		pause $secs
 		do stand
 		log PHASE1: AFK done - resume hunt
 		do conf sitAuto_idle 1
@@ -348,13 +352,21 @@ macro phase1_fountain_afk {
 }
 
 # One random step (sets visible body facing), then sit
+# Sit requires Basic Skill >= 3 on this server — raise it first if needed.
+# Pauses outside [...] so skill add / walk / sit actually wait.
 macro phase1_afk_face_sit {
 	[
-		do eval Phase1_StepFace()
-		pause 8
-		do eval Phase1_AfkSit()
-		pause 4
+		do eval Phase1_EnsureBasicSkillForSit()
 	]
+	pause 2
+	[
+		do eval Phase1_StepFace()
+	]
+	pause 8
+	[
+		do eval Phase1_AfkSit()
+	]
+	pause 4
 }
 
 
@@ -589,21 +601,41 @@ macro phase1_done_sit {
 ###############################################################################
 macro phase1_to_prontera {
 	[
-		log PHASE1: exit field via north portal → Prontera
+		log PHASE1: exit field via north portal to Prontera
 		do conf lockMap none
 		do conf route_randomWalk 0
 		do conf attackAuto 0
+		do conf sitAuto_idle 0
 		do stand
-		do eval AI::clear("move", "route", "mapRoute")
-		do eval Phase1_ApproachFieldPortal()
-		pause 55
-		do eval Phase1_EnterFieldPortal()
-		pause 18
-		do eval Phase1_EnterFieldPortal()
-		pause 18
-		do eval Phase1_EnterFieldPortal()
-		pause 18
+		do eval AI::clear("move", "route", "mapRoute", "attack")
 	]
+	# Already in town — nothing to do
+	call phase1_to_prontera_from_field
+}
+
+macro phase1_to_prontera_from_field {
+	[
+		do eval Phase1_GoPronteraPortal()
+	]
+	pause 120
+	[
+		do stand
+		do eval Phase1_GoPronteraPortal()
+	]
+	pause 90
+	[
+		do stand
+		do eval Phase1_ForceProntera()
+	]
+	pause 90
+}
+
+sub Phase1_ForceProntera {
+	return 1 if Phase1_IsInPronteraTown();
+	Commands::run("stand") if $char && $char->{sitting};
+	Log::message("[PHASE1] force map-route → prontera 156,190\n", "success");
+	Commands::run("move prontera 156 190");
+	return 1;
 }
 
 
@@ -626,25 +658,19 @@ sub Phase1_ApproachFieldPortal {
 	return 1;
 }
 
-sub Phase1_EnterFieldPortal {
+# Combined portal helper: approach + enter. Safe to call repeatedly.
+sub Phase1_GoPronteraPortal {
 	return 1 if Phase1_IsInPronteraTown();
-	return 1 unless $field && $field->baseName eq 'prt_fild08';
-	my $x = $char->{pos}{x} // 0;
-	my $y = $char->{pos}{y} // 0;
-	unless (abs($x - 170) <= 6 && abs($y - 375) <= 10) {
-		Commands::run("stand") if $char->{sitting};
-		Commands::run("move 170 375");
-		return 1;
-	}
+	return 1 unless $field && $char;
 	Commands::run("stand") if $char->{sitting};
-	if ($y < 377) {
-		Commands::run("move 170 377");
-	} elsif ($y < 378) {
-		Commands::run("north");
-	} else {
-		Commands::run("move prontera 156 30");
-	}
+	# Use OpenKore map-route (knows portals) — more reliable than manual lip bump
+	Log::message("[PHASE1] map-route → Prontera fountain area\n", "success");
+	Commands::run("move prontera 156 190");
 	return 1;
+}
+
+sub Phase1_EnterFieldPortal {
+	return Phase1_GoPronteraPortal();
 }
 
 sub Phase1_RandomFountainTile {
@@ -672,7 +698,10 @@ sub Phase1_RandomFountainTile {
 }
 
 sub Phase1_WalkFountain {
-	return 0 unless Phase1_IsInPronteraTown();
+	unless (Phase1_IsInPronteraTown()) {
+		Log::message("[PHASE1] fountain walk skipped - not in Prontera yet\n", "system");
+		return 0;
+	}
 	if ($field && $field->baseName eq 'prt_in') {
 		Commands::run("move prontera 156 190");
 		return 1;
@@ -687,7 +716,10 @@ sub Phase1_WalkFountain {
 # Body dirs: 0=N 1=NW 2=W 3=SW 4=S 5=SE 6=E 7=NE
 # Walking one tile is the only reliable way other clients see facing.
 sub Phase1_StepFace {
-	return 0 unless $char && $field && $field->baseName eq 'prontera';
+	unless ($char && $field && $field->baseName eq 'prontera') {
+		Log::message("[PHASE1] AFK face skipped - not in Prontera\n", "system");
+		return 0;
+	}
 	Commands::run("stand") if $char->{sitting};
 	AI::clear("move", "route", "mapRoute", "sitting", "standing", "look");
 
@@ -722,10 +754,45 @@ sub Phase1_StepFace {
 
 sub Phase1_AfkSit {
 	return 1 if $char && $char->{sitting};
+	unless (Phase1_IsInPronteraTown()) {
+		Log::message("[PHASE1] AFK sit skipped - not in Prontera\n", "system");
+		return 0;
+	}
+	# This server requires Basic Skill >= 3 to sit
+	my $basic = 0;
+	if ($char && $char->{skills}{NV_BASIC}) {
+		$basic = $char->{skills}{NV_BASIC}{lv} // 0;
+	}
+	if ($basic < 3) {
+		Log::message("[PHASE1] AFK stand-idle - Basic Skill $basic < 3 cannot sit\n", "system");
+		Commands::run("stand") if $char && $char->{sitting};
+		return 0;
+	}
 	# Prevent processSitAuto from standing us immediately at full HP
 	$ai_v{sitAuto_forcedBySitCommand} = 1;
 	$ai_v{sitAuto_forceStop} = 0;
 	Commands::run("sit");
+	return 1;
+}
+
+# Spend skill points until Basic Skill >= 3 so AFK sit works
+sub Phase1_EnsureBasicSkillForSit {
+	return 1 unless $char;
+	my $basic = 0;
+	if ($char->{skills}{NV_BASIC}) {
+		$basic = $char->{skills}{NV_BASIC}{lv} // 0;
+	}
+	return 1 if $basic >= 3;
+	Commands::run("stand") if $char->{sitting};
+	my $points = $char->{points_skill} // 0;
+	Log::message("[PHASE1] Raising Basic Skill for sit ($basic -> 3), free points=$points\n", "success");
+	my $guard = 0;
+	while ($basic < 3 && $guard++ < 5) {
+		last if ($char->{points_skill} // 0) <= 0;
+		Commands::run("skills add 1");
+		select(undef, undef, undef, 0.4);
+		$basic = ($char->{skills}{NV_BASIC}{lv} // 0) if $char->{skills}{NV_BASIC};
+	}
 	return 1;
 }
 
