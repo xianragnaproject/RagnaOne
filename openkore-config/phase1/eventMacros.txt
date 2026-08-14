@@ -23,7 +23,6 @@
 ###############################################################################
 automacro Phase1_SetLockMap {
 	exclusive 1
-	run-once 1
 	timeout 30
 	priority 4
 	JobID 0
@@ -83,7 +82,6 @@ automacro Phase1_KeepHunt {
 ###############################################################################
 automacro Phase1_SetSave_Go {
 	exclusive 1
-	run-once 1
 	timeout 90
 	priority 2
 	JobID 0
@@ -113,7 +111,6 @@ automacro Phase1_SetSave_Go {
 
 automacro Phase1_SetSave_Talk {
 	exclusive 1
-	run-once 1
 	timeout 60
 	priority 2
 	JobID 0
@@ -122,24 +119,25 @@ automacro Phase1_SetSave_Talk {
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Afk 1
 	ConfigKeyNot phase1Jobbing 1
-	InMap prontera
-	NpcNear /Kafra/
+	NpcNear /Kafra Employee/
+	InMapList prontera
 	call {
 		[
 			log PHASE1: set save @ Prontera south Kafra once
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do stand
-			pause 2
+			pause 1
 			do talknpc 151 29 c r0
-			pause 5
-			do conf phase1SaveDone 1
-			do conf saveMap prontera
-			do conf saveMap_x 155
-			do conf saveMap_y 50
-			do conf saveMap_warpToBuyOrSell 1
+			pause 6
+			do conf -f saveMap prontera
+			do conf -f saveMap_x 155
+			do conf -f saveMap_y 50
+			do conf -f phase1SaveDone 1
 			log PHASE1: save set Prontera south - resume hunt
+			do conf sitAuto_idle 1
 			do eval Phase1_ResumeHunt()
+			pause 10
 		]
 	}
 }
