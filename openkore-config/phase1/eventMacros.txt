@@ -1,0 +1,1078 @@
+###############################################################################
+# RagnaOne Phase 1 macros (Novice base 1-15)
+#
+# Macros own config - they set lockMap / sellAuto / buyAuto / saveMap themselves.
+#
+# 1) LockMap prt_fild08          - Novice base 1-15
+# 2) Save Prontera south Kafra   - Novice base 1-15
+# 3) Sell @ Prontera tool dealer - Novice base 1-15, OW >= 50%
+# 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
+# 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
+# 6) Job change                  - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job
+# 7) Base 15 + 1st job           - Kafra Teleport Service → Payon (END Phase 1)
+# Auto: skillsAddAuto Basic Skill 9; statsAddAuto novice hunt build (class build after job)
+#
+# Flags (set by macros):
+#   phase1LockDone  phase1SaveDone  phase1ShopDone  phase1Jobbing
+#   phase1JobDone  phase1Afk  phase1Done  phase1Traveling  grindTargetJob
+#   phase1Done = arrived in Payon (Phase 1 complete)
+###############################################################################
+
+
+###############################################################################
+# 1) LockMap -> prt_fild08 (Novice base 1-15) - RUN ONCE
+###############################################################################
+automacro Phase1_SetLockMap {
+	exclusive 1
+	timeout 30
+	priority 4
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1LockDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase1Selling 1
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
+	call {
+		[
+			log PHASE1: set lockMap prt_fild08 Novice 1-15 once
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			do conf -f grindHuntMap prt_fild08
+			do conf attackAuto 2
+			do conf attackAuto_inLockOnly 1
+			do conf attackRouteMaxPathDistance 50
+			do conf attackMinPlayerDistance 0
+			do conf route_randomWalk 1
+			do conf route_randomWalk_inLockOnly 1
+			do conf -f phase1LockDone 1
+		]
+	}
+}
+
+# Keep hunting aggressive while on the field
+automacro Phase1_KeepHunt {
+	exclusive 1
+	timeout 40
+	priority 8
+	JobID 0
+	BaseLevel 1..15
+	InMap prt_fild08
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase1Selling 1
+	ConfigKeyNot attackAuto 2
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
+	call {
+		[
+			log PHASE1: restore attackAuto 2 on prt_fild08
+			do conf lockMap prt_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf attackRouteMaxPathDistance 50
+		]
+	}
+}
+
+
+###############################################################################
+# 2) Save point - Prontera south Kafra (Novice base 1-15) - RUN ONCE
+###############################################################################
+automacro Phase1_SetSave_Go {
+	exclusive 1
+	timeout 90
+	priority 2
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1SaveDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase1Selling 1
+	NpcNotNear /Kafra/
+	call {
+		[
+			log PHASE1: walk Prontera south Kafra to set save once
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+		]
+		call phase1_to_prontera
+		[
+			do move 151 29
+			pause 25
+		]
+	}
+}
+
+automacro Phase1_SetSave_Talk {
+	exclusive 1
+	timeout 60
+	priority 2
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1SaveDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	NpcNear /Kafra Employee/
+	InMap prontera
+	call {
+		[
+			log PHASE1: set save @ Prontera south Kafra once
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do stand
+			pause 1
+			do talknpc 151 29 c r0
+			pause 6
+			do conf -f saveMap prontera
+			do conf -f saveMap_x 155
+			do conf -f saveMap_y 50
+			do conf -f phase1SaveDone 1
+			log PHASE1: save set Prontera south - resume hunt
+			do conf sitAuto_idle 1
+			do eval Phase1_ResumeHunt()
+			pause 10
+		]
+	}
+}
+
+
+###############################################################################
+# 3) Auto-sell @ Prontera tool dealer when OW >= 50% (Novice 1-15)
+# Macros configure sellAuto npc, then own the trip (built-in sellAuto + lockMap
+# freezes MapRoute on this server).
+###############################################################################
+automacro Phase1_ConfigureSell {
+	exclusive 1
+	timeout 120
+	priority 5
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1ShopDone 1
+	ConfigKeyNot phase1Done 1
+	call {
+		[
+			log PHASE1: configure sellAuto @ Prontera tool dealer OW 50pct
+			do conf sellAuto 0
+			do conf sellAuto_npc prt_in 126 76
+			do conf sellAuto_standpoint prt_in 130 72
+			do conf sellAuto_distance 10
+			do conf sellAuto_maxDistance 14
+			do conf sellAuto_npc_steps s
+			do conf itemsMaxWeight 89
+			do conf itemsMaxWeight_sellOrStore 50
+			do conf phase1ShopDone 1
+		]
+	}
+}
+
+automacro Phase1_SellLoot {
+	exclusive 1
+	timeout 60
+	priority 2
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase1Selling 1
+	Eval (Misc::percent_weight($char) >= 50) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call phase1_sell_loot
+}
+
+macro phase1_sell_loot {
+	[
+		log PHASE1: OW>=50% - portal to Prontera tool dealer sell
+		do conf phase1Selling 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do conf sellAuto_npc prt_in 126 76
+		do conf sellAuto_standpoint prt_in 130 72
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "sellAuto")
+	]
+	call phase1_to_prontera
+	[
+		do move prt_in 130 72
+		pause 45
+		do conf sellAuto 1
+		do eval AI::queue("sellAuto")
+		pause 35
+		do conf sellAuto 0
+		do move 135 71
+		pause 6
+		do move prontera 160 70
+		pause 10
+		do conf phase1Selling 0
+		do eval Phase1_ResumeHunt()
+		log PHASE1: sell done - resume hunt
+	]
+}
+
+
+###############################################################################
+# 4) Buy 50 Red Potion @ Prontera tool dealer
+# Trigger: Novice + zeny >= 5000 + Red Potion stock == 0
+###############################################################################
+automacro Phase1_BuyPots_Enable {
+	exclusive 1
+	timeout 45
+	priority 3
+	JobID 0
+	BaseLevel 1..15
+	Zeny >= 5000
+	InInventoryID 501 == 0
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase1Selling 1
+	call {
+		[
+			log PHASE1: Novice, 0 Red Potion, zeny>=5000 - enable buy 50
+			do conf buyAuto_0 Red Potion
+			do conf buyAuto_0_npc prt_in 126 76
+			do conf buyAuto_0_standpoint prt_in 130 72
+			do conf buyAuto_0_distance 5
+			do conf buyAuto_0_minAmount 0
+			do conf buyAuto_0_maxAmount 50
+			do conf buyAuto_0_zeny >= 5000
+			do conf buyAuto_0_disabled 0
+			do conf buyAuto_0_npc_steps b
+		]
+	}
+}
+
+# Disable buy when stock exists, broke, or no longer novice
+automacro Phase1_BuyPots_DisableHasStock {
+	exclusive 1
+	timeout 60
+	priority 3
+	InInventoryID 501 > 0
+	ConfigKeyNot buyAuto_0_disabled 1
+	call {
+		[
+			log PHASE1: have Red Potion - disable buyAuto
+			do conf buyAuto_0_disabled 1
+			do eval AI::clear("buyAuto")
+		]
+	}
+}
+
+automacro Phase1_BuyPots_DisableBroke {
+	exclusive 1
+	timeout 60
+	priority 3
+	JobID 0
+	Zeny < 5000
+	ConfigKeyNot buyAuto_0_disabled 1
+	call {
+		[
+			log PHASE1: zeny < 5000 - disable Red Potion buy
+			do conf buyAuto_0_disabled 1
+			do eval AI::clear("buyAuto")
+		]
+	}
+}
+
+automacro Phase1_BuyPots_DisableJobbed {
+	exclusive 1
+	timeout 60
+	priority 3
+	JobIDNot 0
+	ConfigKeyNot phase2Active 1
+	ConfigKeyNot buyAuto_0_disabled 1
+	call {
+		[
+			log PHASE1: jobbed - disable Red Potion buy
+			do conf buyAuto_0_disabled 1
+			do eval AI::clear("buyAuto")
+		]
+	}
+}
+
+
+###############################################################################
+# 5) Fountain AFK - ~every 30 min, sit 5-15 min, random facing (not always N)
+###############################################################################
+automacro Phase1_FountainAFK {
+	exclusive 1
+	timeout 1800
+	priority 6
+	InMap prt_fild08
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Selling 1
+	ConfigKeyNot phase1Jobbing 1
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
+	call phase1_fountain_afk
+}
+
+macro phase1_fountain_afk {
+	[
+		log PHASE1: AFK break - go fountain then sit
+		do conf phase1Afk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+	]
+	call phase1_to_prontera
+	[
+		do eval Phase1_WalkFountain()
+	]
+	# pause MUST be outside [...] — macro_block runs lines in one tick and skips waits
+	pause 55
+	call phase1_afk_face_sit
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	$secs = &rand(300, 900)
+	log PHASE1: AFK sit-idle for $secs sec
+	pause $secs
+	[
+		do stand
+		log PHASE1: AFK done - resume hunt
+		do conf sitAuto_idle 1
+		do conf phase1Afk 0
+		do eval Phase1_ResumeHunt()
+	]
+}
+
+# One random step (sets visible body facing), then sit
+# Sit requires Basic Skill >= 3 on this server — raise it first if needed.
+# Pauses outside [...] so skill add / walk / sit actually wait.
+macro phase1_afk_face_sit {
+	[
+		do eval Phase1_EnsureBasicSkillForSit()
+	]
+	pause 2
+	[
+		do eval Phase1_StepFace()
+	]
+	pause 8
+	[
+		do eval Phase1_AfkSit()
+	]
+	pause 4
+}
+
+
+###############################################################################
+# 6) Job change - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job @ Job Master
+###############################################################################
+
+# Unstick: phase1Jobbing left on while not actually ready (or already jobbed)
+automacro Phase1_UnstickJobbing {
+	exclusive 1
+	timeout 30
+	priority 9
+	ConfigKey phase1Jobbing 1
+	ConfigKeyNot phase1Done 1
+	call {
+		[
+			do eval Phase1_ClearStuckJobbing()
+		]
+	}
+}
+
+automacro Phase1_Job_BasicSkill {
+	exclusive 1
+	timeout 15
+	priority 0
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 15
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	SkillLevel NV_BASIC < 9
+	call {
+		[
+			log PHASE1: spend skill points on Basic Skill
+			do conf phase1Jobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf sitAuto_idle 0
+			do stand
+			pause 1
+			do skills add 1
+			pause 2
+		]
+	}
+}
+
+# On field ready for job change - map-route to Prontera Job Master area
+automacro Phase1_JobChange_GoField {
+	exclusive 1
+	timeout 60
+	priority 0
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 15
+	InMap prt_fild08
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Selling 1
+	SkillLevel NV_BASIC >= 9
+	call {
+		[
+			log PHASE1: Job10+Base15 on field - go Prontera Job Master
+			do conf phase1Jobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sitAuto_idle 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack")
+			do eval Phase1_GoPronteraPortal()
+		]
+		pause 120
+		[
+			do stand
+			do move 155 180
+		]
+		pause 60
+	}
+}
+
+# Already in Prontera - walk to Job Master
+automacro Phase1_JobChange_GoTown {
+	exclusive 1
+	timeout 40
+	priority 0
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 15
+	InMap prontera
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	SkillLevel NV_BASIC >= 9
+	NpcNotNear /Job Master/
+	call {
+		[
+			log PHASE1: in Prontera - walk to Job Master
+			do conf phase1Jobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sitAuto_idle 0
+			do stand
+			do eval AI::clear("move", "route", "mapRoute")
+			do move 155 180
+		]
+		pause 45
+	}
+}
+
+automacro Phase1_JobChange_Talk {
+	exclusive 1
+	timeout 30
+	priority 0
+	JobID 0
+	JobLevel >= 10
+	BaseLevel >= 15
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	SkillLevel NV_BASIC >= 9
+	NpcNear /Job Master/
+	call {
+		[
+			log PHASE1: talk Job Master - random 1st job
+			do conf phase1Jobbing 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			pause 2
+			do eval Phase1_TalkJobMaster()
+			pause 18
+		]
+	}
+}
+
+automacro Phase1_JobDone {
+	exclusive 1
+	timeout 20
+	priority 0
+	JobIDNot 0
+	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase2Active 1
+	call {
+		[
+			log PHASE1: 1st job acquired
+			do conf phase1JobDone 1
+			do conf phase1Jobbing 0
+			do conf buyAuto_0_disabled 1
+			do conf sitAuto_idle 1
+			do eval Phase1_ApplyJobBuild()
+			do eval Phase1_AfterJobChange()
+		]
+	}
+}
+
+
+###############################################################################
+# 7) Base 15 + 1st job → Payon via Prontera Kafra Teleport Service (END Phase 1)
+# Never field-walk to Payon. phase1Done is set only after arriving in Payon.
+###############################################################################
+automacro Phase1_GoPayon {
+	exclusive 1
+	timeout 120
+	priority 0
+	BaseLevel >= 15
+	JobIDNot 0
+	ConfigKey phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Selling 1
+	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase2Active 1
+	ConfigKeyNot phase1Traveling 1
+	NotInMap payon
+	call {
+		[
+			log PHASE1: Base15 + 1st job - Kafra Teleport Service to Payon (end Phase1)
+			do conf phase1Traveling 1
+			do conf phase1Afk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sellAuto 0
+			do conf buyAuto_0_disabled 1
+			do conf itemsTakeAuto 0
+			do conf itemsGatherAuto 0
+			do conf sitAuto_idle 0
+			do stand
+		]
+		call phase1_to_payon
+		[
+			do conf phase1Traveling 0
+		]
+	}
+}
+
+# Already next to a Prontera Kafra while finishing Phase1 — talk Teleport Service now
+automacro Phase1_KafraTeleportToPayon {
+	exclusive 0
+	timeout 25
+	priority 0
+	BaseLevel >= 15
+	JobIDNot 0
+	InMap prontera
+	ConfigKey phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase2Active 1
+	NpcNear /Kafra/
+	call {
+		[
+			log PHASE1: Kafra nearby — Teleport Service to Payon
+			do stand
+			do eval Phase1_TalkKafraWarpPayon()
+			pause 12
+		]
+	}
+}
+
+automacro Phase1_GoPayon_Arrived {
+	exclusive 1
+	timeout 15
+	priority 0
+	BaseLevel >= 15
+	JobIDNot 0
+	InMap payon
+	ConfigKey phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase2Active 1
+	call {
+		[
+			log PHASE1 COMPLETE - arrived Payon via Kafra (end Phase 1)
+			do conf phase1Done 1
+			do conf phase1Traveling 0
+			do conf phase1Afk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sitAuto_idle 1
+		]
+	}
+}
+
+macro phase1_to_payon {
+	[
+		log PHASE1: go Payon via Kafra teleport (not field walk)
+		do conf lockMap none
+		do conf route_randomWalk 0
+		do conf attackAuto 0
+		do conf sitAuto_idle 0
+		do stand
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 40
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 45
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 45
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 40
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	pause 30
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	[
+		log PHASE1: still not in Payon - will retry next automacro
+		do conf phase1Traveling 0
+	]
+	stop
+	:phase1_payon_ready
+	[
+		log PHASE1: Payon ready
+		do conf phase1Traveling 0
+	]
+}
+
+
+###############################################################################
+# Shared: prt_fild08 → Prontera via north portal (170,375 → 170,377)
+###############################################################################
+macro phase1_to_prontera {
+	[
+		log PHASE1: go Prontera for town chores
+		do conf lockMap none
+		do conf route_randomWalk 0
+		do conf attackAuto 0
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do eval Phase1_GoPronteraPortal()
+	]
+	# Already in town? skip multi-minute portal waits (avoids GM idle kicks)
+	if (&config(phase1InProntera) == 1) goto phase1_town_ready
+	pause 90
+	[
+		do stand
+		do eval Phase1_GoPronteraPortal()
+	]
+	if (&config(phase1InProntera) == 1) goto phase1_town_ready
+	pause 60
+	[
+		do stand
+		do eval Phase1_ForceProntera()
+	]
+	pause 60
+	:phase1_town_ready
+	[
+		log PHASE1: Prontera ready
+	]
+}
+
+sub Phase1_ForceProntera {
+	return 1 if Phase1_IsInPronteraTown();
+	Commands::run("stand") if $char && $char->{sitting};
+	Log::message("[PHASE1] force map-route → prontera 156,190\n", "success");
+	Commands::run("move prontera 156 190");
+	return 1;
+}
+
+
+###############################################################################
+# Perl helpers
+###############################################################################
+sub Phase1_IsInPronteraTown {
+	return 0 unless $field;
+	my $m = $field->baseName;
+	return ($m eq 'prontera' || $m eq 'prt_in') ? 1 : 0;
+}
+
+sub Phase1_ApproachFieldPortal {
+	return 1 if Phase1_IsInPronteraTown();
+	return 1 unless $field && $field->baseName eq 'prt_fild08';
+	my $x = $char->{pos}{x} // 0;
+	my $y = $char->{pos}{y} // 0;
+	return 1 if abs($x - 170) <= 2 && abs($y - 375) <= 3;
+	Commands::run("move 170 375");
+	return 1;
+}
+
+# Combined portal helper: approach + enter. Safe to call repeatedly.
+sub Phase1_GoPronteraPortal {
+	if (Phase1_IsInPronteraTown()) {
+		Commands::run("conf -f phase1InProntera 1");
+		return 1;
+	}
+	Commands::run("conf -f phase1InProntera 0");
+	return 1 unless $field && $char;
+	Commands::run("stand") if $char->{sitting};
+	# Use OpenKore map-route (knows portals) — more reliable than manual lip bump
+	Log::message("[PHASE1] map-route → Prontera fountain area\n", "success");
+	Commands::run("move prontera 156 190");
+	return 1;
+}
+
+sub Phase1_EnterFieldPortal {
+	return Phase1_GoPronteraPortal();
+}
+
+sub Phase1_RandomFountainTile {
+	my @spots = (
+		[155, 185], [150, 185], [160, 185], [148, 185], [162, 185],
+		[155, 180], [152, 182], [158, 182], [150, 182], [160, 182],
+		[155, 188], [152, 188], [158, 188], [148, 188], [162, 188],
+		[155, 190], [150, 190], [160, 190], [152, 190], [158, 190],
+		[145, 192], [146, 188], [166, 192], [167, 188],
+		[145, 185], [167, 185],
+	);
+	my @ok;
+	if ($field && $field->baseName eq 'prontera') {
+		for my $s (@spots) {
+			next unless $field->isWalkable($s->[0], $s->[1]);
+			push @ok, $s;
+		}
+	}
+	@ok = (
+		[155, 185], [150, 185], [160, 185], [152, 182], [158, 182],
+		[155, 180], [148, 185], [162, 185], [155, 188],
+	) unless @ok;
+	my $s = $ok[int(rand(scalar @ok))];
+	return ($s->[0], $s->[1]);
+}
+
+sub Phase1_WalkFountain {
+	unless (Phase1_IsInPronteraTown()) {
+		Log::message("[PHASE1] fountain walk skipped - not in Prontera yet\n", "system");
+		return 0;
+	}
+	if ($field && $field->baseName eq 'prt_in') {
+		Commands::run("move prontera 156 190");
+		return 1;
+	}
+	my ($x, $y) = Phase1_RandomFountainTile();
+	Log::message("[PHASE1] fountain walk → $x,$y\n", "success");
+	Commands::run("stand") if $char && $char->{sitting};
+	Commands::run("move $x $y");
+	return 1;
+}
+
+# Body dirs: 0=N 1=NW 2=W 3=SW 4=S 5=SE 6=E 7=NE
+# Walking one tile is the only reliable way other clients see facing.
+sub Phase1_StepFace {
+	unless ($char && $field && $field->baseName eq 'prontera') {
+		Log::message("[PHASE1] AFK face skipped - not in Prontera\n", "system");
+		return 0;
+	}
+	Commands::run("stand") if $char->{sitting};
+	AI::clear("move", "route", "mapRoute", "sitting", "standing", "look");
+
+	my @dx = (0, -1, -1, -1, 0, 1, 1, 1);
+	my @dy = (1, 1, 0, -1, -1, -1, 0, 1);
+	my @dir = qw(N NW W SW S SE E NE);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+
+	my @cands;
+	for my $d (0 .. 7) {
+		my ($tx, $ty) = ($x + $dx[$d], $y + $dy[$d]);
+		next unless $ty >= 170 && abs($tx - 156) <= 22;
+		push @cands, [$d, $tx, $ty];
+	}
+	unless (@cands) {
+		for my $d (0 .. 7) {
+			push @cands, [$d, $x + $dx[$d], $y + $dy[$d]];
+		}
+	}
+	for (my $i = @cands - 1; $i > 0; $i--) {
+		my $j = int(rand($i + 1));
+		@cands[$i, $j] = @cands[$j, $i];
+	}
+	my ($body, $tx, $ty) = @{$cands[0]};
+	Commands::run("conf sitAuto_look $body");
+	Commands::run("conf sitAuto_look_delay 0");
+	Commands::run("move $tx $ty");
+	Log::message("[PHASE1] AFK step face=$body ($dir[$body]) → $tx,$ty\n", "success");
+	return $body;
+}
+
+sub Phase1_AfkSit {
+	return 1 if $char && $char->{sitting};
+	unless (Phase1_IsInPronteraTown()) {
+		Log::message("[PHASE1] AFK sit skipped - not in Prontera\n", "system");
+		return 0;
+	}
+	# This server requires Basic Skill >= 3 to sit
+	my $basic = 0;
+	if ($char && $char->{skills}{NV_BASIC}) {
+		$basic = $char->{skills}{NV_BASIC}{lv} // 0;
+	}
+	if ($basic < 3) {
+		Log::message("[PHASE1] AFK stand-idle - Basic Skill $basic < 3 cannot sit\n", "system");
+		Commands::run("stand") if $char && $char->{sitting};
+		return 0;
+	}
+	# Prevent processSitAuto from standing us immediately at full HP
+	$ai_v{sitAuto_forcedBySitCommand} = 1;
+	$ai_v{sitAuto_forceStop} = 0;
+	Commands::run("sit");
+	return 1;
+}
+
+# Spend skill points until Basic Skill >= 3 so AFK sit works
+sub Phase1_EnsureBasicSkillForSit {
+	return 1 unless $char;
+	my $basic = 0;
+	if ($char->{skills}{NV_BASIC}) {
+		$basic = $char->{skills}{NV_BASIC}{lv} // 0;
+	}
+	return 1 if $basic >= 3;
+	Commands::run("stand") if $char->{sitting};
+	my $points = $char->{points_skill} // 0;
+	Log::message("[PHASE1] Raising Basic Skill for sit ($basic -> 3), free points=$points\n", "success");
+	my $guard = 0;
+	while ($basic < 3 && $guard++ < 5) {
+		last if ($char->{points_skill} // 0) <= 0;
+		Commands::run("skills add 1");
+		select(undef, undef, undef, 0.4);
+		$basic = ($char->{skills}{NV_BASIC}{lv} // 0) if $char->{skills}{NV_BASIC};
+	}
+	return 1;
+}
+
+sub Phase1_TalkJobMaster {
+	my $job = lc($config{grindTargetJob} || 'random');
+	my @pool = qw(Swordman Magician Archer Acolyte Merchant Thief);
+	my %menu = (
+		swordman => 'r0',
+		swordsman => 'r0',
+		magician => 'r1',
+		mage => 'r1',
+		archer => 'r2',
+		acolyte => 'r3',
+		merchant => 'r4',
+		thief => 'r5',
+	);
+	if ($job eq '' || $job eq 'random' || $job eq 'none' || $job eq 'auto') {
+		my $pick = $pool[int(rand(scalar @pool))];
+		Commands::run("conf grindTargetJob $pick");
+		$job = lc($pick);
+		Log::message("[PHASE1] Random class selected: $pick\n", "success");
+	}
+	my $r = $menu{$job} // 'r0';
+	Log::message("[PHASE1] Job Master talk for '$job' ($r) @ 155,180\n", "success");
+	Commands::run("stand");
+	Commands::run("talknpc 155 180 c c c $r c r0");
+	return 1;
+}
+
+sub Phase1_ClearStuckJobbing {
+	return 0 unless ($config{phase1Jobbing} // 0);
+	my $jobbed = $char && ($char->{jobID} // 0) != 0;
+	my $ready = $char
+		&& ($char->{jobID} // 0) == 0
+		&& ($char->{lv_job} // 0) >= 10
+		&& ($char->{lv} // 0) >= 15;
+	if ($jobbed || !$ready) {
+		Log::message("[PHASE1] Clear stuck phase1Jobbing (jobbed=$jobbed ready=$ready)\n", "system");
+		Commands::run("conf phase1Jobbing 0");
+		Commands::run("conf phase1Afk 0") if $config{phase1Afk};
+		Phase1_ResumeHunt() unless $config{phase1Done};
+		return 1;
+	}
+	return 0;
+}
+
+sub Phase1_ApplyJobBuild {
+	# Phase2 owns pure class builds for 1st-class 15-30
+	if ($config{phase2Active}) {
+		Log::message("[PHASE1] skip ApplyJobBuild — Phase2 active\n", "system");
+		return 1;
+	}
+	# Map jobID → class name when grindTargetJob not set
+	my %id_to_job = (
+		1 => 'swordman', 2 => 'magician', 3 => 'archer',
+		4 => 'acolyte', 5 => 'merchant', 6 => 'thief',
+	);
+	my $job = lc($config{grindTargetJob} || '');
+	if ($job eq '' || $job eq 'random' || $job eq 'none' || $job eq 'auto') {
+		$job = $id_to_job{ $char->{jobID} // -1 } // 'swordman';
+		Commands::run("conf grindTargetJob $job");
+	}
+	$job = 'swordman' if $job eq 'swordsman';
+	$job = 'magician' if $job eq 'mage';
+
+	my %skills = (
+		swordman => 'Basic Skill 9, Bash 10, Provoke 5, Endure 1',
+		magician => 'Basic Skill 9, Cold Bolt 5, Fire Bolt 5, Lightning Bolt 5, Increase SP Recovery 5',
+		archer   => 'Basic Skill 9, Owl\'s Eye 10, Vulture\'s Eye 5, Double Strafe 5',
+		acolyte  => 'Basic Skill 9, Divine Protection 5, Heal 10, Increase AGI 5, Blessing 5',
+		merchant => 'Basic Skill 9, Enlarge Weight Limit 5, Discount 5, Overcharge 5, Pushcart 4',
+		thief    => 'Basic Skill 9, Double Attack 10, Improve Dodge 10, Envenom 5',
+	);
+	my %stats = (
+		swordman => '15 str, 15 dex, 15 agi, 25 dex, 15 vit, 30 str, 30 agi, 20 vit, 40 str, 40 agi, 35 dex',
+		magician => '15 dex, 15 int, 20 dex, 40 int, 30 dex, 50 int, 20 vit, 60 int, 40 dex',
+		archer   => '15 dex, 15 agi, 30 dex, 30 agi, 40 dex, 40 agi, 50 dex, 50 agi, 60 dex',
+		acolyte  => '15 str, 15 dex, 25 str, 25 dex, 15 vit, 30 dex, 40 str, 20 vit, 20 int, 50 str',
+		merchant => '15 dex, 15 str, 20 agi, 25 str, 25 dex, 30 vit, 40 str, 30 dex, 40 agi',
+		thief    => '10 str, 10 agi, 20 dex, 20 str, 40 agi, 30 dex, 30 str, 50 agi, 40 dex, 60 agi',
+	);
+
+	my $sk = $skills{$job} // $skills{swordman};
+	my $st = $stats{$job} // $stats{swordman};
+	Commands::run("conf -f skillsAddAuto_list $sk");
+	Commands::run("conf -f skillsAddAuto 1");
+	Commands::run("conf -f statsAddAuto_list $st");
+	Commands::run("conf -f statsAddAuto 1");
+	Log::message("[PHASE1] Auto skill/stat build for $job\n", "success");
+	return 1;
+}
+
+sub Phase1_IsInPayonTown {
+	return 0 unless $field;
+	my $m = $field->baseName // '';
+	return ($m eq 'payon') ? 1 : 0;
+}
+
+# Prontera Kafra → Payon Teleport Service (openkore portals.txt: c r2 c r2)
+# Kafras: south 151,29 | mid 146,89 | east 282,200 | west 35,208
+sub Phase1_TalkKafraWarpPayon {
+	my @kafras = (
+		[151, 29],
+		[146, 89],
+		[282, 200],
+		[35, 208],
+	);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+	my ($best, $bd);
+	foreach my $k (@kafras) {
+		my $d = abs($x - $k->[0]) + abs($y - $k->[1]);
+		if (!defined $bd || $d < $bd) {
+			$bd = $d;
+			$best = $k;
+		}
+	}
+	return 0 unless $best;
+	if ($bd > 16) {
+		Log::message("[PHASE1] walk to Kafra $best->[0],$best->[1] for Payon teleport\n", "success");
+		Commands::run("move $best->[0] $best->[1]");
+		return 0;
+	}
+	Log::message("[PHASE1] Teleport Service → Payon via Kafra $best->[0],$best->[1]\n", "success");
+	Commands::run("talknpc $best->[0] $best->[1] c r2 c r2");
+	return 1;
+}
+
+# Get to Payon city via Prontera Kafra only (never field-walk "move payon")
+sub Phase1_GoPayonTown {
+	Commands::run("stand") if $char && $char->{sitting};
+	my $m = $field ? ($field->baseName // '') : '';
+	if ($m eq 'payon') {
+		Commands::run("conf -f phase1InPayon 1");
+		Log::message("[PHASE1] already in Payon\n", "success");
+		return 1;
+	}
+	Commands::run("conf -f phase1InPayon 0");
+
+	# Do not interrupt an in-progress walk/route/NPC
+	if (AI::inQueue("route") || AI::inQueue("mapRoute") || AI::inQueue("move")
+		|| AI::is("route", "mapRoute", "move") || AI::is("NPC")) {
+		Log::message("[PHASE1] already routing/NPC — let it finish\n", "system");
+		return 0;
+	}
+
+	if ($m eq 'prontera') {
+		return Phase1_TalkKafraWarpPayon();
+	}
+
+	# From Prontera field / indoors: enter Prontera city first, then Kafra
+	if ($m eq 'prt_fild08' || $m eq 'prt_in') {
+		Log::message("[PHASE1] $m → Prontera city then Kafra teleport to Payon\n", "success");
+		Phase1_GoPronteraPortal();
+		return 0;
+	}
+
+	# Fallback: map-route into Prontera (not Payon fields)
+	Log::message("[PHASE1] map-route → Prontera then Kafra to Payon\n", "success");
+	Commands::run("move prontera 156 190");
+	return 0;
+}
+
+sub Phase1_AfterJobChange {
+	my $base = $char ? ($char->{lv} // 0) : 0;
+	# Base 15+ jobbed: stop hunting; Phase1_GoPayon takes over (phase1Done set on Payon arrival)
+	if ($base >= 15) {
+		Log::message("[PHASE1] Base $base + jobbed - go Payon via Kafra (Phase1 finale)\n", "success");
+		if ($config{phase2Active}) {
+			Commands::run("conf phase1Afk 0");
+			Commands::run("conf phase1Done 1");
+			return 1;
+		}
+		Commands::run("conf phase1Afk 0");
+		Commands::run("conf phase1Traveling 0");
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		Commands::run("conf sellAuto 0");
+		return 1;
+	}
+	# Safety: if somehow jobbed below 15, keep hunting
+	Log::message("[PHASE1] Base $base < 15 - resume prt_fild08 as 1st job\n", "success");
+	Commands::run("conf -f grindHuntMap prt_fild08");
+	Phase1_ResumeHunt();
+	return 1;
+}
+
+sub Phase1_ResumeHunt {
+	if ($config{phase2Active}) {
+		# Phase2 owns hunting
+		return 1;
+	}
+	if ($config{phase1Afk} || $config{phase1Done}) {
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
+	# Ready for job change — stop hunting so job macros can run
+	if ($char && $char->{jobID} == 0 && ($char->{lv_job} // 0) >= 10 && ($char->{lv} // 0) >= 15) {
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
+	}
+	Commands::run("conf lockMap prt_fild08");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf -f grindHuntMap prt_fild08");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf attackAuto_inLockOnly 1");
+	Commands::run("conf attackRouteMaxPathDistance 50");
+	Commands::run("conf attackMinPlayerDistance 0");
+	Commands::run("conf route_randomWalk 1");
+	Commands::run("conf sellAuto 0");
+	Log::message("[PHASE1] Resume hunt prt_fild08\n", "success");
+	return 1;
+}

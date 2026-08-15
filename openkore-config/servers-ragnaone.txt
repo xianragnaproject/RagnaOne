@@ -1,0 +1,19 @@
+# RagnaOne - pre-renewal Ep4 (PACKETVER 20180620)
+# Source: http://173.208.138.84/Config.local.js
+# Login 6900 / Char 6121 / Map 5121
+# MD5 passwords OFF, PIN OFF, packet obfuscation OFF
+[RagnaOne]
+ip 173.208.138.84
+port 6900
+master_version 1
+version 55
+serverType kRO_RagexeRE_2018_06_20e
+serverEncoding Western
+charBlockSize 155
+addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
+private 1
+pinCode 0
+sendCryptKeys 0x00000000, 0x00000000, 0x00000000
+gameGuard 0
+secureLogin 0
+title RagnaOne Pre-RE Ep4

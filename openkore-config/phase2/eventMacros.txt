@@ -1,0 +1,735 @@
+###############################################################################
+# RagnaOne Phase 2 macros (1st class base 15-30)
+#
+# Auto-triggers for JobID 1-6 (Swordman/Mage/Archer/Acolyte/Merchant/Thief):
+# 1) Save @ Payon middle Kafra (181,104)     - RUN ONCE
+# 2) lockMap pay_fild08                       - RUN ONCE
+# 3) Sell & buy potions @ Payon (159,96)
+# 4) AFK near Payon middle Kafra
+# 5) Class-pure stats (e.g. Mage INT+DEX, Archer DEX+AGI)
+# 6) Auto skill points (class skill lists)
+#
+# Flags:
+#   phase2Active  phase2LockDone  phase2SaveDone  phase2ShopDone
+#   phase2Selling  phase2Afk  phase2BuildDone
+###############################################################################
+
+
+###############################################################################
+# 0) Bootstrap — Phase1 finished (in Payon); enable Phase2 grind
+###############################################################################
+automacro Phase2_Bootstrap {
+	exclusive 1
+	timeout 20
+	priority 0
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase1Done 1
+	ConfigKeyNot phase2Active 1
+	ConfigKeyNot phase2Selling 1
+	ConfigKeyNot phase2Afk 1
+	call {
+		[
+			log PHASE2: bootstrap 1st-class 15-30 — Phase1 complete (Payon)
+			do conf phase2Active 1
+			do conf phase1Afk 0
+			do conf phase1JobDone 1
+			do conf sitAuto_idle 1
+			do conf itemsTakeAuto 2
+			do conf itemsGatherAuto 2
+			do ai on
+			do stand
+			do eval Phase2_DumpJunkWeight()
+			do eval Phase2_ApplyJobBuild()
+			do conf phase2BuildDone 1
+			do conf sellAuto 0
+			do conf sellAuto_npc payon 159 96
+			do conf sellAuto_standpoint payon 160 98
+			do conf sellAuto_distance 10
+			do conf sellAuto_maxDistance 14
+			do conf sellAuto_npc_steps s
+			do conf itemsMaxWeight 89
+			do conf itemsMaxWeight_sellOrStore 50
+			do conf buyAuto_0 Red Potion
+			do conf buyAuto_0_npc payon 159 96
+			do conf buyAuto_0_standpoint payon 160 98
+			do conf buyAuto_0_distance 5
+			do conf buyAuto_0_minAmount 0
+			do conf buyAuto_0_maxAmount 50
+			do conf buyAuto_0_zeny >= 5000
+			do conf buyAuto_0_disabled 0
+			do conf buyAuto_0_npc_steps b
+			do conf phase2ShopDone 1
+			log PHASE2: shop configured Payon 159,96
+		]
+	}
+}
+
+
+###############################################################################
+# 1) Save point — Payon middle Kafra (181,104) — RUN ONCE
+###############################################################################
+automacro Phase2_SetSave_Go {
+	exclusive 0
+	timeout 180
+	priority 1
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2SaveDone 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	ConfigKeyNot phase2Traveling 1
+	NpcNotNear /Kafra/
+	call {
+		[
+			log PHASE2: walk Payon middle Kafra to set save once
+			do conf phase2Traveling 1
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+		]
+		call phase2_to_payon
+		[
+			do conf phase2Traveling 0
+			do move 181 104
+			pause 40
+		]
+	}
+}
+
+automacro Phase2_SetSave_Talk {
+	exclusive 1
+	timeout 60
+	priority 1
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2SaveDone 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	NpcNear /Kafra/
+	InMap payon
+	call {
+		[
+			log PHASE2: set save @ Payon middle Kafra once
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do stand
+			pause 1
+			do talknpc 181 104 c r0
+			pause 6
+			do conf -f saveMap payon
+			do conf -f saveMap_x 181
+			do conf -f saveMap_y 104
+			do conf -f phase2SaveDone 1
+			log PHASE2: save set Payon - resume hunt
+			do eval Phase2_ResumeHunt()
+			pause 10
+		]
+	}
+}
+
+
+###############################################################################
+# 2) LockMap → pay_fild08 — RUN ONCE
+###############################################################################
+automacro Phase2_SetLockMap {
+	exclusive 1
+	timeout 25
+	priority 2
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKey phase2SaveDone 1
+	ConfigKeyNot phase2LockDone 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	call {
+		[
+			log PHASE2: set lockMap pay_fild08 once
+			do conf lockMap pay_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			do conf -f grindHuntMap pay_fild08
+			do conf attackAuto 2
+			do conf attackAuto_inLockOnly 1
+			do conf attackRouteMaxPathDistance 50
+			do conf attackMinPlayerDistance 0
+			do conf route_randomWalk 1
+			do conf route_randomWalk_inLockOnly 1
+			do conf -f phase2LockDone 1
+		]
+	}
+}
+
+automacro Phase2_KeepHunt {
+	exclusive 1
+	timeout 40
+	priority 8
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	InMap pay_fild08
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	ConfigKeyNot attackAuto 2
+	call {
+		[
+			log PHASE2: restore attackAuto 2 on pay_fild08
+			do conf lockMap pay_fild08
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf attackRouteMaxPathDistance 50
+		]
+	}
+}
+
+
+###############################################################################
+# 3) Sell & buy potions @ Payon outdoor vendor (159,96)
+###############################################################################
+automacro Phase2_ConfigureShop {
+	exclusive 0
+	timeout 20
+	priority 0
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2ShopDone 1
+	call {
+		[
+			log PHASE2: configure sell/buy @ Payon 159,96
+			do conf sellAuto 0
+			do conf sellAuto_npc payon 159 96
+			do conf sellAuto_standpoint payon 160 98
+			do conf sellAuto_distance 10
+			do conf sellAuto_maxDistance 14
+			do conf sellAuto_npc_steps s
+			do conf itemsMaxWeight 89
+			do conf itemsMaxWeight_sellOrStore 50
+			do conf buyAuto_0 Red Potion
+			do conf buyAuto_0_npc payon 159 96
+			do conf buyAuto_0_standpoint payon 160 98
+			do conf buyAuto_0_distance 5
+			do conf buyAuto_0_minAmount 0
+			do conf buyAuto_0_maxAmount 50
+			do conf buyAuto_0_zeny >= 5000
+			do conf buyAuto_0_disabled 0
+			do conf buyAuto_0_npc_steps b
+			do conf phase2ShopDone 1
+		]
+	}
+}
+
+automacro Phase2_SellLoot {
+	exclusive 1
+	timeout 60
+	priority 2
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	Eval (Misc::percent_weight($char) >= 50) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call phase2_sell_loot
+}
+
+macro phase2_sell_loot {
+	[
+		log PHASE2: OW>=50% - sell @ Payon vendor
+		do conf phase2Selling 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do conf sellAuto_npc payon 159 96
+		do conf sellAuto_standpoint payon 160 98
+		do conf sellAuto_distance 10
+		do conf sellAuto_maxDistance 14
+		do conf sellAuto_npc_steps s
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "sellAuto", "buyAuto")
+	]
+	call phase2_to_payon
+	[
+		do move 160 98
+		pause 25
+		do talknpc 159 96 s
+		pause 8
+		do conf phase2Selling 0
+		do eval Phase2_ResumeHunt()
+	]
+}
+
+automacro Phase2_BuyPotions {
+	exclusive 1
+	timeout 90
+	priority 4
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKey phase2ShopDone 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	ConfigKeyNot buyAuto_0_disabled 1
+	InInventory "Red Potion" < 10
+	Zeny > 5000
+	Eval !(AI::inQueue("buyAuto") || AI::inQueue("sellAuto") || AI::is("buyAuto","sellAuto","NPC"))
+	call {
+		[
+			log PHASE2: low Red Potion - enable buyAuto @ Payon
+			do conf buyAuto_0_disabled 0
+			do conf buyAuto_0_npc payon 159 96
+			do conf buyAuto_0_standpoint payon 160 98
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do stand
+			do eval AI::clear("move", "route", "mapRoute", "attack")
+			do eval AI::queue("buyAuto")
+		]
+		pause 90
+		[
+			do eval Phase2_ResumeHunt()
+		]
+	}
+}
+
+
+###############################################################################
+# 4) AFK near Payon middle Kafra — ~every 30 min, sit 5-15 min
+###############################################################################
+automacro Phase2_PayonAFK {
+	exclusive 1
+	timeout 1800
+	priority 6
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	InMap pay_fild08
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2Afk 1
+	ConfigKeyNot phase2Selling 1
+	call phase2_payon_afk
+}
+
+macro phase2_payon_afk {
+	[
+		log PHASE2: AFK break - Payon middle Kafra then sit
+		do conf phase2Afk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+	]
+	call phase2_to_payon
+	[
+		do eval Phase2_WalkKafraAFK()
+	]
+	pause 55
+	call phase2_afk_face_sit
+	$secs = &rand(300, 900)
+	log PHASE2: AFK sit-idle for $secs sec
+	pause $secs
+	[
+		do stand
+		log PHASE2: AFK done - resume hunt
+		do conf sitAuto_idle 1
+		do conf phase2Afk 0
+		do eval Phase2_ResumeHunt()
+	]
+}
+
+macro phase2_afk_face_sit {
+	[
+		do eval Phase1_EnsureBasicSkillForSit()
+	]
+	pause 2
+	[
+		do eval Phase2_StepFaceKafra()
+	]
+	pause 8
+	[
+		do eval Phase2_AfkSit()
+	]
+	pause 4
+}
+
+# While AFK in payon, keep sitting near kafra
+automacro Phase2_Afk_Resit {
+	exclusive 1
+	timeout 90
+	priority 3
+	InMap payon
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Afk 1
+	Eval !$char->{sitting}
+	Eval $char && abs(($char->{pos}{x} || 0) - 181) <= 18 && abs(($char->{pos}{y} || 0) - 104) <= 18
+	call {
+		[
+			do eval Phase2_AfkSit()
+			pause 3
+		]
+	}
+}
+
+
+###############################################################################
+# 5+6) Class stats + skills — re-apply if missing
+###############################################################################
+automacro Phase2_EnsureBuild {
+	exclusive 1
+	timeout 60
+	priority 5
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2BuildDone 1
+	call {
+		[
+			log PHASE2: apply class skill/stat build
+			do eval Phase2_ApplyJobBuild()
+			do conf phase2BuildDone 1
+		]
+	}
+}
+
+automacro Phase2_RefreshBuild {
+	exclusive 1
+	timeout 90
+	priority 7
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase2Active 1
+	call {
+		[
+			do eval Phase2_ApplyJobBuild()
+			do conf phase2BuildDone 1
+		]
+	}
+}
+
+
+###############################################################################
+# Shared: route helpers + perl
+# Travel rule: NEVER map-route across fields to Payon.
+# Get to a city Kafra → Teleport Service → Payon.
+###############################################################################
+macro phase2_to_payon {
+	[
+		log PHASE2: go Payon via Kafra teleport service (not field walk)
+		do conf lockMap none
+		do conf route_randomWalk 0
+		do conf attackAuto 0
+		do conf sitAuto_idle 0
+		do stand
+		do eval Phase2_DumpJunkWeight()
+		do eval Phase2_GoPayon()
+	]
+	if (&config(phase2InPayon) == 1) goto phase2_town_ready
+	pause 40
+	[
+		do eval Phase2_GoPayon()
+	]
+	pause 45
+	[
+		do eval Phase2_GoPayon()
+	]
+	pause 45
+	[
+		do eval Phase2_GoPayon()
+	]
+	pause 40
+	[
+		do eval Phase2_GoPayon()
+	]
+	pause 30
+	if (&config(phase2InPayon) == 1) goto phase2_town_ready
+	[
+		log PHASE2: still not in Payon - will retry next automacro
+		do conf phase2Traveling 0
+	]
+	stop
+	:phase2_town_ready
+	[
+		log PHASE2: Payon ready
+		do conf phase2Traveling 0
+	]
+}
+
+# If standing next to any Prontera Kafra and we need Payon — use Teleport Service now
+automacro Phase2_KafraTeleportToPayon {
+	exclusive 0
+	timeout 25
+	priority 0
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	InMap prontera
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2InPayon 1
+	NpcNear /Kafra/
+	Eval !$config{phase2SaveDone} || $config{phase2Selling} || $config{phase2Afk} || $config{phase2Traveling}
+	call {
+		[
+			log PHASE2: Kafra nearby — Teleport Service to Payon
+			do stand
+			do eval Phase2_TalkKafraWarpPayon()
+			pause 12
+		]
+	}
+}
+
+automacro Phase2_UnstickSelling {
+	exclusive 1
+	timeout 45
+	priority 9
+	ConfigKey phase2Selling 1
+	Eval !(AI::inQueue("sellAuto") || AI::is("sellAuto","NPC")) && Misc::percent_weight($char) < 45
+	call {
+		[
+			log PHASE2: clear stuck selling flag
+			do conf phase2Selling 0
+			do eval Phase2_ResumeHunt()
+		]
+	}
+}
+
+# ==== perl helpers (eventMacro appends to shared interpreter) ====
+sub Phase2_IsInPayonTown {
+	return 0 unless $field;
+	my $m = $field->baseName // '';
+	return ($m eq 'payon') ? 1 : 0;
+}
+
+# Drop common junk so OW drops below move penalties before town travel
+sub Phase2_DumpJunkWeight {
+	return 0 unless $char && $char->inventory;
+	my $pct = 0;
+	eval { $pct = Misc::percent_weight($char) };
+	return 1 if $pct < 50;
+	my @junk = (
+		'Jellopy', 'Empty Bottle', 'Feather', 'Fluff', 'Apple', 'Carrot',
+		'Clover', 'Shell', 'Sticky Mucus', 'Chrysalis', 'Stone', 'Unripe Apple',
+	);
+	my $dropped = 0;
+	foreach my $name (@junk) {
+		last if Misc::percent_weight($char) < 45;
+		my $item = $char->inventory->getByName($name);
+		next unless $item && ($item->{amount} // 0) > 0;
+		my $n = $item->{amount};
+		Commands::run("drop $item->{binID} $n");
+		$dropped += $n;
+		select(undef, undef, undef, 0.35);
+	}
+	Log::message("[PHASE2] dumped junk (approx $dropped) weight now ".Misc::percent_weight($char)."%\n", "success");
+	return 1;
+}
+
+# Prontera Kafra → Payon Teleport Service (openkore portals.txt: c r2 c r2)
+# Kafras: south 151,29 | mid 146,89 | east 282,200 | west 35,208
+sub Phase2_TalkKafraWarpPayon {
+	my @kafras = (
+		[151, 29],
+		[146, 89],
+		[282, 200],
+		[35, 208],
+	);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+	my ($best, $bd);
+	foreach my $k (@kafras) {
+		my $d = abs($x - $k->[0]) + abs($y - $k->[1]);
+		if (!defined $bd || $d < $bd) {
+			$bd = $d;
+			$best = $k;
+		}
+	}
+	return 0 unless $best;
+	# Only talk if reasonably close (else walk first)
+	if ($bd > 16) {
+		Log::message("[PHASE2] walk to Kafra $best->[0],$best->[1] for Payon teleport\n", "success");
+		Commands::run("move $best->[0] $best->[1]");
+		return 0;
+	}
+	Log::message("[PHASE2] Teleport Service → Payon via Kafra $best->[0],$best->[1]\n", "success");
+	Commands::run("talknpc $best->[0] $best->[1] c r2 c r2");
+	return 1;
+}
+
+sub Phase2_GoPayon {
+	Commands::run("stand") if $char && $char->{sitting};
+	my $m = $field ? ($field->baseName // '') : '';
+	if ($m eq 'payon') {
+		Commands::run("conf -f phase2InPayon 1");
+		Log::message("[PHASE2] already in Payon\n", "success");
+		return 1;
+	}
+	Commands::run("conf -f phase2InPayon 0");
+
+	# Do not interrupt an in-progress walk/route (was causing permanent Stuck)
+	if (AI::inQueue("route") || AI::inQueue("mapRoute") || AI::inQueue("move")
+		|| AI::is("route", "mapRoute", "move") || AI::is("NPC")) {
+		Log::message("[PHASE2] already routing/NPC — let it finish\n", "system");
+		return 0;
+	}
+
+	# From hunt map: only the short town portal (not field-hopping to Prontera)
+	if ($m eq 'pay_fild08') {
+		Log::message("[PHASE2] pay_fild08 → Payon town portal 17,75\n", "success");
+		Commands::run("move 17 75");
+		return 0;
+	}
+
+	# From Prontera: walk inside city to Kafra, then Teleport Service → Payon
+	# NEVER "move payon ..." (that walks through fields)
+	if ($m eq 'prontera') {
+		return Phase2_TalkKafraWarpPayon();
+	}
+
+	# From Prontera field: enter Prontera city, then Kafra teleport (not walk to Payon)
+	if ($m eq 'prt_fild08') {
+		Log::message("[PHASE2] prt_fild08 → Prontera city then Kafra teleport to Payon\n", "success");
+		Commands::run("move 170 378");
+		return 0;
+	}
+
+	# Elsewhere: go Prontera south Kafra only — next ticks use Teleport Service
+	Log::message("[PHASE2] go Prontera Kafra then Teleport Service to Payon\n", "success");
+	Commands::run("move prontera 151 29");
+	return 0;
+}
+
+sub Phase2_WalkKafraAFK {
+	unless (Phase2_IsInPayonTown()) {
+		Log::message("[PHASE2] not in Payon — use Kafra teleport (no field walk)\n", "system");
+		Phase2_GoPayon();
+		return 0;
+	}
+	my $x = 175 + int(rand(13));   # 175-187 near middle kafra
+	my $y = 98 + int(rand(13));    # 98-110
+	Log::message("[PHASE2] kafra AFK walk → $x,$y\n", "success");
+	Commands::run("stand") if $char && $char->{sitting};
+	Commands::run("move $x $y");
+	return 1;
+}
+
+sub Phase2_StepFaceKafra {
+	return 0 unless $char && Phase2_IsInPayonTown();
+	Commands::run("stand") if $char->{sitting};
+	AI::clear("move", "route", "mapRoute", "sitting", "standing", "look");
+	my @dx = (0, -1, -1, -1, 0, 1, 1, 1);
+	my @dy = (1, 1, 0, -1, -1, -1, 0, 1);
+	my @dir = qw(N NW W SW S SE E NE);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 181;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 104;
+	my @cands;
+	for my $d (0 .. 7) {
+		my ($tx, $ty) = ($x + $dx[$d], $y + $dy[$d]);
+		next unless abs($tx - 181) <= 18 && abs($ty - 104) <= 18;
+		push @cands, [$d, $tx, $ty];
+	}
+	unless (@cands) {
+		for my $d (0 .. 7) {
+			push @cands, [$d, $x + $dx[$d], $y + $dy[$d]];
+		}
+	}
+	for (my $i = @cands - 1; $i > 0; $i--) {
+		my $j = int(rand($i + 1));
+		@cands[$i, $j] = @cands[$j, $i];
+	}
+	my ($body, $tx, $ty) = @{$cands[0]};
+	Commands::run("conf sitAuto_look $body");
+	Commands::run("conf sitAuto_look_delay 0");
+	Commands::run("move $tx $ty");
+	Log::message("[PHASE2] AFK step face=$body ($dir[$body]) → $tx,$ty\n", "success");
+	return $body;
+}
+
+sub Phase2_AfkSit {
+	return 1 if $char && $char->{sitting};
+	unless (Phase2_IsInPayonTown()) {
+		Log::message("[PHASE2] AFK sit skipped - not in Payon\n", "system");
+		return 0;
+	}
+	my $basic = 0;
+	if ($char && $char->{skills}{NV_BASIC}) {
+		$basic = $char->{skills}{NV_BASIC}{lv} // 0;
+	}
+	if ($basic < 3) {
+		Log::message("[PHASE2] AFK stand-idle - Basic Skill $basic < 3\n", "system");
+		return 0;
+	}
+	$ai_v{sitAuto_forcedBySitCommand} = 1;
+	$ai_v{sitAuto_forceStop} = 0;
+	Commands::run("sit");
+	return 1;
+}
+
+sub Phase2_ApplyJobBuild {
+	my %id_to_job = (
+		1 => 'swordman', 2 => 'magician', 3 => 'archer',
+		4 => 'acolyte', 5 => 'merchant', 6 => 'thief',
+	);
+	my $job = lc($config{grindTargetJob} || '');
+	if ($job eq '' || $job eq 'random' || $job eq 'none' || $job eq 'auto') {
+		$job = $id_to_job{ $char->{jobID} // -1 } // 'swordman';
+		Commands::run("conf grindTargetJob $job");
+	}
+	$job = 'swordman' if $job eq 'swordsman';
+	$job = 'magician' if $job eq 'mage';
+
+	# Pure two-stat builds through mid levels
+	my %stats = (
+		swordman => '20 str, 20 agi, 40 str, 40 agi, 60 str, 60 agi, 80 str, 80 agi, 90 str, 90 agi',
+		magician => '20 int, 20 dex, 40 int, 40 dex, 60 int, 60 dex, 80 int, 80 dex, 90 int, 90 dex',
+		archer   => '20 dex, 20 agi, 40 dex, 40 agi, 60 dex, 60 agi, 80 dex, 80 agi, 90 dex, 90 agi',
+		acolyte  => '20 int, 20 dex, 40 int, 40 dex, 60 int, 60 dex, 80 int, 80 dex, 90 int, 90 dex',
+		merchant => '20 str, 20 dex, 40 str, 40 dex, 60 str, 60 dex, 80 str, 80 dex, 90 str, 90 dex',
+		thief    => '20 agi, 20 dex, 40 agi, 40 dex, 60 agi, 60 dex, 80 agi, 80 dex, 90 agi, 90 dex',
+	);
+	my %skills = (
+		swordman => 'Basic Skill 9, Bash 10, Provoke 5, Endure 5, Magnum Break 10',
+		magician => 'Basic Skill 9, Cold Bolt 10, Fire Bolt 10, Lightning Bolt 10, Increase SP Recovery 10',
+		archer   => 'Basic Skill 9, Owl\'s Eye 10, Vulture\'s Eye 10, Double Strafe 10, Arrow Shower 5',
+		acolyte  => 'Basic Skill 9, Divine Protection 10, Demon Bane 5, Heal 10, Increase AGI 10, Blessing 10',
+		merchant => 'Basic Skill 9, Enlarge Weight Limit 10, Discount 10, Overcharge 10, Pushcart 10, Vending 5',
+		thief    => 'Basic Skill 9, Double Attack 10, Improve Dodge 10, Stealing 10, Envenom 10, Hiding 5',
+	);
+
+	my $sk = $skills{$job} // $skills{swordman};
+	my $st = $stats{$job} // $stats{swordman};
+	Commands::run("conf -f skillsAddAuto_list $sk");
+	Commands::run("conf -f skillsAddAuto 1");
+	Commands::run("conf -f statsAddAuto_list $st");
+	Commands::run("conf -f statsAddAuto 1");
+	Commands::run("conf -f statsAddAuto_dontUseBonus 0");
+	Log::message("[PHASE2] Auto skill/stat build for $job (pure)\n", "success");
+	return 1;
+}
+
+sub Phase2_ResumeHunt {
+	Commands::run("conf phase2Afk 0") if $config{phase2Afk};
+	Commands::run("conf phase2Selling 0") if $config{phase2Selling};
+	Commands::run("conf lockMap pay_fild08");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf lockMap_y none");
+	Commands::run("conf -f grindHuntMap pay_fild08");
+	Commands::run("conf attackAuto 2");
+	Commands::run("conf attackAuto_inLockOnly 1");
+	Commands::run("conf attackRouteMaxPathDistance 50");
+	Commands::run("conf attackMinPlayerDistance 0");
+	Commands::run("conf route_randomWalk 1");
+	Commands::run("conf route_randomWalk_inLockOnly 1");
+	Commands::run("conf sellAuto 0");
+	Commands::run("conf sitAuto_idle 1");
+	Commands::run("conf itemsTakeAuto 2");
+	Commands::run("conf itemsGatherAuto 2");
+	Commands::run("stand") if $char && $char->{sitting};
+	Commands::run("ai on");
+	Log::message("[PHASE2] Resume hunt pay_fild08\n", "success");
+	return 1;
+}
