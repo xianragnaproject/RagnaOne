@@ -16,7 +16,7 @@
 
 
 ###############################################################################
-# 0) Bootstrap — leave Phase1 Prontera park, enable Phase2
+# 0) Bootstrap — Phase1 finished (in Payon); enable Phase2 grind
 ###############################################################################
 automacro Phase2_Bootstrap {
 	exclusive 1
@@ -24,15 +24,15 @@ automacro Phase2_Bootstrap {
 	priority 0
 	BaseLevel 15..30
 	JobID 1, 2, 3, 4, 5, 6
+	ConfigKey phase1Done 1
 	ConfigKeyNot phase2Active 1
 	ConfigKeyNot phase2Selling 1
 	ConfigKeyNot phase2Afk 1
 	call {
 		[
-			log PHASE2: bootstrap 1st-class 15-30 — leave Phase1 park
+			log PHASE2: bootstrap 1st-class 15-30 — Phase1 complete (Payon)
 			do conf phase2Active 1
 			do conf phase1Afk 0
-			do conf phase1Done 1
 			do conf phase1JobDone 1
 			do conf sitAuto_idle 1
 			do conf itemsTakeAuto 2

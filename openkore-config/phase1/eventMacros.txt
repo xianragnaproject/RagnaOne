@@ -9,12 +9,13 @@
 # 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
 # 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
 # 6) Job change                  - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job
-# 7) Base 15 + jobbed            - park/sit near Prontera fountain (random face)
+# 7) Base 15 + 1st job           - Kafra Teleport Service → Payon (END Phase 1)
 # Auto: skillsAddAuto Basic Skill 9; statsAddAuto novice hunt build (class build after job)
 #
 # Flags (set by macros):
 #   phase1LockDone  phase1SaveDone  phase1ShopDone  phase1Jobbing
-#   phase1JobDone  phase1Afk  phase1Done  grindTargetJob
+#   phase1JobDone  phase1Afk  phase1Done  phase1Traveling  grindTargetJob
+#   phase1Done = arrived in Payon (Phase 1 complete)
 ###############################################################################
 
 
@@ -527,12 +528,12 @@ automacro Phase1_JobDone {
 
 
 ###############################################################################
-# 7) Base 15 + jobbed - sit near Prontera fountain (random spot + facing)
-# Skipped once Phase2 is active (1st class 15-30 → Payon grind).
+# 7) Base 15 + 1st job → Payon via Prontera Kafra Teleport Service (END Phase 1)
+# Never field-walk to Payon. phase1Done is set only after arriving in Payon.
 ###############################################################################
-automacro Phase1_Done_SitFountain {
+automacro Phase1_GoPayon {
 	exclusive 1
-	timeout 30
+	timeout 120
 	priority 0
 	BaseLevel >= 15
 	JobIDNot 0
@@ -541,86 +542,118 @@ automacro Phase1_Done_SitFountain {
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot phase1Jobbing 1
 	ConfigKeyNot phase2Active 1
-	call phase1_done_sit
-}
-
-automacro Phase1_Done_HoldSit {
-	exclusive 1
-	timeout 90
-	priority 1
-	BaseLevel >= 15
-	JobIDNot 0
-	ConfigKey phase1Done 1
-	ConfigKeyNot phase1Afk 1
-	ConfigKeyNot phase2Active 1
-	call phase1_done_sit
-}
-
-automacro Phase1_Done_Resit {
-	exclusive 1
-	timeout 90
-	priority 3
-	InMap prontera
-	BaseLevel >= 15
-	JobIDNot 0
-	ConfigKey phase1Done 1
-	ConfigKey phase1Afk 1
-	ConfigKeyNot phase2Active 1
-	Eval !$char->{sitting}
-	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 22
+	ConfigKeyNot phase1Traveling 1
+	NotInMap payon
 	call {
 		[
-			do eval Phase1_AfkSit()
-			pause 3
-		]
-	}
-}
-
-# If parked AFK but standing south of fountain, walk up
-automacro Phase1_Done_ToFountain {
-	exclusive 1
-	timeout 45
-	priority 0
-	InMap prontera
-	BaseLevel >= 15
-	JobIDNot 0
-	ConfigKey phase1Done 1
-	ConfigKey phase1Afk 1
-	ConfigKeyNot phase2Active 1
-	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 22)
-	call {
-		[
-			log PHASE1 done: walk to fountain plaza
+			log PHASE1: Base15 + 1st job - Kafra Teleport Service to Payon (end Phase1)
+			do conf phase1Traveling 1
+			do conf phase1Afk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sellAuto 0
+			do conf buyAuto_0_disabled 1
+			do conf itemsTakeAuto 0
+			do conf itemsGatherAuto 0
+			do conf sitAuto_idle 0
 			do stand
-			do eval Phase1_WalkFountain()
-			pause 40
 		]
-		call phase1_afk_face_sit
+		call phase1_to_payon
+		[
+			do conf phase1Traveling 0
+		]
 	}
 }
 
-macro phase1_done_sit {
+# Already next to a Prontera Kafra while finishing Phase1 — talk Teleport Service now
+automacro Phase1_KafraTeleportToPayon {
+	exclusive 0
+	timeout 25
+	priority 0
+	BaseLevel >= 15
+	JobIDNot 0
+	InMap prontera
+	ConfigKey phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase2Active 1
+	NpcNear /Kafra/
+	call {
+		[
+			log PHASE1: Kafra nearby — Teleport Service to Payon
+			do stand
+			do eval Phase1_TalkKafraWarpPayon()
+			pause 12
+		]
+	}
+}
+
+automacro Phase1_GoPayon_Arrived {
+	exclusive 1
+	timeout 15
+	priority 0
+	BaseLevel >= 15
+	JobIDNot 0
+	InMap payon
+	ConfigKey phase1JobDone 1
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase2Active 1
+	call {
+		[
+			log PHASE1 COMPLETE - arrived Payon via Kafra (end Phase 1)
+			do conf phase1Done 1
+			do conf phase1Traveling 0
+			do conf phase1Afk 0
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do conf sitAuto_idle 1
+		]
+	}
+}
+
+macro phase1_to_payon {
 	[
-		log PHASE1 DONE - Base15 + jobbed - sit fountain random face
-		do conf phase1Done 1
-		do conf phase1Afk 1
-		do conf attackAuto 0
-		do conf route_randomWalk 0
+		log PHASE1: go Payon via Kafra teleport (not field walk)
 		do conf lockMap none
-		do conf sellAuto 0
-		do conf buyAuto_0_disabled 1
-		do conf itemsTakeAuto 0
-		do conf itemsGatherAuto 0
+		do conf route_randomWalk 0
+		do conf attackAuto 0
 		do conf sitAuto_idle 0
 		do stand
-		do eval AI::clear("move", "route", "mapRoute", "attack")
+		do eval Phase1_GoPayonTown()
 	]
-	call phase1_to_prontera
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 40
 	[
-		do eval Phase1_WalkFountain()
-		pause 55
+		do eval Phase1_GoPayonTown()
 	]
-	call phase1_afk_face_sit
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 45
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 45
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	pause 40
+	[
+		do eval Phase1_GoPayonTown()
+	]
+	pause 30
+	if (&config(phase1InPayon) == 1) goto phase1_payon_ready
+	[
+		log PHASE1: still not in Payon - will retry next automacro
+		do conf phase1Traveling 0
+	]
+	stop
+	:phase1_payon_ready
+	[
+		log PHASE1: Payon ready
+		do conf phase1Traveling 0
+	]
 }
 
 
@@ -917,17 +950,89 @@ sub Phase1_ApplyJobBuild {
 	return 1;
 }
 
+sub Phase1_IsInPayonTown {
+	return 0 unless $field;
+	my $m = $field->baseName // '';
+	return ($m eq 'payon') ? 1 : 0;
+}
+
+# Prontera Kafra → Payon Teleport Service (openkore portals.txt: c r2 c r2)
+# Kafras: south 151,29 | mid 146,89 | east 282,200 | west 35,208
+sub Phase1_TalkKafraWarpPayon {
+	my @kafras = (
+		[151, 29],
+		[146, 89],
+		[282, 200],
+		[35, 208],
+	);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+	my ($best, $bd);
+	foreach my $k (@kafras) {
+		my $d = abs($x - $k->[0]) + abs($y - $k->[1]);
+		if (!defined $bd || $d < $bd) {
+			$bd = $d;
+			$best = $k;
+		}
+	}
+	return 0 unless $best;
+	if ($bd > 16) {
+		Log::message("[PHASE1] walk to Kafra $best->[0],$best->[1] for Payon teleport\n", "success");
+		Commands::run("move $best->[0] $best->[1]");
+		return 0;
+	}
+	Log::message("[PHASE1] Teleport Service → Payon via Kafra $best->[0],$best->[1]\n", "success");
+	Commands::run("talknpc $best->[0] $best->[1] c r2 c r2");
+	return 1;
+}
+
+# Get to Payon city via Prontera Kafra only (never field-walk "move payon")
+sub Phase1_GoPayonTown {
+	Commands::run("stand") if $char && $char->{sitting};
+	my $m = $field ? ($field->baseName // '') : '';
+	if ($m eq 'payon') {
+		Commands::run("conf -f phase1InPayon 1");
+		Log::message("[PHASE1] already in Payon\n", "success");
+		return 1;
+	}
+	Commands::run("conf -f phase1InPayon 0");
+
+	# Do not interrupt an in-progress walk/route/NPC
+	if (AI::inQueue("route") || AI::inQueue("mapRoute") || AI::inQueue("move")
+		|| AI::is("route", "mapRoute", "move") || AI::is("NPC")) {
+		Log::message("[PHASE1] already routing/NPC — let it finish\n", "system");
+		return 0;
+	}
+
+	if ($m eq 'prontera') {
+		return Phase1_TalkKafraWarpPayon();
+	}
+
+	# From Prontera field / indoors: enter Prontera city first, then Kafra
+	if ($m eq 'prt_fild08' || $m eq 'prt_in') {
+		Log::message("[PHASE1] $m → Prontera city then Kafra teleport to Payon\n", "success");
+		Phase1_GoPronteraPortal();
+		return 0;
+	}
+
+	# Fallback: map-route into Prontera (not Payon fields)
+	Log::message("[PHASE1] map-route → Prontera then Kafra to Payon\n", "success");
+	Commands::run("move prontera 156 190");
+	return 0;
+}
+
 sub Phase1_AfterJobChange {
 	my $base = $char ? ($char->{lv} // 0) : 0;
-	# Mark Phase1 complete; Phase2 macros take over for 1st-class 15-30
+	# Base 15+ jobbed: stop hunting; Phase1_GoPayon takes over (phase1Done set on Payon arrival)
 	if ($base >= 15) {
-		Log::message("[PHASE1] Base $base + jobbed - Phase1 done (Phase2 may take over)\n", "success");
-		Commands::run("conf phase1Done 1");
-		# Do not force park if Phase2 is already active
+		Log::message("[PHASE1] Base $base + jobbed - go Payon via Kafra (Phase1 finale)\n", "success");
 		if ($config{phase2Active}) {
 			Commands::run("conf phase1Afk 0");
+			Commands::run("conf phase1Done 1");
 			return 1;
 		}
+		Commands::run("conf phase1Afk 0");
+		Commands::run("conf phase1Traveling 0");
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");

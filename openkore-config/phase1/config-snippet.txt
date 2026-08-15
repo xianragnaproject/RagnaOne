@@ -40,6 +40,8 @@ phase1Jobbing 0
 phase1JobDone 0
 phase1Afk 0
 phase1Done 0
+phase1Traveling 0
+phase1InPayon 0
 
 # Red Potion buyAuto (disabled until macro enables: Novice + zeny>=5000 + stock 0)
 buyAuto_0 Red Potion
