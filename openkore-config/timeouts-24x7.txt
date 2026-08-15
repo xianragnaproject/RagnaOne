@@ -31,8 +31,8 @@ poseidon_wait_reply 15
 ai 1
 
 # Retry move commands every x seconds, and give up if movement does not progress within x seconds.
-ai_move_retry 0.4
-ai_move_giveup 1.2
+ai_move_retry 0.5
+ai_move_giveup 4
 
 # How often to prune actors whose reported positions drift implausibly far from our predicted location.
 avoidDistantActors 1
@@ -93,7 +93,7 @@ ai_attack_unstuck 2.75
 ai_attack_unfail 12
 
 # Time to wait before route logic considers itself stuck and tries to recover.
-ai_route_unstuck 2
+ai_route_unstuck 6
 
 # Pause for the specified number of seconds after taking something,
 # it increases the interval between taking several items and between

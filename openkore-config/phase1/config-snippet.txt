@@ -7,6 +7,8 @@ attackRouteMaxPathDistance 50
 attackMinPlayerDistance 0
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
+# Required for Task::Route — without this, step_index is empty and bots never leave the cell
+route_step 10
 itemsTakeAuto 2
 itemsGatherAuto 2
 itemsGatherAuto_notInTown 1
