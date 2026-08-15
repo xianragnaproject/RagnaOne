@@ -7,9 +7,9 @@
 # 2) Save Prontera south Kafra   - Novice base 1-15
 # 3) Sell @ Prontera tool dealer - Novice base 1-15, OW >= 50%
 # 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
-# 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
+# 5) Fountain AFK break          - ~every 30 min, SHORT sit 45-90s (GM kicks ~5min idle)
 # 6) Job change                  - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job
-# 7) Base 15 + jobbed            - park/sit near Prontera fountain (random face)
+# 7) Base 15 + jobbed            - park near fountain with anti-idle walks (no forever-sit)
 # Auto: skillsAddAuto Basic Skill 9; statsAddAuto novice hunt build (class build after job)
 #
 # Flags (set by macros):
@@ -301,7 +301,7 @@ automacro Phase1_BuyPots_DisableJobbed {
 
 
 ###############################################################################
-# 5) Fountain AFK - ~every 30 min, sit 5-15 min, random facing (not always N)
+# 5) Fountain AFK - ~every 30 min, SHORT sit (server GM-kicks ~5min idle)
 ###############################################################################
 automacro Phase1_FountainAFK {
 	exclusive 1
@@ -320,7 +320,7 @@ automacro Phase1_FountainAFK {
 
 macro phase1_fountain_afk {
 	[
-		log PHASE1: AFK break - go fountain then sit
+		log PHASE1: AFK break - go fountain then short sit
 		do conf phase1Afk 1
 		do conf attackAuto 0
 		do conf route_randomWalk 0
@@ -336,9 +336,8 @@ macro phase1_fountain_afk {
 	# pause MUST be outside [...] — macro_block runs lines in one tick and skips waits
 	pause 55
 	call phase1_afk_face_sit
-	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
-	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
-	$secs = &rand(300, 900)
+	# Keep under ~2 min — longer idle triggers "forced to disconnect by a GM"
+	$secs = &rand(45, 90)
 	log PHASE1: AFK sit-idle for $secs sec
 	pause $secs
 	[
@@ -525,7 +524,8 @@ automacro Phase1_JobDone {
 
 
 ###############################################################################
-# 7) Base 15 + jobbed - sit near Prontera fountain (random spot + facing)
+# 7) Base 15 + jobbed - park near Prontera fountain with ANTI-IDLE
+# Forever-sit gets "forced to disconnect by a GM" on this server (~5 min).
 ###############################################################################
 automacro Phase1_Done_SitFountain {
 	exclusive 1
@@ -537,64 +537,68 @@ automacro Phase1_Done_SitFountain {
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot phase1Jobbing 1
-	call phase1_done_sit
+	call phase1_done_park
 }
 
-automacro Phase1_Done_HoldSit {
+automacro Phase1_Done_HoldPark {
 	exclusive 1
-	timeout 90
+	timeout 120
 	priority 1
 	BaseLevel >= 15
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKeyNot phase1Afk 1
-	call phase1_done_sit
+	call phase1_done_park
 }
 
-automacro Phase1_Done_Resit {
+# Keep moving occasionally so GM idle kick never fires
+automacro Phase1_Done_AntiIdle {
 	exclusive 1
-	timeout 90
-	priority 3
+	timeout 75
+	priority 2
 	InMap prontera
 	BaseLevel >= 15
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKey phase1Afk 1
-	Eval !$char->{sitting}
-	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 22
 	call {
 		[
-			do eval Phase1_AfkSit()
-			pause 3
+			do ai on
+			do stand
+			do eval Phase1_AntiIdleStep()
 		]
+		pause 8
 	}
 }
 
-# If parked AFK but standing south of fountain, walk up
+# If parked far from plaza, walk back (no permanent sit)
 automacro Phase1_Done_ToFountain {
 	exclusive 1
-	timeout 45
+	timeout 90
 	priority 0
 	InMap prontera
 	BaseLevel >= 15
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKey phase1Afk 1
-	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 22)
+	Eval $char && (($char->{pos}{y} || 0) < 165 || abs(($char->{pos}{x} || 0) - 156) > 28)
 	call {
 		[
 			log PHASE1 done: walk to fountain plaza
+			do ai on
 			do stand
 			do eval Phase1_WalkFountain()
-			pause 40
 		]
-		call phase1_afk_face_sit
+		pause 40
+		[
+			do eval Phase1_AntiIdleStep()
+		]
 	}
 }
 
-macro phase1_done_sit {
+macro phase1_done_park {
 	[
-		log PHASE1 DONE - Base15 + jobbed - sit fountain random face
+		log PHASE1 DONE - Base15 + jobbed - park fountain with anti-idle
 		do conf phase1Done 1
 		do conf phase1Afk 1
 		do conf attackAuto 0
@@ -605,6 +609,7 @@ macro phase1_done_sit {
 		do conf itemsTakeAuto 0
 		do conf itemsGatherAuto 0
 		do conf sitAuto_idle 0
+		do ai on
 		do stand
 		do eval AI::clear("move", "route", "mapRoute", "attack")
 	]
@@ -613,7 +618,24 @@ macro phase1_done_sit {
 		do eval Phase1_WalkFountain()
 		pause 55
 	]
-	call phase1_afk_face_sit
+	[
+		do stand
+		do eval Phase1_AntiIdleStep()
+	]
+}
+
+# Safety: if AI was toggled off, turn it back on (prevents frozen "logged in but dead" bots)
+automacro Phase1_EnsureAiOn {
+	exclusive 0
+	timeout 45
+	priority 9
+	Eval defined $char && $char && $field && AI::state() != AI::AUTO
+	call {
+		[
+			log PHASE1: AI was not AUTO - forcing ai on
+			do ai on
+		]
+	}
 }
 
 
@@ -797,6 +819,25 @@ sub Phase1_AfkSit {
 	$ai_v{sitAuto_forcedBySitCommand} = 1;
 	$ai_v{sitAuto_forceStop} = 0;
 	Commands::run("sit");
+	return 1;
+}
+
+# Small random walk near Prontera fountain — prevents GM idle kicks while "parked"
+sub Phase1_AntiIdleStep {
+	return 0 unless $char && Phase1_IsInPronteraTown();
+	Commands::run("stand") if $char->{sitting};
+	AI::clear("sitting", "standing");
+	my $cx = $char->{pos_to}{x} // $char->{pos}{x} // 156;
+	my $cy = $char->{pos_to}{y} // $char->{pos}{y} // 190;
+	my $tx = $cx + int(rand(7)) - 3;
+	my $ty = $cy + int(rand(7)) - 3;
+	$tx = 145 if $tx < 145;
+	$tx = 168 if $tx > 168;
+	$ty = 175 if $ty < 175;
+	$ty = 205 if $ty > 205;
+	Commands::run("move $tx $ty");
+	Commands::run("look " . int(rand(8)));
+	Log::message("[PHASE1] anti-idle step → $tx,$ty\n", "success");
 	return 1;
 }
 

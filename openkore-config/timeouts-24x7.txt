@@ -11,14 +11,15 @@ charlogin 12
 maplogin 12
 play 40
 # When disconnected, wait x seconds before reconnecting again
-reconnect 15
+# Longer base + random stagger — mass GM kicks must NOT stampede 20 logins at once.
+reconnect 25
 
 # After repeated disconnects, wait longer before reconnecting, to reduce load on the server.
-# Keep this short for 24/7 bot fleets (old max was 1800s = looks "dead").
-reconnect_backoff 10,15,20,30,45,60,90,120
+# Cap kept under watchdog stale threshold (180s) so OpenKore self-recovers without hard restart.
+reconnect_backoff 20,30,45,60,75,90,120,150
 
 # Add a random amount of seconds to reconnect time, up to a maximum of reconnect_random seconds.
-reconnect_random 8
+reconnect_random 40
 
 setTitle 0.2
 
