@@ -33,6 +33,7 @@ automacro Phase2_Bootstrap {
 			do conf phase2Active 1
 			do conf phase1Afk 0
 			do conf phase1Done 1
+			do conf phase1JobDone 1
 			do conf sitAuto_idle 1
 			do conf itemsTakeAuto 2
 			do conf itemsGatherAuto 2
@@ -41,6 +42,25 @@ automacro Phase2_Bootstrap {
 			do eval Phase2_DumpJunkWeight()
 			do eval Phase2_ApplyJobBuild()
 			do conf phase2BuildDone 1
+			do conf sellAuto 0
+			do conf sellAuto_npc payon 159 96
+			do conf sellAuto_standpoint payon 160 98
+			do conf sellAuto_distance 10
+			do conf sellAuto_maxDistance 14
+			do conf sellAuto_npc_steps s
+			do conf itemsMaxWeight 89
+			do conf itemsMaxWeight_sellOrStore 50
+			do conf buyAuto_0 Red Potion
+			do conf buyAuto_0_npc payon 159 96
+			do conf buyAuto_0_standpoint payon 160 98
+			do conf buyAuto_0_distance 5
+			do conf buyAuto_0_minAmount 0
+			do conf buyAuto_0_maxAmount 50
+			do conf buyAuto_0_zeny >= 5000
+			do conf buyAuto_0_disabled 0
+			do conf buyAuto_0_npc_steps b
+			do conf phase2ShopDone 1
+			log PHASE2: shop configured Payon 159,96
 		]
 	}
 }
@@ -50,7 +70,7 @@ automacro Phase2_Bootstrap {
 # 1) Save point — Payon middle Kafra (181,104) — RUN ONCE
 ###############################################################################
 automacro Phase2_SetSave_Go {
-	exclusive 1
+	exclusive 0
 	timeout 180
 	priority 1
 	BaseLevel 15..30
