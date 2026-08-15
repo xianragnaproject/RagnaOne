@@ -135,7 +135,7 @@ automacro Phase1_SetSave_Talk {
 			do conf -f saveMap_y 50
 			do conf -f phase1SaveDone 1
 			log PHASE1: save set Prontera south - resume hunt
-			do conf sitAuto_idle 1
+			do conf sitAuto_idle 0
 			do eval Phase1_ResumeHunt()
 			pause 10
 		]
@@ -471,7 +471,7 @@ automacro Phase1_JobDone {
 			do conf phase1JobDone 1
 			do conf phase1Jobbing 0
 			do conf buyAuto_0_disabled 1
-			do conf sitAuto_idle 1
+			do conf sitAuto_idle 0
 			do eval Phase1_ApplyJobBuild()
 			do eval Phase1_AfterJobChange()
 		]
