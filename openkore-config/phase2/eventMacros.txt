@@ -416,27 +416,30 @@ automacro Phase2_RefreshBuild {
 
 ###############################################################################
 # Shared: route helpers + perl
+# Travel rule: NEVER map-route across fields to Payon.
+# Get to a city Kafra → Teleport Service → Payon.
 ###############################################################################
 macro phase2_to_payon {
 	[
-		log PHASE2: go Payon for town chores
+		log PHASE2: go Payon via Kafra teleport service (not field walk)
 		do conf lockMap none
 		do conf route_randomWalk 0
 		do conf attackAuto 0
 		do conf sitAuto_idle 0
 		do stand
+		do eval Phase2_DumpJunkWeight()
 		do eval Phase2_GoPayon()
 	]
 	if (&config(phase2InPayon) == 1) goto phase2_town_ready
+	pause 40
+	[
+		do eval Phase2_GoPayon()
+	]
 	pause 45
 	[
 		do eval Phase2_GoPayon()
 	]
-	pause 50
-	[
-		do eval Phase2_GoPayon()
-	]
-	pause 50
+	pause 45
 	[
 		do eval Phase2_GoPayon()
 	]
@@ -456,6 +459,28 @@ macro phase2_to_payon {
 		log PHASE2: Payon ready
 		do conf phase2Traveling 0
 	]
+}
+
+# If standing next to any Prontera Kafra and we need Payon — use Teleport Service now
+automacro Phase2_KafraTeleportToPayon {
+	exclusive 0
+	timeout 25
+	priority 0
+	BaseLevel 15..30
+	JobID 1, 2, 3, 4, 5, 6
+	InMap prontera
+	ConfigKey phase2Active 1
+	ConfigKeyNot phase2InPayon 1
+	NpcNear /Kafra/
+	Eval !$config{phase2SaveDone} || $config{phase2Selling} || $config{phase2Afk} || $config{phase2Traveling}
+	call {
+		[
+			log PHASE2: Kafra nearby — Teleport Service to Payon
+			do stand
+			do eval Phase2_TalkKafraWarpPayon()
+			pause 12
+		]
+	}
 }
 
 automacro Phase2_UnstickSelling {
@@ -504,6 +529,37 @@ sub Phase2_DumpJunkWeight {
 	return 1;
 }
 
+# Prontera Kafra → Payon Teleport Service (openkore portals.txt: c r2 c r2)
+# Kafras: south 151,29 | mid 146,89 | east 282,200 | west 35,208
+sub Phase2_TalkKafraWarpPayon {
+	my @kafras = (
+		[151, 29],
+		[146, 89],
+		[282, 200],
+		[35, 208],
+	);
+	my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
+	my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
+	my ($best, $bd);
+	foreach my $k (@kafras) {
+		my $d = abs($x - $k->[0]) + abs($y - $k->[1]);
+		if (!defined $bd || $d < $bd) {
+			$bd = $d;
+			$best = $k;
+		}
+	}
+	return 0 unless $best;
+	# Only talk if reasonably close (else walk first)
+	if ($bd > 16) {
+		Log::message("[PHASE2] walk to Kafra $best->[0],$best->[1] for Payon teleport\n", "success");
+		Commands::run("move $best->[0] $best->[1]");
+		return 0;
+	}
+	Log::message("[PHASE2] Teleport Service → Payon via Kafra $best->[0],$best->[1]\n", "success");
+	Commands::run("talknpc $best->[0] $best->[1] c r2 c r2");
+	return 1;
+}
+
 sub Phase2_GoPayon {
 	Commands::run("stand") if $char && $char->{sitting};
 	my $m = $field ? ($field->baseName // '') : '';
@@ -516,55 +572,41 @@ sub Phase2_GoPayon {
 
 	# Do not interrupt an in-progress walk/route (was causing permanent Stuck)
 	if (AI::inQueue("route") || AI::inQueue("mapRoute") || AI::inQueue("move")
-		|| AI::is("route", "mapRoute", "move")) {
-		Log::message("[PHASE2] already routing — let it finish\n", "system");
+		|| AI::is("route", "mapRoute", "move") || AI::is("NPC")) {
+		Log::message("[PHASE2] already routing/NPC — let it finish\n", "system");
 		return 0;
 	}
 
-	# From hunt map: west portal → Payon
+	# From hunt map: only the short town portal (not field-hopping to Prontera)
 	if ($m eq 'pay_fild08') {
-		Log::message("[PHASE2] pay_fild08 → Payon portal 17,75\n", "success");
+		Log::message("[PHASE2] pay_fild08 → Payon town portal 17,75\n", "success");
 		Commands::run("move 17 75");
 		return 0;
 	}
 
-	# From Prontera: Kafra teleport to Payon (portals.txt: c r2 c r2)
+	# From Prontera: walk inside city to Kafra, then Teleport Service → Payon
+	# NEVER "move payon ..." (that walks through fields)
 	if ($m eq 'prontera') {
-		my $x = $char->{pos_to}{x} // $char->{pos}{x} // 0;
-		my $y = $char->{pos_to}{y} // $char->{pos}{y} // 0;
-		# Near south Kafra — warp
-		if (abs($x - 151) <= 14 && abs($y - 29) <= 14) {
-			Log::message("[PHASE2] Prontera south Kafra → warp Payon\n", "success");
-			Commands::run("talknpc 151 29 c r2 c r2");
-			return 0;
-		}
-		# Near west/tool kafra
-		if (abs($x - 146) <= 14 && abs($y - 89) <= 14) {
-			Log::message("[PHASE2] Prontera Kafra 146,89 → warp Payon\n", "success");
-			Commands::run("talknpc 146 89 c r2 c r2");
-			return 0;
-		}
-		# Fountain plaza / north — walk south first (avoid stuck 155,169→146,89)
-		if ($y >= 120) {
-			Log::message("[PHASE2] leave fountain area → 155,50 then Kafra\n", "success");
-			Commands::run("move 155 50");
-			return 0;
-		}
-		Log::message("[PHASE2] walk Prontera south Kafra 151,29\n", "success");
-		Commands::run("move 151 29");
+		return Phase2_TalkKafraWarpPayon();
+	}
+
+	# From Prontera field: enter Prontera city, then Kafra teleport (not walk to Payon)
+	if ($m eq 'prt_fild08') {
+		Log::message("[PHASE2] prt_fild08 → Prontera city then Kafra teleport to Payon\n", "success");
+		Commands::run("move 170 378");
 		return 0;
 	}
 
-	# Elsewhere: get to Prontera south, next ticks warp
-	Log::message("[PHASE2] route Prontera south Kafra then warp Payon\n", "success");
+	# Elsewhere: go Prontera south Kafra only — next ticks use Teleport Service
+	Log::message("[PHASE2] go Prontera Kafra then Teleport Service to Payon\n", "success");
 	Commands::run("move prontera 151 29");
 	return 0;
 }
 
 sub Phase2_WalkKafraAFK {
 	unless (Phase2_IsInPayonTown()) {
-		Log::message("[PHASE2] kafra AFK walk skipped - not in Payon yet\n", "system");
-		Commands::run("move payon 181 104");
+		Log::message("[PHASE2] not in Payon — use Kafra teleport (no field walk)\n", "system");
+		Phase2_GoPayon();
 		return 0;
 	}
 	my $x = 175 + int(rand(13));   # 175-187 near middle kafra
