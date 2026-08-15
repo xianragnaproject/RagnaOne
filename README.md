@@ -20,7 +20,7 @@ Web client: http://173.208.138.84/ (roBrowser)
 ./scripts/setup-openkore.sh
 ```
 
-This clones [OpenKore](https://github.com/OpenKore/openkore), installs build deps if needed, compiles `XSTools`, and adds the **RagnaOne** entry to `tables/servers.txt`.
+This **wipes** any previous `openkore/` tree, reclones stock [OpenKore](https://github.com/OpenKore/openkore), compiles `XSTools`, and adds only the **RagnaOne** entry to `tables/servers.txt`. Macros, eventMacros, and grind plugins (`macro`, `eventMacro`, `raiseStat`, `raiseSkill`, `breakTime`, `profiles`) are not installed.
 
 ### Connect
 
@@ -50,7 +50,7 @@ addTableFolders kRO/RagexeRE_2018_06_21a;translated/kRO_english;kRO
 private 1
 ```
 
-In `openkore/control/config.txt`: `master RagnaOne`
+In `openkore/control/config.txt`: `master RagnaOne` (everything else is stock OpenKore defaults)
 
 ### Verified
 

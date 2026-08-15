@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Clone and build OpenKore for RagnaOne
+# Fresh, clean OpenKore install for RagnaOne.
+# Wipes any previous checkout (macros, grind configs, leftover control files)
+# and reclones stock OpenKore. Only adds the RagnaOne server entry and
+# points master at it. Credentials stay empty.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OK="$ROOT/openkore"
-
-if [[ ! -d "$OK/.git" && ! -f "$OK/openkore.pl" ]]; then
-  git clone --depth 1 https://github.com/OpenKore/openkore.git "$OK"
-fi
 
 # Ensure build deps (idempotent)
 sudo apt-get update -qq
@@ -15,10 +14,16 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
   build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus
 # OpenKore's Makefile invokes `python`; python-is-python3 provides it.
 
-# Apply RagnaOne server definition if missing
+echo "Wiping $OK for a clean OpenKore checkout"
+rm -rf "$OK"
+git clone --depth 1 https://github.com/OpenKore/openkore.git "$OK"
+
+# Drop stock macro files if upstream ships any
+rm -f "$OK/control/eventMacros.txt" "$OK/control/macros.txt"
+
+# Apply RagnaOne server definition
 SNIPPET="$ROOT/openkore-config/servers-ragnaone.txt"
-if ! grep -q '^\[RagnaOne\]' "$OK/tables/servers.txt" 2>/dev/null; then
-  python3 - "$OK/tables/servers.txt" "$SNIPPET" <<'PY'
+python3 - "$OK/tables/servers.txt" "$SNIPPET" <<'PY'
 from pathlib import Path
 import sys
 p = Path(sys.argv[1])
@@ -31,33 +36,43 @@ else:
     p.write_text(text + "\n" + entry)
 print("Added [RagnaOne] to servers.txt")
 PY
-fi
 
-# Point default master at RagnaOne (credentials stay empty)
+# Point master at RagnaOne only. Leave every other control option stock.
 python3 - "$OK/control/config.txt" <<'PY'
-import re, sys
+import re
 from pathlib import Path
-p = Path(sys.argv[1])
+p = Path(__import__('sys').argv[1])
 text = p.read_text()
-def set_key(text, key, value):
-    pat = re.compile(rf'^{re.escape(key)}(?:\s+.*)?$', re.M)
-    if pat.search(text):
-        return pat.sub(f'{key} {value}', text, count=1)
-    return text + f'\n{key} {value}\n'
-text = set_key(text, 'master', 'RagnaOne')
-text = set_key(text, 'server', '0')
-text = set_key(text, 'char', '0')
-text = set_key(text, 'attackAuto', '0')
-text = set_key(text, 'route_randomWalk', '0')
+pat = re.compile(r'^master(?:\s+.*)?$', re.M)
+if pat.search(text):
+    text = pat.sub('master RagnaOne', text, count=1)
+else:
+    text += '\nmaster RagnaOne\n'
 p.write_text(text)
-print("Updated control/config.txt defaults")
+print("Set master RagnaOne (stock config otherwise)")
+PY
+
+# Disable macro / grind plugins. Keep reconnect and map utilities.
+python3 - "$OK/control/sys.txt" <<'PY'
+import re
+from pathlib import Path
+p = Path(__import__('sys').argv[1])
+text = p.read_text()
+text = re.sub(
+    r'^loadPlugins_list\s+.*$',
+    'loadPlugins_list map,reconnect,xconf,OTP,LatamChecksum,AdventureAgency,LATAMTranslate',
+    text,
+    count=1,
+    flags=re.M,
+)
+p.write_text(text)
+print("Disabled macro, eventMacro, raiseStat, raiseSkill, breakTime, profiles")
 PY
 
 # Fix mixed CP949 bytes in upstream English quests table (blocks startup)
 python3 - "$OK/tables/translated/kRO_english/quests.txt" <<'PY'
 from pathlib import Path
-import sys
-p = Path(sys.argv[1])
+p = Path(__import__('sys').argv[1])
 if not p.exists():
     raise SystemExit(0)
 data = p.read_bytes()
@@ -84,4 +99,4 @@ PY
 
 cd "$OK"
 scons -j"$(nproc)"
-echo "OpenKore ready. Run: RO_USERNAME=... RO_PASSWORD=... ./scripts/run-openkore.sh"
+echo "Clean OpenKore ready. No macros. Run: RO_USERNAME=... RO_PASSWORD=... ./scripts/run-openkore.sh"
