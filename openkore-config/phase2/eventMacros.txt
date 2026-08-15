@@ -191,9 +191,9 @@ automacro Phase2_KeepHunt {
 # 3) Sell & buy potions @ Payon outdoor vendor (159,96)
 ###############################################################################
 automacro Phase2_ConfigureShop {
-	exclusive 1
-	timeout 120
-	priority 3
+	exclusive 0
+	timeout 20
+	priority 0
 	BaseLevel 15..30
 	JobID 1, 2, 3, 4, 5, 6
 	ConfigKey phase2Active 1
