@@ -289,6 +289,7 @@ automacro Phase1_BuyPots_DisableJobbed {
 	timeout 60
 	priority 3
 	JobIDNot 0
+	ConfigKeyNot phase2Active 1
 	ConfigKeyNot buyAuto_0_disabled 1
 	call {
 		[
@@ -510,6 +511,7 @@ automacro Phase1_JobDone {
 	priority 0
 	JobIDNot 0
 	ConfigKeyNot phase1JobDone 1
+	ConfigKeyNot phase2Active 1
 	call {
 		[
 			log PHASE1: 1st job acquired
@@ -526,6 +528,7 @@ automacro Phase1_JobDone {
 
 ###############################################################################
 # 7) Base 15 + jobbed - sit near Prontera fountain (random spot + facing)
+# Skipped once Phase2 is active (1st class 15-30 → Payon grind).
 ###############################################################################
 automacro Phase1_Done_SitFountain {
 	exclusive 1
@@ -537,6 +540,7 @@ automacro Phase1_Done_SitFountain {
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot phase1Jobbing 1
+	ConfigKeyNot phase2Active 1
 	call phase1_done_sit
 }
 
@@ -548,6 +552,7 @@ automacro Phase1_Done_HoldSit {
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase2Active 1
 	call phase1_done_sit
 }
 
@@ -560,6 +565,7 @@ automacro Phase1_Done_Resit {
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKey phase1Afk 1
+	ConfigKeyNot phase2Active 1
 	Eval !$char->{sitting}
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 22
 	call {
@@ -580,6 +586,7 @@ automacro Phase1_Done_ToFountain {
 	JobIDNot 0
 	ConfigKey phase1Done 1
 	ConfigKey phase1Afk 1
+	ConfigKeyNot phase2Active 1
 	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 22)
 	call {
 		[
@@ -865,6 +872,11 @@ sub Phase1_ClearStuckJobbing {
 }
 
 sub Phase1_ApplyJobBuild {
+	# Phase2 owns pure class builds for 1st-class 15-30
+	if ($config{phase2Active}) {
+		Log::message("[PHASE1] skip ApplyJobBuild — Phase2 active\n", "system");
+		return 1;
+	}
 	# Map jobID → class name when grindTargetJob not set
 	my %id_to_job = (
 		1 => 'swordman', 2 => 'magician', 3 => 'archer',
@@ -907,10 +919,15 @@ sub Phase1_ApplyJobBuild {
 
 sub Phase1_AfterJobChange {
 	my $base = $char ? ($char->{lv} // 0) : 0;
-	# Job change now requires base ≥ 15, so park at fountain
+	# Mark Phase1 complete; Phase2 macros take over for 1st-class 15-30
 	if ($base >= 15) {
-		Log::message("[PHASE1] Base $base + jobbed - park at fountain\n", "success");
+		Log::message("[PHASE1] Base $base + jobbed - Phase1 done (Phase2 may take over)\n", "success");
 		Commands::run("conf phase1Done 1");
+		# Do not force park if Phase2 is already active
+		if ($config{phase2Active}) {
+			Commands::run("conf phase1Afk 0");
+			return 1;
+		}
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
@@ -925,6 +942,10 @@ sub Phase1_AfterJobChange {
 }
 
 sub Phase1_ResumeHunt {
+	if ($config{phase2Active}) {
+		# Phase2 owns hunting
+		return 1;
+	}
 	if ($config{phase1Afk} || $config{phase1Done}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");

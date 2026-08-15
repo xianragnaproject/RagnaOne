@@ -1,0 +1,16 @@
+######## Phase 2 — 1st class base 15-30 (Payon / pay_fild08) ########
+# Flags (macros set these)
+phase2Active 0
+phase2LockDone 0
+phase2SaveDone 0
+phase2ShopDone 0
+phase2Selling 0
+phase2Afk 0
+phase2BuildDone 0
+phase2InPayon 0
+phase2Traveling 0
+
+# Defaults overwritten by Phase2 macros when active
+# grindHuntMap pay_fild08
+# saveMap payon
+# sellAuto_npc payon 159 96
