@@ -135,11 +135,21 @@ expect {
     puts "SENT_CREATE $char $sex"
     expect {
       -re {Character .* created|created successfully|Character List|Slot 0:} { puts "CREATE_OK" }
-      -re {Character name is already used|name is unavailable|Name already exists} {
+      -re {Character name is already used|name is unavailable|Name already exists|Charname already exists} {
         puts "NAME_TAKEN"
+        expect -re {Enter your answer:|Please choose a character}
+        # unique suffix — old fleet names may still exist on the server
+        set alt "B[clock seconds][pid]"
+        set alt [string range $alt 0 15]
+        send "0\r"
         expect -re {Enter your answer:}
-        send "0 \"${char}x\" 1 1 novice $sex\r"
-        expect -re {created|Character List|Slot 0:}
+        send "0 \"$alt\" 1 1 novice $sex\r"
+        puts "SENT_CREATE_ALT $alt $sex"
+        expect {
+          -re {Character .* created|created successfully|Character List|Slot 0:} { puts "CREATE_OK_ALT" }
+          -re {Charname already exists|Name already exists} { puts "NAME_TAKEN_AGAIN"; exit 5 }
+          timeout { puts "TIMEOUT_CREATE_ALT"; exit 5 }
+        }
       }
       timeout { puts "TIMEOUT_CREATE"; exit 5 }
     }
