@@ -1,4 +1,4 @@
 {
-  "install": "./scripts/setup-openkore.sh",
+  "install": "bash ./scripts/setup-openkore.sh",
   "start": ""
 }
