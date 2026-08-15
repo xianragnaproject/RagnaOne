@@ -7,9 +7,9 @@
 # 2) Save Prontera south Kafra   - Novice base 1-15
 # 3) Sell @ Prontera tool dealer - Novice base 1-15, OW >= 50%
 # 4) Buy 50 Red Potion           - Novice, zeny >= 5000, stock 0
-# 5) (removed) Fountain AFK — idle sits caused GM force-disconnect on this server
+# 5) Fountain AFK break          - ~every 30 min, sit 5-15 min, random facing
 # 6) Job change                  - Job Lv ≥ 10 AND Base ≥ 15 → random 1st job
-# 7) Base 15 + jobbed            - keep hunting prt_fild08 (no park / no idle kick)
+# 7) Base 15 + jobbed            - park/sit near Prontera fountain (random face)
 # Auto: skillsAddAuto Basic Skill 9; statsAddAuto novice hunt build (class build after job)
 #
 # Flags (set by macros):
@@ -135,7 +135,7 @@ automacro Phase1_SetSave_Talk {
 			do conf -f saveMap_y 50
 			do conf -f phase1SaveDone 1
 			log PHASE1: save set Prontera south - resume hunt
-			do conf sitAuto_idle 0
+			do conf sitAuto_idle 1
 			do eval Phase1_ResumeHunt()
 			pause 10
 		]
@@ -301,11 +301,56 @@ automacro Phase1_BuyPots_DisableJobbed {
 
 
 ###############################################################################
-# 5) REMOVED — Fountain AFK idle breaks (server GM-kicks idle players)
-# Keep bots moving/hunting only. Helpers below unused by AFK path.
+# 5) Fountain AFK - ~every 30 min, sit 5-15 min, random facing (not always N)
 ###############################################################################
+automacro Phase1_FountainAFK {
+	exclusive 1
+	timeout 1800
+	priority 6
+	InMap prt_fild08
+	JobID 0
+	BaseLevel 1..15
+	ConfigKeyNot phase1Done 1
+	ConfigKeyNot phase1Afk 1
+	ConfigKeyNot phase1Selling 1
+	ConfigKeyNot phase1Jobbing 1
+	Eval !($char && $char->{lv_job} >= 10 && $char->{lv} >= 15)
+	call phase1_fountain_afk
+}
 
-# One random step (sets visible body facing), then sit — kept for rare town waits
+macro phase1_fountain_afk {
+	[
+		log PHASE1: AFK break - go fountain then sit
+		do conf phase1Afk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
+	]
+	call phase1_to_prontera
+	[
+		do eval Phase1_WalkFountain()
+	]
+	# pause MUST be outside [...] — macro_block runs lines in one tick and skips waits
+	pause 55
+	call phase1_afk_face_sit
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	# Duration after sit. Avoid parentheses in log text (parsed as perl subs).
+	$secs = &rand(300, 900)
+	log PHASE1: AFK sit-idle for $secs sec
+	pause $secs
+	[
+		do stand
+		log PHASE1: AFK done - resume hunt
+		do conf sitAuto_idle 1
+		do conf phase1Afk 0
+		do eval Phase1_ResumeHunt()
+	]
+}
+
+# One random step (sets visible body facing), then sit
 # Sit requires Basic Skill >= 3 on this server — raise it first if needed.
 # Pauses outside [...] so skill add / walk / sit actually wait.
 macro phase1_afk_face_sit {
@@ -471,7 +516,7 @@ automacro Phase1_JobDone {
 			do conf phase1JobDone 1
 			do conf phase1Jobbing 0
 			do conf buyAuto_0_disabled 1
-			do conf sitAuto_idle 0
+			do conf sitAuto_idle 1
 			do eval Phase1_ApplyJobBuild()
 			do eval Phase1_AfterJobChange()
 		]
@@ -480,9 +525,9 @@ automacro Phase1_JobDone {
 
 
 ###############################################################################
-# 7) Base 15 + jobbed - KEEP HUNTING (no park / no idle — avoids GM idle kick)
+# 7) Base 15 + jobbed - sit near Prontera fountain (random spot + facing)
 ###############################################################################
-automacro Phase1_Done_KeepHunting {
+automacro Phase1_Done_SitFountain {
 	exclusive 1
 	timeout 30
 	priority 0
@@ -492,75 +537,83 @@ automacro Phase1_Done_KeepHunting {
 	ConfigKeyNot phase1Done 1
 	ConfigKeyNot phase1Selling 1
 	ConfigKeyNot phase1Jobbing 1
-	call phase1_done_hunt
+	call phase1_done_sit
 }
 
-# If an old session still has phase1Done/park flags, clear and resume hunt
-automacro Phase1_UnstickDonePark {
+automacro Phase1_Done_HoldSit {
 	exclusive 1
-	timeout 45
+	timeout 90
 	priority 1
+	BaseLevel >= 15
 	JobIDNot 0
 	ConfigKey phase1Done 1
-	call phase1_done_hunt
+	ConfigKeyNot phase1Afk 1
+	call phase1_done_sit
 }
 
-automacro Phase1_UnstickAfk {
+automacro Phase1_Done_Resit {
+	exclusive 1
+	timeout 90
+	priority 3
+	InMap prontera
+	BaseLevel >= 15
+	JobIDNot 0
+	ConfigKey phase1Done 1
+	ConfigKey phase1Afk 1
+	Eval !$char->{sitting}
+	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 22
+	call {
+		[
+			do eval Phase1_AfkSit()
+			pause 3
+		]
+	}
+}
+
+# If parked AFK but standing south of fountain, walk up
+automacro Phase1_Done_ToFountain {
 	exclusive 1
 	timeout 45
-	priority 2
+	priority 0
+	InMap prontera
+	BaseLevel >= 15
+	JobIDNot 0
+	ConfigKey phase1Done 1
 	ConfigKey phase1Afk 1
-	ConfigKeyNot phase1Jobbing 1
-	ConfigKeyNot phase1Selling 1
+	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 22)
 	call {
 		[
-			log PHASE1: clear leftover AFK flag - resume activity
-			do conf phase1Afk 0
-			do conf sitAuto_idle 0
+			log PHASE1 done: walk to fountain plaza
 			do stand
-			do ai on
-			do eval Phase1_ResumeHunt()
+			do eval Phase1_WalkFountain()
+			pause 40
 		]
+		call phase1_afk_face_sit
 	}
 }
 
-macro phase1_done_hunt {
+macro phase1_done_sit {
 	[
-		log PHASE1 DONE - Base15 + jobbed - keep hunting no idle park
+		log PHASE1 DONE - Base15 + jobbed - sit fountain random face
 		do conf phase1Done 1
-		do conf phase1Afk 0
-		do conf sitAuto_idle 0
-		do ai on
-		do stand
-		do conf -f grindHuntMap prt_fild08
-		do conf lockMap prt_fild08
-		do conf lockMap_x none
-		do conf lockMap_y none
-		do conf attackAuto 2
-		do conf attackAuto_inLockOnly 1
-		do conf attackRouteMaxPathDistance 50
-		do conf attackMinPlayerDistance 0
-		do conf route_randomWalk 1
-		do conf route_randomWalk_inLockOnly 1
-		do conf itemsTakeAuto 2
-		do conf itemsGatherAuto 2
+		do conf phase1Afk 1
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
 		do conf sellAuto 0
-		do eval AI::clear("sitting", "standing")
+		do conf buyAuto_0_disabled 1
+		do conf itemsTakeAuto 0
+		do conf itemsGatherAuto 0
+		do conf sitAuto_idle 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack")
 	]
-}
-
-# Safety: if AI was toggled off, turn it back on (prevents frozen "logged in but dead" bots)
-automacro Phase1_EnsureAiOn {
-	exclusive 0
-	timeout 45
-	priority 9
-	Eval defined $char && $char && $field && AI::state() != AI::AUTO
-	call {
-		[
-			log PHASE1: AI was not AUTO - forcing ai on
-			do ai on
-		]
-	}
+	call phase1_to_prontera
+	[
+		do eval Phase1_WalkFountain()
+		pause 55
+	]
+	call phase1_afk_face_sit
 }
 
 
@@ -747,25 +800,6 @@ sub Phase1_AfkSit {
 	return 1;
 }
 
-# Small random walk near Prontera fountain — prevents GM idle kicks while "parked"
-sub Phase1_AntiIdleStep {
-	return 0 unless $char && Phase1_IsInPronteraTown();
-	Commands::run("stand") if $char->{sitting};
-	AI::clear("sitting", "standing");
-	my $cx = $char->{pos_to}{x} // $char->{pos}{x} // 156;
-	my $cy = $char->{pos_to}{y} // $char->{pos}{y} // 190;
-	my $tx = $cx + int(rand(7)) - 3;
-	my $ty = $cy + int(rand(7)) - 3;
-	$tx = 145 if $tx < 145;
-	$tx = 168 if $tx > 168;
-	$ty = 175 if $ty < 175;
-	$ty = 205 if $ty > 205;
-	Commands::run("move $tx $ty");
-	Commands::run("look " . int(rand(8)));
-	Log::message("[PHASE1] anti-idle step → $tx,$ty\n", "success");
-	return 1;
-}
-
 # Spend skill points until Basic Skill >= 3 so AFK sit works
 sub Phase1_EnsureBasicSkillForSit {
 	return 1 unless $char;
@@ -873,37 +907,32 @@ sub Phase1_ApplyJobBuild {
 
 sub Phase1_AfterJobChange {
 	my $base = $char ? ($char->{lv} // 0) : 0;
-	# Always keep hunting after job — no fountain park (idle = GM kick on this server)
-	Log::message("[PHASE1] Base $base + jobbed - keep hunting prt_fild08 (no idle park)\n", "success");
-	Commands::run("conf phase1Done 1");
-	Commands::run("conf phase1Afk 0");
-	Commands::run("conf sitAuto_idle 0");
+	# Job change now requires base ≥ 15, so park at fountain
+	if ($base >= 15) {
+		Log::message("[PHASE1] Base $base + jobbed - park at fountain\n", "success");
+		Commands::run("conf phase1Done 1");
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		Commands::run("conf sellAuto 0");
+		return 1;
+	}
+	# Safety: if somehow jobbed below 15, keep hunting
+	Log::message("[PHASE1] Base $base < 15 - resume prt_fild08 as 1st job\n", "success");
 	Commands::run("conf -f grindHuntMap prt_fild08");
-	Commands::run("conf lockMap prt_fild08");
-	Commands::run("conf lockMap_x none");
-	Commands::run("conf lockMap_y none");
-	Commands::run("conf attackAuto 2");
-	Commands::run("conf attackAuto_inLockOnly 1");
-	Commands::run("conf attackRouteMaxPathDistance 50");
-	Commands::run("conf attackMinPlayerDistance 0");
-	Commands::run("conf route_randomWalk 1");
-	Commands::run("conf route_randomWalk_inLockOnly 1");
-	Commands::run("conf itemsTakeAuto 2");
-	Commands::run("conf itemsGatherAuto 2");
-	Commands::run("conf sellAuto 0");
-	Commands::run("stand");
-	Commands::run("ai on");
+	Phase1_ResumeHunt();
 	return 1;
 }
 
 sub Phase1_ResumeHunt {
-	# Never leave bots idle — phase1Done still hunts
-	if ($config{phase1Afk}) {
-		Commands::run("conf phase1Afk 0");
+	if ($config{phase1Afk} || $config{phase1Done}) {
+		Commands::run("conf attackAuto 0");
+		Commands::run("conf route_randomWalk 0");
+		Commands::run("conf lockMap none");
+		return 1;
 	}
 	# Ready for job change — stop hunting so job macros can run
-	if ($char && $char->{jobID} == 0 && ($char->{lv_job} // 0) >= 10 && ($char->{lv} // 0) >= 15
-		&& !($config{phase1JobDone} // 0)) {
+	if ($char && $char->{jobID} == 0 && ($char->{lv_job} // 0) >= 10 && ($char->{lv} // 0) >= 15) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
@@ -917,9 +946,7 @@ sub Phase1_ResumeHunt {
 	Commands::run("conf attackRouteMaxPathDistance 50");
 	Commands::run("conf attackMinPlayerDistance 0");
 	Commands::run("conf route_randomWalk 1");
-	Commands::run("conf route_randomWalk_inLockOnly 1");
 	Commands::run("conf sellAuto 0");
-	Commands::run("conf sitAuto_idle 0");
 	Log::message("[PHASE1] Resume hunt prt_fild08\n", "success");
 	return 1;
 }

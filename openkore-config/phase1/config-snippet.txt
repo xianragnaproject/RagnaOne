@@ -61,10 +61,10 @@ statsAdd_over_99 0
 # Generic novice hunt build through base/job 15; AfterJobChange swaps to class build
 statsAddAuto_list 9 dex, 9 agi, 12 str, 12 dex, 15 agi, 15 str, 18 dex, 10 vit, 20 str, 20 agi, 22 dex, 12 vit, 25 str, 25 agi
 
-# Do not auto-sit when idle — idle sit triggers GM force-disconnect on RagnaOne
+# Sit look randomized by macros (do not force north)
 sitAuto_look
 sitAuto_look_delay 0
-sitAuto_idle 0
+sitAuto_idle 1
 
 # Stay online 24/7 — never DC for routine events; reconnect aggressively
 dcOnDeath 0
