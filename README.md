@@ -33,6 +33,18 @@ export RO_PASSWORD='your_password'
 
 Credentials are injected at runtime and are **not** written into the tracked config.
 
+### 24/7 watchdog
+
+On a long-lived host (My Machines / private worker), keep the client restarting:
+
+```bash
+export RO_USERNAME='your_account'
+export RO_PASSWORD='your_password'
+./scripts/start-24x7.sh   # tmux session ok-24x7
+```
+
+Phase 1 also applies reconnect settings via macro (`Phase1_StayOnline`). A Cursor-managed Cloud Agent VM is not 24/7; use a My Machines worker for an always-on box.
+
 ### Manual config (already applied by setup)
 
 In `openkore/tables/servers.txt`:

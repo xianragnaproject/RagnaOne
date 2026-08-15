@@ -12,5 +12,8 @@ Every gameplay setting is applied by a macro (`do conf` / `do pconf` / `do iconf
 | 4 | Autoloot all | **run once** |
 | 5 | Sell at Prontera tool dealer (`prt_in 126,76`) | Novice, overweight ≥ 50% |
 | 6 | Auto skills + stats | Novice |
+| 7 | Stay online (reconnect, no DC pause) | **run once** |
 
 Novice build (macro 6): `Basic Skill 9` and hunt stats (`dex` / `agi` / `str` / `vit`).
+
+A tmux watchdog (`scripts/start-24x7.sh`) restarts OpenKore if the process exits. That keeps the **bot** up on a long-lived machine. A Cursor-managed Cloud Agent VM is still ephemeral.

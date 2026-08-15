@@ -8,7 +8,36 @@
 # 4) Autoloot all                - RUN ONCE
 # 5) Auto-sell @ Prontera dealer - Novice, OW >= 50%
 # 6) Auto stats & skills         - Novice
+# 7) Stay online 24/7            - RUN ONCE (reconnect / no DC pause)
 ###############################################################################
+
+
+###############################################################################
+# 7) Stay online — RUN ONCE (macro-owned reconnect; no direct timeouts.txt edit)
+###############################################################################
+automacro Phase1_StayOnline {
+	exclusive 1
+	timeout 20
+	priority 0
+	ConfigKeyNot phase1StayOnline 1
+	call {
+		[
+			log PHASE1: stay-online reconnect (run once)
+			do conf dcPause 0
+			do conf dcOnDeath 0
+			do conf dcOnDisconnect 0
+			do conf dcOnServerShutDown 0
+			do conf dcOnServerClose 0
+			do conf dcOnMaxReconnections 0
+			do conf autoRestart 0
+			do timeout reconnect 10
+			do timeout reconnect_backoff 10,20,30,60,90,120
+			do timeout reconnect_random 5
+			do timeout play 20
+			do conf -f phase1StayOnline 1
+		]
+	}
+}
 
 
 ###############################################################################
