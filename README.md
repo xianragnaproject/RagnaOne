@@ -20,7 +20,7 @@ Web client: http://173.208.138.84/ (roBrowser)
 ./scripts/setup-openkore.sh
 ```
 
-This **wipes** any previous `openkore/` tree, reclones stock [OpenKore](https://github.com/OpenKore/openkore), compiles `XSTools`, and adds only the **RagnaOne** entry to `tables/servers.txt`. Macros, eventMacros, and grind plugins (`macro`, `eventMacro`, `raiseStat`, `raiseSkill`, `breakTime`, `profiles`) are not installed.
+This **wipes** any previous `openkore/` tree, reclones stock [OpenKore](https://github.com/OpenKore/openkore), compiles `XSTools`, and adds only the **RagnaOne** entry to `tables/servers.txt`. Phase 1 `eventMacro`s are copied in; lockMap, loot, sell, job change, Payon save, and novice stats/skills are applied by those macros, not by editing `config.txt`. See `openkore-config/phase1/README.md`.
 
 ### Connect
 
