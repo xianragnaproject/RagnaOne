@@ -1,0 +1,67 @@
+{
+  "id": "02-if-you-liked-inception",
+  "brand": "RAGNA ONE",
+  "palette": "midnight",
+  "seed": 29,
+  "voice": "en-GB-RyanNeural",
+  "title": "If you liked Inception, you are watching the wrong next movie",
+  "keyword": "movies like Inception",
+  "caption": "If you liked Inception, you are watching the wrong next movie. Do not go to another Nolan first. Go here.",
+  "hashtags": ["#inception", "#movierecommendations", "#filmtok", "#whatowatch", "#mindbend"],
+  "scenes": [
+    {
+      "kicker": "WATCH NEXT",
+      "hook": true,
+      "text": "If you liked\nInception,",
+      "voice": "If you liked Inception,",
+      "seconds": 2.2
+    },
+    {
+      "kicker": "WATCH NEXT",
+      "text": "you are watching\nthe wrong next movie.",
+      "voice": "you are watching the wrong next movie.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "SKIP THIS",
+      "text": "Do not go to\nanother Nolan first.",
+      "voice": "Do not go to another Nolan first. You already know that trick.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "WATCH THIS",
+      "text": "Coherence",
+      "sub": "A dinner party. Then the sky changes.",
+      "voice": "Watch Coherence. A dinner party. Then the sky changes.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "THEN THIS",
+      "text": "Primer",
+      "sub": "77 minutes. No mercy. Take notes.",
+      "voice": "Then Primer. 77 minutes. No mercy. Take notes.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "THEN THIS",
+      "text": "Predestination",
+      "sub": "The loop is the character.",
+      "voice": "Then Predestination. The loop is the character.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "WHY",
+      "text": "Inception explains.\nThese refuse.",
+      "voice": "Inception explains the rules. These movies refuse. That is the high.",
+      "seconds": 3.8
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Start with\nCoherence tonight.",
+      "sub": "Watch again for the order.",
+      "voice": "Save this. Start with Coherence tonight. Watch it again for the order.",
+      "seconds": 4.0
+    }
+  ]
+}

@@ -44,7 +44,9 @@ python3 -m pip install -r requirements.txt
 python3 tools/render_video.py videos/scripts/*.json
 ```
 
-Label them as AI-generated when you upload. If this "ship from zero" series is not your niche, do not post them — send the real topic and I will recut the week.
+This week is a **movies** account: watch-next lists, short runtimes, one-location craft, cheap masterpieces. Label the uploads as AI-generated. Do not layer studio clips on top.
+
+Suggested setup in the app: niche `movies to watch tonight`, viewer `people who want a film and not a 3-hour homework assignment`, pillars `watch-next`, `short movies`, `craft / one location`.
 
 ## Repo layout
 

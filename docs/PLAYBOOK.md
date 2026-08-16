@@ -192,3 +192,13 @@ If you cannot answer from numbers, you are not logging. The tracker in the app e
 - RagnaOne for planning and review
 
 You do not need a growth panel, a bot, or a second phone. You need a repeatable video and an honest scorecard.
+
+## 14. If the account is movies
+
+This repo is set up for a **watch-next** movie account, not a clip account.
+
+- Pillars that categorize: watch-next (“if you liked X”), short runtimes, one-location craft, cheap-looking masterpieces.
+- Say the movie title on frame one. Search is how movie-tok lives.
+- Lists people can save. Arguments in the comments become the next video.
+- Do not upload studio scenes under a new voiceover. That is a takedown, not a growth tactic. Original commentary plus titles is the format here.
+- Public-domain films are a later extra, not week one. Week one is four lists people can act on tonight.

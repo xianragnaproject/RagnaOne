@@ -1,0 +1,68 @@
+{
+  "id": "03-one-room",
+  "brand": "RAGNA ONE",
+  "palette": "blood",
+  "seed": 44,
+  "voice": "en-GB-RyanNeural",
+  "title": "4 movies that never leave one place and still feel huge",
+  "keyword": "one location movies",
+  "caption": "4 movies that never leave one place and still feel huge. If a film needs 40 cities, the script is nervous.",
+  "hashtags": ["#filmtok", "#movierecommendations", "#cinema", "#whatowatch", "#onelocation"],
+  "scenes": [
+    {
+      "kicker": "CRAFT",
+      "hook": true,
+      "text": "If a movie needs\n40 cities,",
+      "voice": "If a movie needs 40 cities, the script is nervous.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "CRAFT",
+      "text": "watch one that\nnever leaves.",
+      "voice": "Watch one that never leaves.",
+      "seconds": 2.4
+    },
+    {
+      "kicker": "01",
+      "text": "Rear Window",
+      "sub": "One apartment. A whole street of lives.",
+      "voice": "Rear Window. One apartment. A whole street of lives.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "02",
+      "text": "12 Angry Men",
+      "sub": "The room gets hotter. So do they.",
+      "voice": "12 Angry Men. The room gets hotter. So do they.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "03",
+      "text": "Buried",
+      "sub": "A box. A phone. No cheat cutaways.",
+      "voice": "Buried. A box. A phone. No cheat cutaways.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "04",
+      "text": "Locke",
+      "sub": "A highway. One man. The movie is the calls.",
+      "voice": "Locke. A highway. One man. The movie is the phone calls.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "THE RULE",
+      "text": "Trap the person.\nThe story gets honest.",
+      "voice": "Trap the person. The story gets honest.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Start with\nRear Window.",
+      "sub": "Watch again for the four titles.",
+      "voice": "Save this. Start with Rear Window. Watch it again for the four titles.",
+      "seconds": 4.0
+    }
+  ]
+}

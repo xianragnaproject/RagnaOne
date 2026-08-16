@@ -1,0 +1,68 @@
+{
+  "id": "04-cheap-masterpieces",
+  "brand": "RAGNA ONE",
+  "palette": "sage",
+  "seed": 71,
+  "voice": "en-GB-RyanNeural",
+  "title": "4 movies that look expensive and were not",
+  "keyword": "low budget movies",
+  "caption": "4 movies that look expensive and were not. Save this. Taste is not a budget line.",
+  "hashtags": ["#filmtok", "#indiefilm", "#movierecommendations", "#whatowatch", "#cinema"],
+  "scenes": [
+    {
+      "kicker": "BUDGET",
+      "hook": true,
+      "text": "These movies look\nlike a studio check.",
+      "voice": "These movies look like a studio check.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "BUDGET",
+      "text": "They were not.",
+      "voice": "They were not.",
+      "seconds": 1.8
+    },
+    {
+      "kicker": "01",
+      "text": "Primer",
+      "sub": "About seven thousand dollars.",
+      "voice": "Primer. About seven thousand dollars. And it still outthinks most time-travel films.",
+      "seconds": 4.2
+    },
+    {
+      "kicker": "02",
+      "text": "El Mariachi",
+      "sub": "Also about seven thousand.",
+      "voice": "El Mariachi. Also about seven thousand. Robert Rodriguez shot it like a raid.",
+      "seconds": 4.0
+    },
+    {
+      "kicker": "03",
+      "text": "Following",
+      "sub": "Nolan. Before anyone cared.",
+      "voice": "Following. Nolan, before anyone cared, on a tiny pile of cash.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "04",
+      "text": "The Blair Witch\nProject",
+      "sub": "A woods. A camera. A panic.",
+      "voice": "The Blair Witch Project. A woods. A camera. A panic. The budget was a rumor compared to the box office.",
+      "seconds": 4.6
+    },
+    {
+      "kicker": "THE POINT",
+      "text": "Taste is not\na budget line.",
+      "voice": "Taste is not a budget line.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Start with Primer.",
+      "sub": "Watch again for the four titles.",
+      "voice": "Save this. Start with Primer. Watch it again for the four titles.",
+      "seconds": 3.8
+    }
+  ]
+}

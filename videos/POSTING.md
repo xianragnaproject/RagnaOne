@@ -1,37 +1,35 @@
-# How to post these videos
+# How to post these movie videos
 
-These are faceless, voiceover videos. You still have to post them. I cannot log into TikTok for you.
+This account is **movies**: what to watch next, short lists, craft. The files are original commentary with titles on screen. They are not ripped scenes.
+
+Do not paste studio clips under this voiceover. That is how movie accounts get blocked. If you later film your face reacting, that is your footage. Studio footage is not.
 
 ## Before you post
 
-1. Watch each file in `videos/out/`. If a line feels wrong, tell me and I will recut it.
-2. In TikTok, turn on the **AI-generated content** label. This used a synthetic voice and generated frames.
-3. Film a 2-second reaction stitch later if you want a face on the account. Do not start with a watermarked repost.
+1. Watch each file in `videos/out/`.
+2. Turn on TikTok’s **AI-generated content** label. Synthetic voice, generated frames.
+3. Keep the movie titles in the caption. That is how search finds you.
 
-## Caption copy
-
-Copy the caption from the matching JSON in `videos/scripts/`, or from the Factory tab in the Growth OS. Keep the keyword in the first sentence.
-
-Hashtags stay at 3–5. Do not add `#fyp` as the whole strategy.
-
-## First week order
+## First week
 
 | Day | File | Hook |
 | --- | --- | --- |
-| 1 | `01-ugly-version.mp4` | Stop building the logo. |
-| 2 | `02-three-hour-rule.mp4` | The 3-hour rule that kills projects. |
-| 3 | `03-nobody-asked.mp4` | If nobody asked, it is not a business. |
-| 4 | `04-weekly-scoreboard.mp4` | The only weekly scoreboard. |
+| 1 | `01-short-movies.mp4` | Stop starting 3-hour movies. |
+| 2 | `02-if-you-liked-inception.mp4` | If you liked Inception, you are watching the wrong next movie. |
+| 3 | `03-one-room.mp4` | If a movie needs 40 cities, the script is nervous. |
+| 4 | `04-cheap-masterpieces.mp4` | These movies look like a studio check. |
 
-Reply to every comment for the first hour. If someone argues, that is a Part 2.
+Reply for the first hour. “What should I watch after X?” is your next video.
 
-## Make another one
+## Bio that matches this week
+
+`Movie lists you can finish tonight. Short films. Wrong next-watches. Cheap masterpieces.`
+
+## Make another
 
 ```bash
 python3 -m pip install -r requirements.txt
-python3 tools/render_video.py videos/scripts/01-ugly-version.json
+python3 tools/render_video.py videos/scripts/01-short-movies.json
 ```
 
-Or send me the niche, the viewer, and 4 titles. I will write scripts and render the next batch.
-
-This first week is a **maker / ship-from-zero** series because you had not picked a niche yet. If that is not the account, do not post these. Tell me the real topic and I will cut a new set.
+Send a title (“movies like Parasite”, “best rainy-day films”) and I will cut the next one.

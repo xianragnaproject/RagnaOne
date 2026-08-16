@@ -408,28 +408,28 @@
 
   const READY_VIDEOS = [
     {
-      file: "videos/out/01-ugly-version.mp4",
-      title: "Stop building the logo. Ship the ugly version tonight.",
-      caption: "Stop building the logo. Ship the ugly version tonight. Save this if you keep polishing instead of publishing.",
-      tags: "#buildinpublic #shipit #startabusiness #maker #firstcustomers",
+      file: "videos/out/01-short-movies.mp4",
+      title: "4 movies under 100 minutes that hit harder than a trilogy",
+      caption: "4 movies under 100 minutes that hit harder than a trilogy. Save this before your next 3-hour slog.",
+      tags: "#movierecommendations #filmtok #whatowatch #cinema #shortmovies",
     },
     {
-      file: "videos/out/02-three-hour-rule.mp4",
-      title: "The 3-hour rule that kills most new projects",
-      caption: "The 3-hour rule that kills most new projects. Your idea is not dying from a lack of tutorials.",
-      tags: "#deepwork #shipit #productivity #makers #buildinpublic",
+      file: "videos/out/02-if-you-liked-inception.mp4",
+      title: "If you liked Inception, you are watching the wrong next movie",
+      caption: "If you liked Inception, you are watching the wrong next movie. Do not go to another Nolan first. Go here.",
+      tags: "#inception #movierecommendations #filmtok #whatowatch #mindbend",
     },
     {
-      file: "videos/out/03-nobody-asked.mp4",
-      title: "If nobody asked for it, you do not have a business yet",
-      caption: "If nobody asked for it, you do not have a business yet. Listen for the sentence I hate that I have to.",
-      tags: "#startabusiness #firstcustomers #buildinpublic #indiehackers #maker",
+      file: "videos/out/03-one-room.mp4",
+      title: "4 movies that never leave one place and still feel huge",
+      caption: "4 movies that never leave one place and still feel huge. If a film needs 40 cities, the script is nervous.",
+      tags: "#filmtok #movierecommendations #cinema #whatowatch #onelocation",
     },
     {
-      file: "videos/out/04-weekly-scoreboard.mp4",
-      title: "The only weekly scoreboard that matters",
-      caption: "Save this. The only weekly scoreboard that matters. Not followers. Not hours in the chair.",
-      tags: "#weeklyreview #buildinpublic #shipit #makers #scoreboard",
+      file: "videos/out/04-cheap-masterpieces.mp4",
+      title: "4 movies that look expensive and were not",
+      caption: "4 movies that look expensive and were not. Save this. Taste is not a budget line.",
+      tags: "#filmtok #indiefilm #movierecommendations #whatowatch #cinema",
     },
   ];
 
@@ -438,7 +438,7 @@
       <div class="page-head">
         <div>
           <h2>Factory</h2>
-          <p class="lede">Ready-to-post files I already cut. You upload them. Label them as AI-generated. This first week is a ship-from-zero series because a niche had not been chosen yet.</p>
+          <p class="lede">Movie-account week one. Cinematic text films you upload. Original commentary only — no ripped clips.</p>
         </div>
       </div>
       <div class="banner">I cannot log into TikTok or post for you. Download the MP4, paste the caption, turn on the AI label, then reply for the first hour.</div>

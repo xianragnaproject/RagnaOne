@@ -1,0 +1,68 @@
+{
+  "id": "01-short-movies",
+  "brand": "RAGNA ONE",
+  "palette": "tungsten",
+  "seed": 14,
+  "voice": "en-GB-RyanNeural",
+  "title": "4 movies under 100 minutes that hit harder than a trilogy",
+  "keyword": "movies under 100 minutes",
+  "caption": "4 movies under 100 minutes that hit harder than a trilogy. Save this before your next 3-hour slog.",
+  "hashtags": ["#movierecommendations", "#filmtok", "#whatowatch", "#cinema", "#shortmovies"],
+  "scenes": [
+    {
+      "kicker": "TONIGHT",
+      "hook": true,
+      "text": "Stop starting\n3-hour movies.",
+      "voice": "Stop starting 3 hour movies.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "THE POINT",
+      "text": "These four are\nunder 100 minutes.",
+      "voice": "These four are under 100 minutes, and they hit harder than most trilogies.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "01",
+      "text": "12 Angry Men",
+      "sub": "96 minutes. One room. No escape.",
+      "voice": "12 Angry Men. 96 minutes. One room. No escape.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "02",
+      "text": "Before Sunset",
+      "sub": "80 minutes. One walk. One clock.",
+      "voice": "Before Sunset. 80 minutes. One walk. One clock.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "03",
+      "text": "Run Lola Run",
+      "sub": "80 minutes. Three lives. Same street.",
+      "voice": "Run Lola Run. 80 minutes. Three lives. Same street.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "04",
+      "text": "Locke",
+      "sub": "85 minutes. One car. Tom Hardy.",
+      "voice": "Locke. 85 minutes. One car. Tom Hardy talking to a dashboard, and it works.",
+      "seconds": 4.2
+    },
+    {
+      "kicker": "WHY THIS LIST",
+      "text": "Short is not small.",
+      "voice": "Short is not small. It is a movie that cannot hide.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Pick one tonight.",
+      "sub": "Watch it again for the runtimes.",
+      "voice": "Save this. Pick one tonight. Watch it again for the runtimes.",
+      "seconds": 3.8
+    }
+  ]
+}

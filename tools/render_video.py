@@ -17,10 +17,46 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 WIDTH, HEIGHT = 1080, 1920
 SERIF = "/usr/share/fonts/truetype/noto/NotoSerif-Bold.ttf"
+SERIF_REG = "/usr/share/fonts/truetype/noto/NotoSerif-Regular.ttf"
 SANS = "/usr/share/fonts/truetype/macos/Inter-SemiBold.ttf"
 SANS_REG = "/usr/share/fonts/truetype/macos/Inter-Regular.ttf"
 MONO = "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-Bold.ttf"
-VOICE = "en-US-AndrewMultilingualNeural"
+VOICE = "en-GB-RyanNeural"
+
+PALETTES = {
+    "tungsten": {
+        "base": (12, 9, 7),
+        "glow": (210, 92, 38),
+        "text": (247, 236, 220),
+        "muted": (168, 148, 128),
+        "kicker": (232, 150, 74),
+        "bar": (6, 5, 4),
+    },
+    "midnight": {
+        "base": (7, 9, 16),
+        "glow": (48, 82, 160),
+        "text": (232, 238, 248),
+        "muted": (140, 152, 176),
+        "kicker": (170, 196, 230),
+        "bar": (4, 5, 8),
+    },
+    "blood": {
+        "base": (12, 6, 6),
+        "glow": (150, 28, 32),
+        "text": (247, 230, 224),
+        "muted": (176, 132, 128),
+        "kicker": (220, 86, 78),
+        "bar": (8, 3, 3),
+    },
+    "sage": {
+        "base": (7, 11, 9),
+        "glow": (46, 110, 78),
+        "text": (230, 240, 228),
+        "muted": (140, 160, 148),
+        "kicker": (150, 196, 164),
+        "bar": (4, 7, 6),
+    },
+}
 
 
 def font(path: str, size: int) -> ImageFont.FreeTypeFont:
@@ -44,82 +80,91 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, face: ImageFont.FreeTypeFont, max
     return lines or [text]
 
 
-def paint_background(seed: int) -> Image.Image:
+def paint_background(seed: int, palette: dict) -> Image.Image:
     rng = random.Random(seed)
-    sw, sh = 180, 320
-    img = Image.new("RGB", (sw, sh), (16, 13, 10))
+    sw, sh = 200, 356
+    img = Image.new("RGB", (sw, sh), palette["base"])
     px = img.load()
-    cx, cy = rng.randint(30, 150), rng.randint(60, 250)
+    cx, cy = rng.randint(40, 160), rng.randint(80, 260)
+    gr, gg, gb = palette["glow"]
+    br, bg_, bb = palette["base"]
     for y in range(sh):
         for x in range(sw):
-            dx = (x - cx) / 70
-            dy = (y - cy) / 95
-            dist = math.sqrt(dx * dx + dy * dy)
-            glow = max(0.0, 1.2 - dist)
-            r = min(255, int(16 + glow * 118 + rng.randint(-6, 6)))
-            g = min(255, int(11 + glow * 42 + rng.randint(-4, 4)))
-            b = min(255, int(8 + glow * 14))
+            # Wide anamorphic streak, plus a weaker vertical bloom.
+            dx = (x - cx) / 150
+            dy = (y - cy) / 22
+            streak = math.exp(-(dx * dx + dy * dy))
+            bloom = max(0.0, 1.05 - math.sqrt(((x - cx) / 90) ** 2 + ((y - cy) / 80) ** 2))
+            glow = min(1.0, streak * 1.15 + bloom * 0.35)
+            r = min(255, int(br + glow * gr + rng.randint(-5, 5)))
+            g = min(255, int(bg_ + glow * (gg * 0.55) + rng.randint(-4, 4)))
+            b = min(255, int(bb + glow * (gb * 0.45)))
             px[x, y] = (r, g, b)
     img = img.resize((WIDTH, HEIGHT), Image.Resampling.BICUBIC)
-    img = img.filter(ImageFilter.GaussianBlur(radius=10))
-    overlay = Image.new("RGB", (WIDTH, HEIGHT), (12, 10, 8))
-    img = Image.blend(img, overlay, 0.22)
+    img = img.filter(ImageFilter.GaussianBlur(radius=14))
+    overlay = Image.new("RGB", (WIDTH, HEIGHT), palette["base"])
+    img = Image.blend(img, overlay, 0.18)
     grain = Image.new("RGB", (WIDTH // 2, HEIGHT // 2))
     gpx = grain.load()
     gw, gh = grain.size
     for y in range(gh):
         for x in range(gw):
-            n = rng.randint(0, 26)
+            n = rng.randint(0, 30)
             gpx[x, y] = (n, n, n)
     grain = grain.resize((WIDTH, HEIGHT), Image.Resampling.NEAREST)
-    return Image.blend(img, grain, 0.1)
+    return Image.blend(img, grain, 0.11)
 
 
-def draw_scene(bg: Image.Image, scene: dict, index: int, total: int, brand: str) -> Image.Image:
+def draw_scene(bg: Image.Image, scene: dict, index: int, total: int, brand: str, palette: dict) -> Image.Image:
     frame = bg.copy().convert("RGBA")
     draw = ImageDraw.Draw(frame, "RGBA")
-    draw.rectangle((0, 0, WIDTH, 140), fill=(10, 8, 6, 180))
-    draw.rectangle((0, HEIGHT - 160, WIDTH, HEIGHT), fill=(10, 8, 6, 180))
-    draw.rectangle((0, 0, 14, HEIGHT), fill=(224, 122, 61, 255))
+    bar = (*palette["bar"], 255)
+    letter = 268
+    draw.rectangle((0, 0, WIDTH, letter), fill=bar)
+    draw.rectangle((0, HEIGHT - letter, WIDTH, HEIGHT), fill=bar)
+    # Hairline like a scope frame.
+    draw.rectangle((0, letter, WIDTH, letter + 3), fill=(*palette["kicker"], 210))
+    draw.rectangle((0, HEIGHT - letter - 3, WIDTH, HEIGHT - letter), fill=(*palette["kicker"], 210))
 
-    kicker = scene.get("kicker") or brand
-    kicker_font = font(MONO, 28)
-    draw.text((64, 56), kicker.upper(), font=kicker_font, fill=(224, 122, 61))
+    kicker = scene.get("kicker") or "FEATURE"
+    kicker_font = font(MONO, 26)
+    draw.text((56, 72), kicker.upper(), font=kicker_font, fill=palette["kicker"])
+    counter = font(MONO, 22)
+    label = f"{index + 1:02d}/{total:02d}"
+    lw = draw.textlength(label, font=counter)
+    draw.text((WIDTH - 56 - lw, 74), label, font=counter, fill=palette["muted"])
 
     text = scene["text"]
-    size = 92 if scene.get("hook") else 76
+    size = 88 if scene.get("hook") else 70
     face = font(SERIF, size)
-    max_width = WIDTH - 128
-    while size > 48 and any(draw.textlength(line, font=face) > max_width for line in text.split("\n")):
-        # shrink only if a single hard line is too wide; wrapping handles the rest
-        break
-    lines = []
+    max_width = WIDTH - 120
+    lines: list[str] = []
     for chunk in text.split("\n"):
         lines.extend(wrap(draw, chunk, face, max_width))
-    line_h = int(size * 1.18)
+    line_h = int(size * 1.16)
     block_h = line_h * len(lines)
-    y = (HEIGHT - block_h) // 2 - 40
+    y = letter + ((HEIGHT - 2 * letter) - block_h) // 2 - 20
     for line in lines:
         w = draw.textlength(line, font=face)
-        draw.text(((WIDTH - w) / 2, y), line, font=face, fill=(243, 234, 220))
+        draw.text(((WIDTH - w) / 2, y), line, font=face, fill=palette["text"])
         y += line_h
 
     sub = scene.get("sub")
     if sub:
-        sub_font = font(SANS_REG, 34)
+        sub_font = font(SERIF_REG, 32)
         sub_lines = wrap(draw, sub, sub_font, WIDTH - 160)
-        sy = y + 28
+        sy = y + 22
         for line in sub_lines:
             w = draw.textlength(line, font=sub_font)
-            draw.text(((WIDTH - w) / 2, sy), line, font=sub_font, fill=(156, 144, 126))
-            sy += 46
+            draw.text(((WIDTH - w) / 2, sy), line, font=sub_font, fill=palette["muted"])
+            sy += 42
 
-    mark = font(SANS, 24)
-    draw.text((64, HEIGHT - 88), brand, font=mark, fill=(215, 176, 86))
-    counter = font(MONO, 24)
-    label = f"{index + 1:02d}/{total:02d}"
-    lw = draw.textlength(label, font=counter)
-    draw.text((WIDTH - 64 - lw, HEIGHT - 88), label, font=counter, fill=(110, 101, 88))
+    mark = font(SANS, 22)
+    draw.text((56, HEIGHT - 92), brand, font=mark, fill=palette["kicker"])
+    tag = font(SANS_REG, 20)
+    tag_text = scene.get("footer") or "ORIGINAL COMMENTARY"
+    tw = draw.textlength(tag_text, font=tag)
+    draw.text((WIDTH - 56 - tw, HEIGHT - 90), tag_text, font=tag, fill=palette["muted"])
     return frame.convert("RGB")
 
 
@@ -154,7 +199,6 @@ def run(cmd: list[str]) -> None:
 
 def render_clip(frame_path: Path, audio_path: Path, dest: Path, seconds: float) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    # Scale up, then pan the crop so the still has a slow push-in.
     filt = (
         f"scale=1190:2115,crop=1080:1920:"
         f"'min(in_w-out_w, (in_w-out_w)*t/{seconds:.3f})':"
@@ -234,20 +278,22 @@ def render_spec(spec_path: Path, out_dir: Path, work_dir: Path, voice: str) -> P
     video_id = spec["id"]
     brand = spec.get("brand", "RAGNA ONE")
     scenes = spec["scenes"]
+    palette = PALETTES.get(spec.get("palette", "tungsten"), PALETTES["tungsten"])
     work = work_dir / video_id
     work.mkdir(parents=True, exist_ok=True)
-    bg = paint_background(spec.get("seed", 7))
+    bg = paint_background(spec.get("seed", 7), palette)
     clips: list[Path] = []
+    chosen_voice = spec.get("voice") or voice
 
     for i, scene in enumerate(scenes):
-        frame = draw_scene(bg, scene, i, len(scenes), brand)
+        frame = draw_scene(bg, scene, i, len(scenes), brand, palette)
         frame_path = work / f"frame-{i:02d}.png"
         frame.save(frame_path)
-        spoken = scene.get("voice") or scene["text"]
+        spoken = scene.get("voice") or scene["text"].replace("\n", " ")
         audio_path = work / f"vo-{i:02d}.mp3"
-        asyncio.run(speak(spoken, audio_path, voice))
+        asyncio.run(speak(spoken, audio_path, chosen_voice))
         audio_dur = probe_duration(audio_path)
-        seconds = max(float(scene.get("seconds", 2.4)), audio_dur + 0.28)
+        seconds = max(float(scene.get("seconds", 2.6)), audio_dur + 0.35)
         clip_path = work / f"clip-{i:02d}.mp4"
         render_clip(frame_path, audio_path, clip_path, seconds)
         clips.append(clip_path)
