@@ -728,7 +728,17 @@
     document.getElementById("copy-pack")?.addEventListener("click", async () => {
       const hook = state._studioHook || "proof";
       const chosen = state._chosenHook || fill(HOOKS[hook].lines[0]);
-      await navigator.clipboard.writeText(buildScript(chosen, hook));
+      const pack = buildScript(chosen, hook);
+      try {
+        await navigator.clipboard.writeText(pack);
+      } catch {
+        const box = document.createElement("textarea");
+        box.value = pack;
+        document.body.appendChild(box);
+        box.select();
+        document.execCommand("copy");
+        box.remove();
+      }
       const btn = document.getElementById("copy-pack");
       if (btn) btn.textContent = "Copied";
     });
