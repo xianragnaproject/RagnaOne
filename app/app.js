@@ -408,6 +408,18 @@
 
   const READY_VIDEOS = [
     {
+      file: "videos/out/05-hxh-start-2011.mp4",
+      title: "Do not start Hunter x Hunter with the 1999 one",
+      caption: "Do not start Hunter x Hunter with the 1999 one. Watch the 2011 version. Same story. The one people mean.",
+      tags: "#hunterxhunter #animerecommendation #anitok #hxh #whattowatch",
+    },
+    {
+      file: "videos/out/06-if-you-liked-hxh.mp4",
+      title: "If Hunter x Hunter ruined other shonen, watch these next",
+      caption: "If Hunter x Hunter ruined other shonen for you, that is normal. Do not go to Naruto next. Go here.",
+      tags: "#hunterxhunter #animerecommendation #anitok #hxh #whattowatch",
+    },
+    {
       file: "videos/out/01-short-movies.mp4",
       title: "4 movies under 100 minutes that hit harder than a trilogy",
       caption: "4 movies under 100 minutes that hit harder than a trilogy. Save this before your next 3-hour slog.",
@@ -438,7 +450,7 @@
       <div class="page-head">
         <div>
           <h2>Factory</h2>
-          <p class="lede">Movie-account week one. Cinematic text films you upload. Original commentary only — no ripped clips.</p>
+          <p class="lede">Start with the Hunter x Hunter pair. Cinematic text films you upload. Original commentary only — no ripped clips.</p>
         </div>
       </div>
       <div class="banner">I cannot log into TikTok or post for you. Download the MP4, paste the caption, turn on the AI label, then reply for the first hour.</div>

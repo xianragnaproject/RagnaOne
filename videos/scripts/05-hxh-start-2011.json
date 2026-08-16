@@ -1,0 +1,70 @@
+{
+  "id": "05-hxh-start-2011",
+  "brand": "RAGNA ONE",
+  "palette": "hunter",
+  "seed": 86,
+  "voice": "en-GB-RyanNeural",
+  "title": "Do not start Hunter x Hunter with the 1999 one",
+  "keyword": "Hunter x Hunter 2011",
+  "caption": "Do not start Hunter x Hunter with the 1999 one. Watch the 2011 version. Same story. The one people mean.",
+  "hashtags": ["#hunterxhunter", "#animerecommendation", "#anitok", "#hxh", "#whattowatch"],
+  "scenes": [
+    {
+      "kicker": "HUNTER X HUNTER",
+      "hook": true,
+      "text": "Do not start\nHunter x Hunter\nwith the 1999 one.",
+      "voice": "Do not start Hunter x Hunter with the 1999 one.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "WATCH THIS",
+      "text": "Watch 2011.",
+      "voice": "Watch the 2011 version.",
+      "seconds": 2.0
+    },
+    {
+      "kicker": "WHY",
+      "text": "Same story.\nCleaner fights.",
+      "voice": "Same story. Cleaner fights. It is the one people mean when they say start it.",
+      "seconds": 3.8
+    },
+    {
+      "kicker": "THE HOOK",
+      "text": "The Hunter Exam\nis the door.",
+      "voice": "The Hunter Exam is the door. That is the hook.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "WHY YOU STAY",
+      "text": "Hisoka is why\nyou stay.",
+      "voice": "Hisoka is why you stay.",
+      "seconds": 2.4
+    },
+    {
+      "kicker": "THEN",
+      "text": "Then it stops\nbeing an adventure.",
+      "voice": "Then the show stops being an adventure.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "THE TURN",
+      "text": "That is the\nChimera Ant arc.",
+      "voice": "That is the Chimera Ant arc. That is where most people get ruined for other shonen.",
+      "seconds": 4.2
+    },
+    {
+      "kicker": "HOW LONG",
+      "text": "148 episodes.\nYou can finish it.",
+      "voice": "148 episodes. You can finish it.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Start 2011\ntonight.",
+      "sub": "Watch again for the version.",
+      "voice": "Save this. Start 2011 tonight. Watch it again for the version.",
+      "seconds": 3.8
+    }
+  ]
+}

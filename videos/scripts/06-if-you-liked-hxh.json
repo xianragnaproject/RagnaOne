@@ -1,0 +1,67 @@
+{
+  "id": "06-if-you-liked-hxh",
+  "brand": "RAGNA ONE",
+  "palette": "hunter",
+  "seed": 99,
+  "voice": "en-GB-RyanNeural",
+  "title": "If Hunter x Hunter ruined other shonen, watch these next",
+  "keyword": "anime like Hunter x Hunter",
+  "caption": "If Hunter x Hunter ruined other shonen for you, that is normal. Do not go to Naruto next. Go here.",
+  "hashtags": ["#hunterxhunter", "#animerecommendation", "#anitok", "#hxh", "#whattowatch"],
+  "scenes": [
+    {
+      "kicker": "AFTER HXH",
+      "hook": true,
+      "text": "If Hunter x Hunter\nruined other shonen,",
+      "voice": "If Hunter x Hunter ruined other shonen for you,",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "AFTER HXH",
+      "text": "that is normal.",
+      "voice": "that is normal.",
+      "seconds": 1.8
+    },
+    {
+      "kicker": "SKIP THIS",
+      "text": "Do not go to\nNaruto next.",
+      "voice": "Do not go to Naruto next. You will feel the drop.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "01",
+      "text": "Yu Yu Hakusho",
+      "sub": "Same author. Same brain. Earlier.",
+      "voice": "Watch Yu Yu Hakusho. Same author. Same brain. Earlier.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "02",
+      "text": "Fate/Zero",
+      "sub": "A war with rules. No mercy.",
+      "voice": "Then Fate Zero. A war with rules. No mercy.",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "03",
+      "text": "Monster",
+      "sub": "The adult version of who is the villain.",
+      "voice": "Then Monster. The adult version of who is the villain.",
+      "seconds": 3.6
+    },
+    {
+      "kicker": "THE POINT",
+      "text": "HxH is not\npower scaling.",
+      "voice": "Hunter x Hunter is not power scaling. It is rules.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Start Yu Yu\nHakusho after.",
+      "sub": "Watch again for the order.",
+      "voice": "Save this. Start Yu Yu Hakusho after you finish. Watch it again for the order.",
+      "seconds": 4.2
+    }
+  ]
+}
