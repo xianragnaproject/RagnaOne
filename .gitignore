@@ -1,0 +1,13 @@
+# Local OpenKore checkout (cloned by scripts/setup-openkore.sh)
+/openkore/
+
+# Runtime / secrets
+**/config.runtime.*.txt
+**/config.create.*.txt
+**/*.log
+**/logs/
+**/ACCOUNT_MAP.txt
+/accounts/
+.env
+.env.*
+!.env.example
