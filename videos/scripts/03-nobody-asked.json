@@ -1,0 +1,74 @@
+{
+  "id": "03-nobody-asked",
+  "brand": "RAGNA ONE",
+  "seed": 41,
+  "title": "If nobody asked for it, you do not have a business yet",
+  "keyword": "nobody asked for it",
+  "caption": "If nobody asked for it, you do not have a business yet. Listen for the sentence I hate that I have to.",
+  "hashtags": ["#startabusiness", "#firstcustomers", "#buildinpublic", "#indiehackers", "#maker"],
+  "scenes": [
+    {
+      "kicker": "RULE 03",
+      "hook": true,
+      "text": "If nobody asked,\nit is not a business.",
+      "voice": "If nobody asked for it, you do not have a business yet.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "NAME IT",
+      "text": "A product nobody\nrequested is a hobby.",
+      "voice": "A product nobody requested is a hobby.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "NAME IT",
+      "text": "That is fine.\nCall it a hobby.",
+      "voice": "That is fine. Call it a hobby.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "IF YOU WANT MONEY",
+      "text": "Start with\na complaint.",
+      "voice": "If you want money, start with a complaint.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "LISTEN FOR",
+      "text": "\"I hate that\nI have to...\"",
+      "voice": "Listen for the sentence: I hate that I have to.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "THAT SENTENCE",
+      "text": "That sentence\nis the product.",
+      "voice": "That sentence is the product.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "BUILD",
+      "text": "Make the\nsmallest fix.",
+      "voice": "Build the smallest fix.",
+      "seconds": 2.4
+    },
+    {
+      "kicker": "CHARGE",
+      "text": "Charge something.\nEven five dollars.",
+      "voice": "Charge something. Even five dollars.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "WHY",
+      "text": "Free users lie.\nPaying users talk.",
+      "voice": "Free users lie. Paying users tell the truth.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Do not design\nanother feature.",
+      "sub": "Find the complaint first.",
+      "voice": "Save this before you design another feature. Find the complaint first.",
+      "seconds": 4.0
+    }
+  ]
+}

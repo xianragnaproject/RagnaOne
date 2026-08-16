@@ -1,0 +1,75 @@
+{
+  "id": "01-ugly-version",
+  "brand": "RAGNA ONE",
+  "seed": 11,
+  "title": "Stop building the logo. Ship the ugly version tonight.",
+  "keyword": "ship the ugly version",
+  "caption": "Stop building the logo. Ship the ugly version tonight. Save this if you keep polishing instead of publishing.",
+  "hashtags": ["#buildinpublic", "#shipit", "#startabusiness", "#maker", "#firstcustomers"],
+  "scenes": [
+    {
+      "kicker": "RULE 01",
+      "hook": true,
+      "text": "Stop building\nthe logo.",
+      "voice": "Stop building the logo.",
+      "seconds": 2.4
+    },
+    {
+      "kicker": "RULE 01",
+      "text": "You do not\nhave a brand yet.",
+      "voice": "You do not have a brand yet.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "RULE 01",
+      "text": "You have\na delay tactic.",
+      "voice": "You have a delay tactic.",
+      "seconds": 2.5
+    },
+    {
+      "kicker": "DO THIS",
+      "text": "Ship the ugly\nversion tonight.",
+      "voice": "Ship the ugly version tonight.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "WHY",
+      "text": "One real user beats\na perfect palette.",
+      "voice": "One real user beats a perfect color palette.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "HOW",
+      "text": "Set a 3-hour timer.",
+      "sub": "No new tools. No new tabs.",
+      "voice": "Set a 3 hour timer. No new tools. No new tabs.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "HOW",
+      "text": "Put it where one\nperson can use it.",
+      "voice": "Put it where one person can actually use it.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "ASK",
+      "text": "Would you\npay for this?",
+      "voice": "Ask one question. Would you pay for this?",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "THEN",
+      "text": "Hesitation is data.\nYes is a business.",
+      "voice": "If they hesitate, you learned something. If they say yes, you have a business.",
+      "seconds": 4.0
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Make the ugly\nthing today.",
+      "sub": "Watch it again. Then start the timer.",
+      "voice": "Save this. Make the ugly thing today. Watch it again, then start the timer.",
+      "seconds": 4.2
+    }
+  ]
+}

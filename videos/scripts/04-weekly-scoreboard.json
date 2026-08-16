@@ -1,0 +1,74 @@
+{
+  "id": "04-weekly-scoreboard",
+  "brand": "RAGNA ONE",
+  "seed": 67,
+  "title": "The only weekly scoreboard that matters",
+  "keyword": "weekly scoreboard",
+  "caption": "Save this. The only weekly scoreboard that matters. Not followers. Not hours in the chair.",
+  "hashtags": ["#weeklyreview", "#buildinpublic", "#shipit", "#makers", "#scoreboard"],
+  "scenes": [
+    {
+      "kicker": "RULE 04",
+      "hook": true,
+      "text": "Save this.\nThe only weekly\nscoreboard.",
+      "voice": "Save this. The only weekly scoreboard that matters.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "NOT THIS",
+      "text": "Not followers.",
+      "voice": "Not followers.",
+      "seconds": 1.8
+    },
+    {
+      "kicker": "NOT THIS",
+      "text": "Not hours\nin the chair.",
+      "voice": "Not hours in the chair.",
+      "seconds": 2.2
+    },
+    {
+      "kicker": "NUMBER 1",
+      "text": "Did you ship\nsomething a stranger\ncould use?",
+      "voice": "Number one. Did you ship something a stranger could use?",
+      "seconds": 3.4
+    },
+    {
+      "kicker": "NUMBER 2",
+      "text": "Did one person\nrespond?",
+      "voice": "Number two. Did one person respond?",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "NUMBER 3",
+      "text": "What will you\nremake next?",
+      "voice": "Number three. Did you write down what you will remake?",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "IF ALL THREE ARE NO",
+      "text": "You were busy.\nNot building.",
+      "voice": "If all three are no, you were busy, not building.",
+      "seconds": 3.2
+    },
+    {
+      "kicker": "IF ONE IS YES",
+      "text": "Do that again.",
+      "voice": "If one is yes, do that again.",
+      "seconds": 2.2
+    },
+    {
+      "kicker": "THE BET",
+      "text": "Four weeks of this\nbeats a perfect plan.",
+      "voice": "Four weeks of this beats a perfect plan.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "REWATCH",
+      "hook": true,
+      "text": "Watch once\nfor the list.",
+      "sub": "Watch again and count your week.",
+      "voice": "Watch once for the list. Watch again and count your week.",
+      "seconds": 4.0
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+videos/work/
+videos/out/*.txt
+__pycache__/
+.DS_Store

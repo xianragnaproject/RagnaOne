@@ -3,6 +3,7 @@
   const VIEWS = [
     ["today", "Today"],
     ["studio", "Studio"],
+    ["factory", "Factory"],
     ["calendar", "Calendar"],
     ["tracker", "Tracker"],
     ["review", "Review"],
@@ -258,6 +259,7 @@
   function viewHTML() {
     switch (state.view) {
       case "studio": return studioHTML();
+      case "factory": return factoryHTML();
       case "calendar": return calendarHTML();
       case "tracker": return trackerHTML();
       case "review": return reviewHTML();
@@ -402,6 +404,58 @@
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "")
       .slice(0, 18) || "fyp";
+  }
+
+  const READY_VIDEOS = [
+    {
+      file: "videos/out/01-ugly-version.mp4",
+      title: "Stop building the logo. Ship the ugly version tonight.",
+      caption: "Stop building the logo. Ship the ugly version tonight. Save this if you keep polishing instead of publishing.",
+      tags: "#buildinpublic #shipit #startabusiness #maker #firstcustomers",
+    },
+    {
+      file: "videos/out/02-three-hour-rule.mp4",
+      title: "The 3-hour rule that kills most new projects",
+      caption: "The 3-hour rule that kills most new projects. Your idea is not dying from a lack of tutorials.",
+      tags: "#deepwork #shipit #productivity #makers #buildinpublic",
+    },
+    {
+      file: "videos/out/03-nobody-asked.mp4",
+      title: "If nobody asked for it, you do not have a business yet",
+      caption: "If nobody asked for it, you do not have a business yet. Listen for the sentence I hate that I have to.",
+      tags: "#startabusiness #firstcustomers #buildinpublic #indiehackers #maker",
+    },
+    {
+      file: "videos/out/04-weekly-scoreboard.mp4",
+      title: "The only weekly scoreboard that matters",
+      caption: "Save this. The only weekly scoreboard that matters. Not followers. Not hours in the chair.",
+      tags: "#weeklyreview #buildinpublic #shipit #makers #scoreboard",
+    },
+  ];
+
+  function factoryHTML() {
+    return `
+      <div class="page-head">
+        <div>
+          <h2>Factory</h2>
+          <p class="lede">Ready-to-post files I already cut. You upload them. Label them as AI-generated. This first week is a ship-from-zero series because a niche had not been chosen yet.</p>
+        </div>
+      </div>
+      <div class="banner">I cannot log into TikTok or post for you. Download the MP4, paste the caption, turn on the AI label, then reply for the first hour.</div>
+      <div class="list">
+        ${READY_VIDEOS.map((v, i) => `
+          <div class="card">
+            <div class="mono" style="color:var(--gold)">DAY ${i + 1} · ${escapeHtml(v.file)}</div>
+            <h3 style="margin-top:8px">${escapeHtml(v.title)}</h3>
+            <p>${escapeHtml(v.caption)}</p>
+            <p class="lede">${escapeHtml(v.tags)}</p>
+            <div class="actions">
+              <button class="btn small" data-copy-caption="${escapeHtml(v.caption + " " + v.tags)}">Copy caption</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
   }
 
   function calendarHTML() {
@@ -723,6 +777,22 @@
       el.addEventListener("click", () => {
         state._chosenHook = el.dataset.pickHook;
         render();
+      });
+    });
+    document.querySelectorAll("[data-copy-caption]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const text = btn.dataset.copyCaption || "";
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const box = document.createElement("textarea");
+          box.value = text;
+          document.body.appendChild(box);
+          box.select();
+          document.execCommand("copy");
+          box.remove();
+        }
+        btn.textContent = "Copied";
       });
     });
     document.getElementById("copy-pack")?.addEventListener("click", async () => {

@@ -2,7 +2,7 @@
 
 A local operating system for growing a new TikTok account the legitimate way: niche, hooks, calendar, scripts, and a scorecard you actually review.
 
-This does not post for you, buy followers, or automate engagement. Those tactics get accounts restricted and teach the algorithm the wrong audience. RagnaOne is the planning and review loop around the videos you make.
+This does not post for you, buy followers, or automate engagement. Those tactics get accounts restricted and teach the algorithm the wrong audience. RagnaOne is the planning loop, plus a local factory that can cut faceless videos you upload yourself.
 
 ## How to use it
 
@@ -35,9 +35,23 @@ RagnaOne is built around that loop:
 
 If a video dies at a few hundred views on a new account, that is often the cold-start test, not a shadowban. Keep posting, keep logging, keep cutting what the data rejects.
 
+## Ready-to-post videos
+
+Four faceless videos are in `videos/out/`. Posting order and captions are in `videos/POSTING.md` and in the Factory tab.
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 tools/render_video.py videos/scripts/*.json
+```
+
+Label them as AI-generated when you upload. If this "ship from zero" series is not your niche, do not post them — send the real topic and I will recut the week.
+
 ## Repo layout
 
 ```
 app/                Growth OS (open index.html)
 docs/PLAYBOOK.md    Full 2026 operating manual
+videos/scripts/     Video scripts (JSON)
+videos/out/         Rendered 1080x1920 MP4s
+tools/render_video.py
 ```

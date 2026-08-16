@@ -1,0 +1,74 @@
+{
+  "id": "02-three-hour-rule",
+  "brand": "RAGNA ONE",
+  "seed": 23,
+  "title": "The 3-hour rule that kills most new projects",
+  "keyword": "3-hour rule",
+  "caption": "The 3-hour rule that kills most new projects. Your idea is not dying from a lack of tutorials.",
+  "hashtags": ["#deepwork", "#shipit", "#productivity", "#makers", "#buildinpublic"],
+  "scenes": [
+    {
+      "kicker": "RULE 02",
+      "hook": true,
+      "text": "The 3-hour rule\nthat kills projects.",
+      "voice": "The 3 hour rule that kills most new projects.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "THE TRAP",
+      "text": "Most people\n\"work on it\"\nfor 11 minutes.",
+      "voice": "Most people work on it for 11 minutes.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "THE TRAP",
+      "text": "Then they\nreorganize\nthe folder.",
+      "voice": "Then they reorganize the folder.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "THE TRAP",
+      "text": "Then they watch\nanother tutorial.",
+      "voice": "Then they watch another tutorial.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "THE RULE",
+      "text": "Three hours.\nOne task.",
+      "voice": "Three hours. One task.",
+      "seconds": 2.4
+    },
+    {
+      "kicker": "THE RULE",
+      "text": "No new tools.\nNo new tabs.",
+      "voice": "No new tools. No new tabs.",
+      "seconds": 2.5
+    },
+    {
+      "kicker": "WHY",
+      "text": "That is how\nugly versions\nget finished.",
+      "voice": "That is how ugly versions actually get finished.",
+      "seconds": 3.0
+    },
+    {
+      "kicker": "TRUTH",
+      "text": "You are not\nshort on ideas.",
+      "voice": "Your project is not dying from a lack of ideas.",
+      "seconds": 2.8
+    },
+    {
+      "kicker": "TRUTH",
+      "text": "You are short\non a clock.",
+      "voice": "It is dying from a lack of a clock.",
+      "seconds": 2.6
+    },
+    {
+      "kicker": "SAVE THIS",
+      "hook": true,
+      "text": "Set the timer.\nClose the rest.",
+      "sub": "Watch again for the rule in line one.",
+      "voice": "Set the timer. Close the rest. Watch it again for the rule in the first line.",
+      "seconds": 4.0
+    }
+  ]
+}
