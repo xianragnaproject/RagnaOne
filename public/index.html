@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>RagnaOne — Temple Signal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee&family=IBM+Plex+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" width="1280" height="720"></canvas>
+
+      <div id="hud">
+        <div id="gift-bar" aria-label="Gift actions">
+          <div class="gift-item" data-action="join">
+            <span class="gift-icon rose"></span>
+            <span class="gift-label">JOIN +1 LIFE</span>
+          </div>
+          <div class="gift-item" data-action="kill1">
+            <span class="gift-icon turbo"></span>
+            <span class="gift-label">TURBO 1 KILL</span>
+          </div>
+          <div class="gift-item" data-action="clones">
+            <span class="gift-icon clones"></span>
+            <span class="gift-label">5 CLONES</span>
+          </div>
+          <div class="gift-item" data-action="kills5">
+            <span class="gift-icon clap"></span>
+            <span class="gift-label">5 KILLS</span>
+          </div>
+          <div class="gift-item" data-action="kills15">
+            <span class="gift-icon snail"></span>
+            <span class="gift-label">15 KILLS</span>
+          </div>
+          <div class="gift-item" data-action="killAll">
+            <span class="gift-icon donut"></span>
+            <span class="gift-label">KILL ALL</span>
+          </div>
+        </div>
+
+        <aside id="leaderboard">
+          <h2>TOP KILL</h2>
+          <ol id="kill-list"></ol>
+        </aside>
+
+        <div id="timer" class="timer green">02:00</div>
+        <div id="phase" class="phase green">GREEN LIGHT</div>
+        <div id="toast" class="toast hidden"></div>
+      </div>
+
+      <section id="control-panel" class="panel">
+        <header>
+          <h1>RagnaOne</h1>
+          <p>Temple Signal — TikTok Live arena</p>
+        </header>
+
+        <label class="field">
+          <span>TikTok username</span>
+          <div class="row">
+            <input id="username" type="text" placeholder="your_tiktok" autocomplete="off" />
+            <button id="btn-connect" type="button">Connect</button>
+            <button id="btn-disconnect" type="button" class="ghost" disabled>Disconnect</button>
+          </div>
+        </label>
+
+        <p id="connection-status" class="status">Idle — use Demo gifts to test</p>
+
+        <div class="demo-grid">
+          <button type="button" data-demo="join">Rose · Join</button>
+          <button type="button" data-demo="kill1">Turbo · 1 Kill</button>
+          <button type="button" data-demo="clones">GG · 5 Clones</button>
+          <button type="button" data-demo="kills5">Clap · 5 Kills</button>
+          <button type="button" data-demo="kills15">Snail · 15 Kills</button>
+          <button type="button" data-demo="killAll">Donut · Kill All</button>
+        </div>
+
+        <div class="row actions">
+          <button id="btn-round" type="button">New Round</button>
+          <button id="btn-hide" type="button" class="ghost">Hide Panel (H)</button>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

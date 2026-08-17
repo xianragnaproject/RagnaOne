@@ -1,0 +1,19 @@
+{
+  "name": "ragnaone-live",
+  "version": "1.0.0",
+  "description": "TikTok Live interactive Red Light / Green Light arena game",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "tiktok-live-connector": "^2.0.2",
+    "ws": "^8.18.0"
+  }
+}
