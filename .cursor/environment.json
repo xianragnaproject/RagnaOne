@@ -1,6 +1,6 @@
 {
   "install": "bash ./scripts/setup-openkore.sh",
-  "start": "bash ./scripts/start-phase12-fleet.sh",
+  "start": "bash ./scripts/start-phase12-fleet.sh\nbash /home/ubuntu/openkore/scripts/week-keepalive.sh",
   "ports": [
     {
       "name": "fleet-panel",
@@ -9,9 +9,9 @@
   ],
   "terminals": [
     {
-      "name": "phase1-watchdog",
-      "command": "bash ./scripts/phase1-watchdog.sh 168",
-      "description": "1-week Phase1/2 heal loop for bot1-bot40. Keep agent RUNNING."
+      "name": "week-keepalive",
+      "command": "bash /home/ubuntu/openkore/scripts/week-keepalive.sh; bash /home/ubuntu/openkore/scripts/phase1-watchdog.sh 168",
+      "description": "1-week Phase1/2 fleet keepalive. Keep this Cloud Agent RUNNING — do not archive/kill."
     }
   ]
 }
