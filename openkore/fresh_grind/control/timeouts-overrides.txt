@@ -1,0 +1,21 @@
+# Merged into OpenKore control/timeouts.txt by sync-all-profiles.sh
+# Kept high so accidental follow never thrash-resets (solo grind uses follow 0)
+ai_follow_lost_end 180
+
+# 24/7 uptime: reconnect quickly after map/server blips (default backoff reaches 1800s)
+reconnect 15
+reconnect_backoff 10,20,30,45,60,90
+reconnect_random 8
+
+# Prontera fountain spawn: walk packets are slow; 2s unstuck cancels every step
+ai_route_unstuck 12
+
+# play only resets on server sync packets — 40s is too tight on this server and
+# causes "Timeout on Map Server" mid-fight when sync is sparse / AI is busy
+play 180
+
+# Map-login handshake can exceed 12s after char select on this server
+maplogin 30
+
+# Keepalive tick while AFK sitting (default 12 is fine; tighten a bit)
+ai_sync 8

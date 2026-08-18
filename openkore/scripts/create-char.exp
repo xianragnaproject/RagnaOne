@@ -1,0 +1,217 @@
+#!/usr/bin/env expect
+# Create a character on an empty account via OpenKore profile.
+# Usage: create-char.exp <Profile> <CharName> <Sex:M|F> [hair_style] [hair_color]
+set timeout 60
+set profile [lindex $argv 0]
+set charname [lindex $argv 1]
+set sex [lindex $argv 2]
+set hair_style [lindex $argv 3]
+set hair_color [lindex $argv 4]
+if {$sex eq ""} { set sex "M" }
+if {$sex eq "F" || $sex eq "f" || $sex eq "female"} {
+  set sexflag "F"
+} else {
+  set sexflag "M"
+}
+# Safe defaults / clamps (classic RO palette)
+if {$hair_style eq "" || ![string is integer -strict $hair_style]} { set hair_style 1 }
+if {$hair_color eq "" || ![string is integer -strict $hair_color]} { set hair_color 1 }
+if {$hair_style < 1} { set hair_style 1 }
+if {$hair_style > 25} { set hair_style 25 }
+if {$hair_color < 0} { set hair_color 0 }
+if {$hair_color > 8} { set hair_color 8 }
+
+cd $::env(HOME)/openkore
+log_file "/tmp/ok-create-$profile.log"
+set ::acct_timeouts 0
+
+spawn perl ./openkore.pl --profile=$profile --interface=Console --ai=manual
+
+expect {
+  -re {Please select your login server|Select Login Server} {
+    expect -re {Enter your answer:}
+    send "0\r"
+    exp_continue
+  }
+  -re {Compile portals} {
+    expect -re {Enter your answer:}
+    send "1\r"
+    exp_continue
+  }
+  -re {Server is closed|The server is closed|The server has denied your connection} {
+    puts "SERVER_CLOSED"
+    catch {send "quit\r"}
+    exit 7
+  }
+  -re {Timeout on Account Server} {
+    incr ::acct_timeouts
+    if {$::acct_timeouts >= 2} {
+      puts "SERVER_CLOSED"
+      catch {send "quit\r"}
+      exit 7
+    }
+    exp_continue
+  }
+  -re {Password Error|Enter your Ragnarok Online password again} {
+    puts "BAD_LOGIN"
+    catch {send "quit\r"}
+    exit 2
+  }
+  -re {Account name .* doesn't exist|The account or password you entered is incorrect|Wrong password} {
+    puts "BAD_LOGIN"
+    catch {send "quit\r"}
+    exit 2
+  }
+  -re {permanently banned|Banned} {
+    puts "BANNED"
+    catch {send "quit\r"}
+    exit 3
+  }
+  -re {There are no characters on this account} {
+    puts "NO_CHARS"
+  }
+  -re "Slot 0: $charname" {
+    puts "ALREADY_HAS_TARGET"
+  }
+  -re {Character List|Slot 0:} {
+    puts "HAS_CHARS"
+  }
+  -re {Please choose a character or an action} {
+    puts "CHAR_MENU"
+  }
+  timeout {
+    puts "TIMEOUT_LOGIN"
+    catch {send "quit\r"}
+    exit 1
+  }
+  eof {
+    puts "EOF_LOGIN"
+    exit 1
+  }
+}
+
+expect {
+  -re {Enter your answer:} {}
+  -re {You are now in the game|Map loaded|Your Coordinates:} {
+    puts "AUTO_INGAME"
+    send "quit\r"
+    expect eof
+    puts "DONE_EXISTING"
+    exit 0
+  }
+  timeout { puts "TIMEOUT_MENU"; exit 1 }
+}
+
+# Decide: create vs select
+# If ALREADY_HAS_TARGET or HAS_CHARS with our name, select 0.
+# If NO_CHARS, create is 0.
+# Simplest robust path:
+# - If we saw NO_CHARS -> send 0 (create), then create form
+# - Else if we saw our char -> send 0 (select)
+# - Else send 0 and branch on whether we get create form or game
+
+send "0\r"
+
+expect {
+  -re {desired properties for your characters} {
+    expect -re {Enter your answer:}
+    send "0 \"$charname\" $hair_style $hair_color novice $sexflag\r"
+    puts "SENT_CREATE $charname $sexflag hair=$hair_style color=$hair_color"
+
+    expect {
+      -re {Character .* created|Character creation successful|created successfully} {
+        puts "CREATE_OK"
+      }
+      -re {Character name is already used|name is unavailable|Name already exists} {
+        puts "NAME_TAKEN"
+        expect -re {Enter your answer:}
+        send "0 \"${charname}x\" $hair_style $hair_color novice $sexflag\r"
+        expect -re {created|Character List|Please choose}
+      }
+      -re {Unknown job or sex|Stats must be} {
+        puts "PARAM_RETRY"
+        expect -re {Enter your answer:}
+        send "0 \"$charname\" $hair_style $hair_color\r"
+        expect -re {created|Character List|Please choose|Unknown}
+      }
+      -re {Please choose a character or an action|Character List|Slot 0:} {
+        puts "BACK_TO_SELECT"
+      }
+      timeout { puts "TIMEOUT_CREATE"; exit 5 }
+    }
+
+    # Select slot 0 after create
+    expect {
+      -re {Enter your answer:} {
+        send "0\r"
+        puts "SELECT_AFTER_CREATE"
+      }
+      timeout { puts "TIMEOUT_SELECT"; exit 5 }
+    }
+
+    # Don't require full map login — account+char exist after select
+    sleep 2
+    puts "DONE_SOFT"
+    catch {send "quit\r"}
+    expect {
+      -re {Bye} {}
+      timeout {}
+      eof {}
+    }
+    puts "DONE"
+    exit 0
+  }
+  -re {Received character ID and Map IP|Connecting to Map Server} {
+    puts "SELECTED_EXISTING"
+  }
+  -re {You are now in the game|Map loaded|Your Coordinates:} {
+    puts "SELECTED_EXISTING_INGAME"
+  }
+  -re {is not a valid choice} {
+    puts "BAD_CHOICE"
+    exit 4
+  }
+  timeout { puts "TIMEOUT_AFTER_0"; exit 1 }
+}
+
+# Wait for map/game — ignore transient "disconnected" from char server switch
+set timeout 90
+expect {
+  -re {You are now in the game} { puts "IN_GAME" }
+  -re {Map loaded} { puts "IN_GAME" }
+  -re {Your Coordinates:} { puts "IN_GAME" }
+  -re {Map Change:} { puts "IN_GAME" }
+  -re {Connecting to Map Server} { exp_continue }
+  -re {connected} { exp_continue }
+  -re {Pausing for} { exp_continue }
+  -re {Disconnecting} { exp_continue }
+  -re {disconnected} { exp_continue }
+  -re {Closing connection} { exp_continue }
+  -re {Error|Unknown packet|Timeout on Map Server} {
+    puts "MAP_ERROR"
+    exp_continue
+  }
+  timeout {
+    # Char was selected/created; map blips are common — treat as soft success
+    puts "TIMEOUT_MAP"
+    puts "DONE_SOFT"
+    catch {send "quit\r"}
+    exit 0
+  }
+}
+
+sleep 2
+send "s\r"
+expect {
+  -re {----------- Status|HP:|Novice} { puts "STATUS_OK" }
+  timeout {}
+}
+
+send "quit\r"
+expect {
+  -re {Bye} {}
+  timeout {}
+  eof {}
+}
+puts "DONE"
+exit 0

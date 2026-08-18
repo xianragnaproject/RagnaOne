@@ -1,0 +1,17 @@
+{
+  "install": "bash ./scripts/setup-openkore.sh",
+  "start": "export FLEET_SHARD=0; bash ./scripts/start-openkore-fleet.sh",
+  "ports": [
+    {
+      "name": "fleet-panel",
+      "port": 8787
+    }
+  ],
+  "terminals": [
+    {
+      "name": "fleet-daemon",
+      "command": "export FLEET_SHARD=0; bash ./scripts/fleet-daemon.sh foreground",
+      "description": "Always-on 40-bot FreshGrind fleet (shard0 Grind01-40 + panel). Keep this agent RUNNING."
+    }
+  ]
+}

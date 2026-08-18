@@ -1,0 +1,328 @@
+######## Fresh grind overrides (merge into profile config) ########
+master RagnaOne
+server 0
+attackAuto 2
+attackAuto_party 0
+attackAuto_onlyWhenSafe 0
+attackAuto_notInTown 1
+attackAuto_outOfLock 0
+# Don't fight while walking to lockMap (orc kafra misroutes are lethal at ~25)
+attackAuto_routeToLock 0
+attackAuto_followTarget 0
+attackAuto_allowKS 1
+attackAuto_inLockOnly 1
+# CRITICAL: if unset, OpenKore treats this as 0 and skips every mob not on your cell
+attackRouteMaxPathDistance 50
+teleportAuto_deadly 1
+attackChangeTarget 0
+attackCheckLOS 1
+attackMinPlayerDistance 0
+attackMinPortalDistance 0
+aggressiveAntiKS 0
+teleportAuto_deadly 0
+teleportAuto_hp 0
+sitAuto_hp_lower 35
+sitAuto_hp_upper 70
+route_randomWalk 1
+route_randomWalk_inLockOnly 1
+# Hunt map: Phase1 = prt_fild08 only. Phase2 (Swordman/Merchant only) = pay_fild08.
+# attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
+# (lockMap / grindHuntMap set below; macros override)
+itemsTakeAuto 2
+itemsGatherAuto 2
+itemsGatherAuto_notInTown 1
+itemsGatherAutoMinPlayerDistance 3
+itemsGatherAutoMinPortalDistance 2
+itemsMaxWeight 89
+# Built-in sellAuto off — Grind_SellLoot owns 30% sells (avoids MapRoute freeze)
+itemsMaxWeight_sellOrStore 99
+# Phase1: sell via Grind_SellLoot macro at 30% OW
+sellAuto 0
+sellAuto_npc prt_in 126 76
+# 130,72 is walkable; 126,74 often causes Stuck during route loops
+sellAuto_standpoint prt_in 130 72
+sellAuto_distance 10
+sellAuto_maxDistance 14
+sellAuto_npc_steps s
+dcOnDeath 0
+dcOnDisconnect 0
+dcOnDualLogin 0
+dcOnMaxReconnections 0
+dcOnServerShutDown 0
+dcOnServerClose 0
+dcOnStorageFull 0
+# Auto-pick slot 0 after reconnect (missing char hangs at "Enter your answer")
+char 0
+aiChat 0
+
+# Defaults — macros own progression. Accounts only set username/password.
+grindTargetJob random
+grindLeftTraining 0
+grindAfk 0
+grindSelling 0
+grindJobbing 0
+grindJob1st 0
+grindGearDone 0
+grindDone15 0
+grindDone25 0
+grindDone35 0
+grindPhase1Done 0
+grindPhase2 0
+grindP2Guard 0
+grindP2SavePayon 0
+grindP2Gear 0
+grindP2Shops 0
+grindP2Buying 0
+grindUnsticking 0
+# Solo grind — no party / no follow
+grindPartyMode 0
+grindPartyRole solo
+partyAuto 0
+partyAutoShare 0
+follow 0
+followBot 0
+followTarget
+attackAuto_followTarget 0
+lockMap
+grindHuntMap prt_fild08
+
+######## buyAuto — gear starts disabled; enabled after 1st job via Grind_EnableGearBuy ########
+# Index order matters for Grind_EnableGearBuy (buyAuto_0..)
+buyAuto Fly Wing {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 2
+	maxAmount 20
+	zeny > 5000
+	disabled 0
+}
+buyAuto Red Potion {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 1
+	maxAmount 10
+	price 50
+	zeny > 2000
+	# Enabled by macro only while Novice + 0 potions + zeny
+	disabled 1
+}
+# Thief dagger
+buyAuto Knife [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman sword
+buyAuto Sword [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Swordman / tank shield — Phase2 Alberta
+buyAuto Guard {
+	npc alberta_in 180 15
+	standpoint alberta_in 180 18
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 500
+	disabled 1
+}
+buyAuto Blade {
+	npc payon_in01 15 119
+	standpoint payon_in01 15 117
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 2900
+	disabled 1
+}
+buyAuto Shoes {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 3500
+	disabled 1
+}
+buyAuto Wooden Mail {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 5500
+	disabled 1
+}
+buyAuto Manteau {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 32000
+	disabled 1
+}
+buyAuto Muffler {
+	npc payon_in01 7 119
+	standpoint payon_in01 10 119
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 5000
+	disabled 1
+}
+# Magician
+buyAuto Rod [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer bow
+buyAuto Bow [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Archer arrows (tool dealer) — kept disabled for non-Archers; Archer macros enable when low
+buyAuto Arrow {
+	npc prt_in 126 76
+	standpoint prt_in 130 72
+	distance 5
+	minAmount 30
+	maxAmount 500
+	zeny > 50
+	disabled 1
+}
+# Acolyte club (sold at Prontera Church, NOT weapon shop 172,130)
+buyAuto Club {
+	npc prt_church 108 124
+	standpoint prt_church 108 122
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Merchant
+buyAuto Axe [3] {
+	npc prt_in 172 130
+	standpoint prt_in 172 128
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 50
+	disabled 1
+}
+# Shared armor
+buyAuto Cotton Shirt {
+	npc prt_in 172 132
+	standpoint prt_in 172 134
+	distance 5
+	minAmount 1
+	maxAmount 1
+	zeny > 10
+	disabled 1
+}
+
+######## Equip after 1st job (use isJob — JobID is NOT checked by equipAuto) ########
+equipAuto {
+	rightHand Knife [3]
+	armor Cotton Shirt
+	isJob Thief
+	disabled 1
+}
+equipAuto {
+	rightHand Blade
+	leftHand Guard
+	armor Wooden Mail
+	robe Manteau
+	shoes Shoes
+	isJob Swordsman
+	disabled 1
+}
+equipAuto {
+	rightHand Sword [3]
+	leftHand Guard
+	armor Cotton Shirt
+	isJob Swordsman
+	disabled 1
+}
+equipAuto {
+	rightHand Rod [3]
+	armor Cotton Shirt
+	isJob Mage
+	disabled 1
+}
+equipAuto {
+	rightHand Bow [3]
+	arrow Arrow
+	armor Cotton Shirt
+	isJob Archer
+	disabled 1
+}
+equipAuto {
+	rightHand Club
+	armor Cotton Shirt
+	isJob Acolyte
+	disabled 1
+}
+equipAuto {
+	rightHand Axe [3]
+	armor Cotton Shirt
+	isJob Merchant
+	disabled 1
+}
+
+statsAddAuto 1
+statsAddAuto_list 10 str, 10 vit, 10 dex, 10 agi, 20 str, 20 vit, 20 dex, 15 agi, 30 str, 30 vit, 25 dex, 20 agi, 40 str, 40 vit, 30 dex, 25 agi, 50 str, 50 vit, 40 dex, 30 agi
+statsAddAuto_dontUseBonus 0
+statsAdd_over_99 1
+skillsAddAuto 1
+# Per-class lists applied by scripts/apply-class-skills.py (do not rely on Basic-only)
+skillsAddAuto_list Basic Skill 9
+
+# Party Heal support (Acolyte); apply-class-skills adds full Acolyte party/self set
+partySkill Heal {
+	lvl 10
+	dist 1
+	maxDist 8
+	sp > 15
+	target_hp < 80%
+	notPartyOnly 0
+	isSelfSkill 0
+	timeout 1
+}
+
+######## Heal items (always keep HP conditions or the bot spams potions) ########
+useSelf_item Red Potion {
+	hp < 55%
+	inInventory Red Potion > 0
+	timeout 2
+	dcOnEmpty 0
+}
+useSelf_item Green Potion {
+	hp < 40%
+	inInventory Green Potion > 0
+	timeout 3
+	dcOnEmpty 0
+}
