@@ -18,7 +18,7 @@ while true; do
   alive=$(ps -eo cmd= | awk '/perl \.\/openkore\.pl --profile=/{c++} END{print c+0}')
   if [[ "${alive:-0}" -lt 35 ]]; then
     log "heal bots alive=$alive → start-all"
-    bash "$ROOT/run-bots.sh" start-all >>"$LOG" 2>&1 || true
+    bash "$ROOT/run-bots.sh" heal >>"$LOG" 2>&1 || true
   fi
 
   # phase1 watchdog 168h
