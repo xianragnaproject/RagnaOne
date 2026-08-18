@@ -43,3 +43,27 @@ openkore/OpenKore Help*
 openkore/fleet_panel/panel.pass
 openkore/fleet_panel/*.pass
 openkore/fleet_panel/PUBLIC_URL.txt
+
+# Local OpenKore runtime / secrets (never commit)
+openkore/profiles/
+openkore/creds/
+openkore/logs/
+openkore/*.log
+openkore/ragnaone-openkore-settings.tar.gz
+openkore/openkore.pl
+openkore/src/
+openkore/fields/
+openkore/tables/
+openkore/plugins/
+openkore/run-bots.sh
+openkore/watch-bots-8h.sh
+openkore/run-openkore.sh
+openkore/phase1-watchdog.sh
+openkore/SETUP_NOTES.md
+openkore/control/macros.txt
+openkore/control/config.txt
+openkore/control/items_control.txt
+openkore/control/mon_control.txt
+openkore/control/sys.txt
+openkore/control/timeouts.txt
+openkore/control/consolecolors.txt

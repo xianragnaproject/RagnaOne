@@ -1,6 +1,6 @@
 {
   "install": "bash ./scripts/setup-openkore.sh",
-  "start": "export FLEET_SHARD=0; bash ./scripts/start-openkore-fleet.sh",
+  "start": "bash ./scripts/start-phase12-fleet.sh",
   "ports": [
     {
       "name": "fleet-panel",
@@ -9,9 +9,9 @@
   ],
   "terminals": [
     {
-      "name": "fleet-daemon",
-      "command": "export FLEET_SHARD=0; bash ./scripts/fleet-daemon.sh foreground",
-      "description": "Always-on 40-bot FreshGrind fleet (shard0 Grind01-40 + panel). Keep this agent RUNNING."
+      "name": "phase1-watchdog",
+      "command": "bash ./scripts/phase1-watchdog.sh 168",
+      "description": "1-week Phase1/2 heal loop for bot1-bot40. Keep agent RUNNING."
     }
   ]
 }
