@@ -1,6 +1,6 @@
 {
   "install": "bash ./scripts/setup-openkore.sh",
-  "start": "bash ./scripts/start-phase12-fleet.sh\nbash /home/ubuntu/openkore/scripts/week-keepalive.sh",
+  "start": "bash ./scripts/start-phase12-fleet.sh",
   "ports": [
     {
       "name": "fleet-panel",
@@ -9,9 +9,9 @@
   ],
   "terminals": [
     {
-      "name": "week-keepalive",
-      "command": "bash /home/ubuntu/openkore/scripts/week-keepalive.sh; bash /home/ubuntu/openkore/scripts/phase1-watchdog.sh 168",
-      "description": "1-week Phase1/2 fleet keepalive. Keep this Cloud Agent RUNNING — do not archive/kill."
+      "name": "always-on-24x7",
+      "command": "bash /home/ubuntu/openkore/scripts/always-on-24x7.sh",
+      "description": "24/7 keepalive for 40-bot Phase1/2 week test. KEEP THIS AGENT RUNNING — do not archive/kill."
     }
   ]
 }
