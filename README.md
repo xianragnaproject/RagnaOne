@@ -41,6 +41,30 @@ Disable Termux battery optimization / keep a wake lock so the phone does not kil
 
 If you already saw `can't sanitize binding "/proc/self/fd/0"`: that warning alone is OK. If install stopped, Ctrl+C and use the download-then-run commands above.
 
+### Connect Cursor agent → Termux (SSH bridge)
+
+Cloud phones block inbound SSH. Termux opens a **reverse tunnel** to the RagnaOne VPS; Cursor jumps through that tunnel.
+
+**1. On Termux** (leave this running):
+
+```bash
+curl -fsSL -o ~/termux-cursor-bridge.sh \
+  https://raw.githubusercontent.com/xianragnaproject/RagnaOne/cursor/termux-openkore-worker-db18/scripts/termux-cursor-bridge.sh
+bash ~/termux-cursor-bridge.sh
+```
+
+It installs `sshd`, installs the Cursor public key, then asks for your **VPS** (`173.208.138.84`) password to keep the tunnel up. Note the printed `termux_user=...`.
+
+**2. On Cursor** (after secrets are set):
+
+```bash
+export TERMUX_USER=u0_aXX          # from bridge output
+bash ./scripts/restore-termux-ssh-key.sh
+bash ./scripts/cursor-ssh-termux.sh 'uname -a'
+```
+
+Secrets used: `TERMUX_CURSOR_SSH_KEY` (private key matching `scripts/cursor-termux.pub`), plus VPS SSH access for the jump host.
+
 ### Setup (Linux / Cursor VM)
 
 ```bash
