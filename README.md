@@ -18,7 +18,33 @@ Web client: http://173.208.138.84/
 
 ## OpenKore
 
-### Setup
+### Cloud phone (Termux worker)
+
+One command installs Ubuntu (proot) + OpenKore + RagnaOne config on your cloud phone:
+
+```bash
+# In Termux (prefer F-Droid Termux build)
+curl -fsSL https://raw.githubusercontent.com/xianragnaproject/RagnaOne/cursor/termux-openkore-worker-db18/scripts/termux-worker.sh | bash
+```
+
+When this PR is merged to `main`, you can use the shorter URL:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xianragnaproject/RagnaOne/main/scripts/termux-worker.sh | bash
+```
+
+After install, helpers appear in Termux home:
+
+```bash
+~/ok-start.sh MyBot_M mypassword   # start bot in tmux
+~/ok-attach.sh                     # watch console
+~/ok-status.sh                     # status + last logs
+~/ok-login.sh                      # Ubuntu shell (repo at /root/RagnaOne)
+```
+
+Disable Termux battery optimization / keep a wake lock so the phone does not kill the bot.
+
+### Setup (Linux / Cursor VM)
 
 ```bash
 bash ./scripts/setup-openkore.sh

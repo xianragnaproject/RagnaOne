@@ -9,12 +9,22 @@ if [[ ! -d "$OK/.git" && ! -f "$OK/openkore.pl" ]]; then
   git clone --depth 1 https://github.com/OpenKore/openkore.git "$OK"
 fi
 
-# Ensure build deps (idempotent)
+# Ensure build deps (idempotent). Works as root (Termux/proot) or via sudo.
+as_root() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    "$@"
+  fi
+}
 if command -v apt-get >/dev/null 2>&1; then
-  sudo apt-get update -qq
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev cpanminus expect cron
-  sudo service cron start 2>/dev/null || true
+  as_root apt-get update -qq
+  as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+    build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev \
+    cpanminus expect cron git tmux wget curl ca-certificates
+  as_root service cron start 2>/dev/null || true
 fi
 
 # Apply RagnaOne server definition if missing
