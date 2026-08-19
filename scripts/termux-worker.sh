@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # RagnaOne Termux worker — installs Ubuntu (proot) + OpenKore with one command.
-# Run this ON the cloud phone inside Termux:
-#   curl -fsSL https://raw.githubusercontent.com/xianragnaproject/RagnaOne/main/scripts/termux-worker.sh | bash
-# Or from a feature branch URL if main is not updated yet.
+#
+# Preferred (avoids proot stdin pipe warning):
+#   curl -fsSL -o ~/termux-worker.sh \
+#     https://raw.githubusercontent.com/xianragnaproject/RagnaOne/cursor/termux-openkore-worker-db18/scripts/termux-worker.sh
+#   bash ~/termux-worker.sh
+#
+# Also works: curl ... | bash  (script re-execs itself from a temp file)
 set -euo pipefail
 
 REPO_URL="${RAGNAONE_REPO:-https://github.com/xianragnaproject/RagnaOne.git}"
@@ -17,12 +21,43 @@ mkdir -p "$LOG_DIR"
 say() { printf '\n==> %s\n' "$*"; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
+# curl|bash leaves stdin as a pipe; proot then warns about /proc/self/fd/0.
+# Re-exec from a real file with stdin on /dev/null so install stays non-interactive.
+reexec_if_piped() {
+  if [[ -n "${RAGNAONE_WORKER_REEXEC:-}" ]]; then
+    return 0
+  fi
+  if [[ -t 0 ]]; then
+    return 0
+  fi
+  local self="${BASH_SOURCE[0]:-}"
+  local tmp
+  tmp="$(mktemp "$TERMUX_HOME/termux-worker.XXXXXX.sh")"
+  if [[ -n "$self" && -f "$self" && -r "$self" ]]; then
+    cp "$self" "$tmp"
+  else
+    # Running via curl|bash — copy from stdin already consumed, so re-fetch.
+    curl -fsSL \
+      "https://raw.githubusercontent.com/xianragnaproject/RagnaOne/${REPO_REF}/scripts/termux-worker.sh" \
+      -o "$tmp" \
+      || die "Could not re-download worker script (network?)."
+  fi
+  chmod +x "$tmp"
+  say "Re-running worker from file (avoids proot stdin pipe warning)"
+  exec env RAGNAONE_WORKER_REEXEC=1 bash "$tmp" "$@" </dev/null
+}
+
 is_termux() {
   [[ -n "${TERMUX_VERSION:-}" ]] || [[ "${PREFIX:-}" == *com.termux* ]] || [[ -d /data/data/com.termux/files/usr ]]
 }
 
 require_termux() {
   is_termux || die "This worker must be run inside Termux on your cloud phone."
+}
+
+ubuntu_login() {
+  # Always detach stdin so proot does not try to bind a pipe as /dev/stdin.
+  proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- "$@" </dev/null
 }
 
 install_termux_pkgs() {
@@ -38,7 +73,7 @@ ensure_ubuntu() {
     say "Ubuntu already installed"
   else
     say "Installing Ubuntu (proot-distro) — this takes a few minutes"
-    proot-distro install ubuntu
+    proot-distro install ubuntu </dev/null
   fi
 }
 
@@ -58,19 +93,23 @@ sync_repo_on_host() {
 
 run_inside_ubuntu() {
   say "Entering Ubuntu worker to install OpenKore"
-  # Bind Termux checkout into Ubuntu so both sides share the same files.
-  proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \
-    bash -lc "set -euo pipefail
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update -qq
-      apt-get install -y -qq \
-        build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev \
-        cpanminus expect git tmux wget curl ca-certificates
-      cd '$UBUNTU_DIR'
-      bash ./scripts/setup-openkore.sh
-      echo
-      echo 'OpenKore build finished inside Ubuntu.'
-    "
+  # Write a one-shot installer inside the shared repo to keep quoting simple.
+  cat > "$HOST_DIR/scripts/termux-inner-install.sh" <<'INNER'
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq \
+  build-essential scons python-is-python3 libreadline-dev libcurl4-openssl-dev \
+  cpanminus expect git tmux wget curl ca-certificates
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+bash ./scripts/setup-openkore.sh
+echo
+echo "OpenKore build finished inside Ubuntu."
+INNER
+  chmod +x "$HOST_DIR/scripts/termux-inner-install.sh"
+  ubuntu_login bash "$UBUNTU_DIR/scripts/termux-inner-install.sh"
 }
 
 write_wrappers() {
@@ -78,7 +117,7 @@ write_wrappers() {
 
   cat > "$TERMUX_HOME/ok-login.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
-# Enter the Ubuntu OpenKore worker shell
+# Enter the Ubuntu OpenKore worker shell (interactive TTY)
 exec proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- bash -lc "cd '$UBUNTU_DIR' && exec bash -l"
 EOF
 
@@ -93,20 +132,20 @@ if [[ -z "\$USER_NAME" || -z "\$PASS" ]]; then
   echo "Usage: ./ok-start.sh <username> <password>"
   exit 1
 fi
-exec proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \
-  bash "$UBUNTU_DIR/scripts/termux-start-bot.sh" "\$USER_NAME" "\$PASS"
+exec proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \\
+  bash "$UBUNTU_DIR/scripts/termux-start-bot.sh" "\$USER_NAME" "\$PASS" </dev/null
 EOF
 
   cat > "$TERMUX_HOME/ok-attach.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
-exec proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \
+exec proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \\
   bash -lc 'tmux attach -t ok-phone || tmux ls'
 EOF
 
   cat > "$TERMUX_HOME/ok-status.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
-proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \
-  bash -lc 'tmux ls 2>/dev/null || echo "No tmux sessions"; tail -n 30 /tmp/ok-run/phone.log 2>/dev/null || true'
+proot-distro login ubuntu --bind "$HOST_DIR:$UBUNTU_DIR" -- \\
+  bash -lc 'tmux ls 2>/dev/null || echo "No tmux sessions"; tail -n 30 /tmp/ok-run/phone.log 2>/dev/null || true' </dev/null
 EOF
 
   chmod +x "$TERMUX_HOME"/ok-*.sh
@@ -138,6 +177,7 @@ EOF
 }
 
 main() {
+  reexec_if_piped "$@"
   require_termux
   install_termux_pkgs
   ensure_ubuntu
