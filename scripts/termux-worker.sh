@@ -22,7 +22,7 @@ say() { printf '\n==> %s\n' "$*"; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 # curl|bash leaves stdin as a pipe; proot then warns about /proc/self/fd/0.
-# Re-exec from a real file with stdin on /dev/null so install stays non-interactive.
+# Re-download and re-exec with stdin on /dev/null so install stays non-interactive.
 reexec_if_piped() {
   if [[ -n "${RAGNAONE_WORKER_REEXEC:-}" ]]; then
     return 0
@@ -30,21 +30,18 @@ reexec_if_piped() {
   if [[ -t 0 ]]; then
     return 0
   fi
-  local self="${BASH_SOURCE[0]:-}"
   local tmp
   tmp="$(mktemp "$TERMUX_HOME/termux-worker.XXXXXX.sh")"
-  if [[ -n "$self" && -f "$self" && -r "$self" ]]; then
-    cp "$self" "$tmp"
-  else
-    # Running via curl|bash — copy from stdin already consumed, so re-fetch.
-    curl -fsSL \
-      "https://raw.githubusercontent.com/xianragnaproject/RagnaOne/${REPO_REF}/scripts/termux-worker.sh" \
-      -o "$tmp" \
-      || die "Could not re-download worker script (network?)."
-  fi
+  curl -fsSL \
+    "https://raw.githubusercontent.com/xianragnaproject/RagnaOne/${REPO_REF}/scripts/termux-worker.sh" \
+    -o "$tmp" \
+    || die "Could not re-download worker script (network?)."
   chmod +x "$tmp"
   say "Re-running worker from file (avoids proot stdin pipe warning)"
-  exec env RAGNAONE_WORKER_REEXEC=1 bash "$tmp" "$@" </dev/null
+  exec env RAGNAONE_WORKER_REEXEC=1 \
+    RAGNAONE_REF="$REPO_REF" \
+    RAGNAONE_REPO="$REPO_URL" \
+    bash "$tmp" "$@" </dev/null
 }
 
 is_termux() {

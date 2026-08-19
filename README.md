@@ -20,17 +20,12 @@ Web client: http://173.208.138.84/
 
 ### Cloud phone (Termux worker)
 
-One command installs Ubuntu (proot) + OpenKore + RagnaOne config on your cloud phone:
+Download then run (avoids a harmless proot stdin warning from `curl | bash`):
 
 ```bash
-# In Termux (prefer F-Droid Termux build)
-curl -fsSL https://raw.githubusercontent.com/xianragnaproject/RagnaOne/cursor/termux-openkore-worker-db18/scripts/termux-worker.sh | bash
-```
-
-When this PR is merged to `main`, you can use the shorter URL:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/xianragnaproject/RagnaOne/main/scripts/termux-worker.sh | bash
+curl -fsSL -o ~/termux-worker.sh \
+  https://raw.githubusercontent.com/xianragnaproject/RagnaOne/cursor/termux-openkore-worker-db18/scripts/termux-worker.sh
+bash ~/termux-worker.sh
 ```
 
 After install, helpers appear in Termux home:
@@ -43,6 +38,8 @@ After install, helpers appear in Termux home:
 ```
 
 Disable Termux battery optimization / keep a wake lock so the phone does not kill the bot.
+
+If you already saw `can't sanitize binding "/proc/self/fd/0"`: that warning alone is OK. If install stopped, Ctrl+C and use the download-then-run commands above.
 
 ### Setup (Linux / Cursor VM)
 
