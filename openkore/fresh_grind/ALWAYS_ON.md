@@ -69,6 +69,12 @@ bash ~/openkore/scripts/fleet-status.sh
 
 That only helps when a **new** Cursor agent boots this repo. It does **not** keep bots online after the agent idles out. Merge this to `main` and keep the agent RUNNING if you want Cursor-side recovery — still not real 24/7.
 
+## Ping = keep-alive (Cloud Agent)
+
+Internal watchdogs cannot outlive Cursor IDLE/ARCHIVE. **External pings** keep the agent RUNNING:
+
+See [`docs/CLOUD_AGENT_PING_KEEPALIVE.md`](../../docs/CLOUD_AGENT_PING_KEEPALIVE.md) — GitHub Actions every 20 min or cron calling `scripts/cloud-agent-ping-keepalive.sh` with `CURSOR_API_KEY`.
+
 ## Recommendation
 
 1. **Keep this agent RUNNING** (do not archive) — that is the 24/7 switch on Cursor.

@@ -11,7 +11,7 @@
     {
       "name": "always-on-24x7",
       "command": "bash /home/ubuntu/openkore/scripts/always-on-24x7.sh",
-      "description": "24/7 keepalive for 40-bot Phase1/2 week test. KEEP THIS AGENT RUNNING — do not archive/kill."
+      "description": "In-pod heal loop. For real keep-alive: external ping \u2014 docs/CLOUD_AGENT_PING_KEEPALIVE.md (API follow-ups every 20m). KEEP AGENT RUNNING."
     }
   ]
 }
