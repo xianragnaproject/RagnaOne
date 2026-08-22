@@ -26,7 +26,8 @@ sitAuto_hp_upper 70
 route_randomWalk 1
 route_randomWalk_inLockOnly 1
 # Hunt map: Phase1 = prt_fild08 only. Phase2 (Swordman/Merchant only) = pay_fild08.
-# Other 1st jobs stop after Phase1 and AFK in Prontera — never pay_fild03/Alberta.
+# grindKeepHunting 1 = all jobs keep grinding after Phase1 (no Prontera AFK park).
+# With grindKeepHunting 0, non-SW/MC stop after Phase1 and AFK in Prontera.
 # attackAuto 2 + mon_control "all 2" = kill every monster (not only aggressive/retaliate)
 # (lockMap / grindHuntMap set below with fresh-novice defaults; macros override)
 itemsTakeAuto 2
@@ -60,6 +61,8 @@ aiChat 0
 grindTargetJob random
 grindLeftTraining 0
 grindAfk 0
+# 1 = fleet keeps hunting 24/7 after Phase1 (disables fountain AFK park)
+grindKeepHunting 1
 grindSelling 0
 grindJobbing 0
 grindJob1st 0

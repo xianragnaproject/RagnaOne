@@ -528,6 +528,7 @@ automacro Grind_Phase1Complete {
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call {
 		[
 			log PHASE1 COMPLETE - Base15 + 1st job - fountain AFK - not SW/MC
@@ -539,6 +540,32 @@ automacro Grind_Phase1Complete {
 			do eval Grind_DisableBuyItem("Red Potion")
 		]
 		call grind_phase1_afk_hold
+	}
+}
+
+# 24/7 fleet: non-SW/MC keep hunting prt_fild08 after Phase1 instead of AFK
+automacro Grind_Phase1Complete_KeepHunting {
+	exclusive 1
+	timeout 30
+	priority 1
+	BaseLevel >= 15
+	JobID 2, 3, 4, 6
+	ConfigKey grindJob1st 1
+	ConfigKey grindKeepHunting 1
+	ConfigKeyNot grindPhase1Done 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log PHASE1 COMPLETE - keep hunting (grindKeepHunting) - not SW/MC
+			do conf grindDone15 1
+			do conf grindPhase1Done 1
+			do conf grindAfk 0
+			do conf -f grindHuntMap prt_fild08
+			do eval Grind_DisableBuyItem("Red Potion")
+			do stand
+			do eval Grind_ResumeHuntLock()
+		]
 	}
 }
 
@@ -626,6 +653,7 @@ automacro Grind_Phase1AfkHold {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_afk_hold
 }
 
@@ -637,6 +665,7 @@ automacro Grind_Phase1Redetect {
 	JobID 2, 3, 4, 6
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindKeepHunting 1
 	call {
 		[
 			log PHASE1 redetect - Base15+jobbed - set done and AFK
@@ -645,6 +674,29 @@ automacro Grind_Phase1Redetect {
 			do conf grindPhase1Done 1
 		]
 		call grind_phase1_afk_hold
+	}
+}
+
+automacro Grind_Phase1Redetect_KeepHunting {
+	exclusive 1
+	timeout 60
+	priority 0
+	BaseLevel >= 15
+	JobID 2, 3, 4, 6
+	ConfigKey grindKeepHunting 1
+	ConfigKeyNot grindPhase1Done 1
+	ConfigKeyNot grindSelling 1
+	call {
+		[
+			log PHASE1 redetect - keep hunting (grindKeepHunting)
+			do conf grindJob1st 1
+			do conf grindDone15 1
+			do conf grindPhase1Done 1
+			do conf grindAfk 0
+			do conf -f grindHuntMap prt_fild08
+			do stand
+			do eval Grind_ResumeHuntLock()
+		]
 	}
 }
 
@@ -692,6 +744,7 @@ automacro Grind_Phase1AfkResit {
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
+	ConfigKeyNot grindKeepHunting 1
 	Eval !$char->{sitting}
 	# Fountain plaza is ~y 185-210; do not sit at south gate (~y 26)
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
@@ -922,6 +975,7 @@ automacro Grind_Phase1StillOnField {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_afk_hold
 }
 
@@ -937,6 +991,7 @@ automacro Grind_Phase1WrongMapPayFild03 {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_payfild03
 }
 
@@ -950,6 +1005,7 @@ automacro Grind_Phase1WrongMapAlberta {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_alberta
 }
 
@@ -963,6 +1019,7 @@ automacro Grind_Phase1WrongMapAlbertaIn {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_alberta
 }
 
@@ -976,6 +1033,7 @@ automacro Grind_Phase1WrongMapPayFild08 {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_payon
 }
 
@@ -989,6 +1047,7 @@ automacro Grind_Phase1WrongMapPayon {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_payon
 }
 
@@ -1002,6 +1061,7 @@ automacro Grind_Phase1WrongMapPayonIn {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase1_home_from_payon
 }
 
@@ -1011,6 +1071,7 @@ automacro Grind_Phase2AbortWrongJob {
 	timeout 30
 	priority 0
 	ConfigKey grindPhase2 1
+	ConfigKeyNot grindKeepHunting 1
 	JobID 2, 3, 4, 6, 0
 	call {
 		[
@@ -1028,6 +1089,30 @@ automacro Grind_Phase2AbortWrongJob {
 			do conf sellAuto 0
 			do stand
 			do eval AI::clear("move", "route", "mapRoute", "attack")
+		]
+	}
+}
+
+automacro Grind_Phase2AbortWrongJob_KeepHunting {
+	exclusive 1
+	timeout 30
+	priority 0
+	ConfigKey grindPhase2 1
+	ConfigKey grindKeepHunting 1
+	JobID 2, 3, 4, 6, 0
+	call {
+		[
+			log PHASE1: clear Phase2 flags - keep hunting prt_fild08
+			do conf grindPhase2 0
+			do conf grindP2Gear 0
+			do conf grindP2Guard 0
+			do conf grindP2Shops 0
+			do conf grindP2Buying 0
+			do conf grindPhase1Done 1
+			do conf grindAfk 0
+			do conf -f grindHuntMap prt_fild08
+			do stand
+			do eval Grind_ResumeHuntLock()
 		]
 	}
 }
@@ -1094,6 +1179,7 @@ automacro Grind_Phase1ToFountain {
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
+	ConfigKeyNot grindKeepHunting 1
 	# South of fountain plaza (south gate / midtown) — walk up
 	Eval $char && (($char->{pos}{y} || 0) < 170 || abs(($char->{pos}{x} || 0) - 156) > 20)
 	call {
@@ -1117,6 +1203,7 @@ automacro Grind_Phase1AfkInTown {
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
+	ConfigKeyNot grindKeepHunting 1
 	Eval !$char->{sitting}
 	Eval $char && ($char->{pos}{y} || 0) >= 170 && abs(($char->{pos}{x} || 0) - 156) <= 20
 	call {
@@ -1137,6 +1224,7 @@ automacro Grind_Phase1ShuffleLook {
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
 	ConfigKey grindAfk 1
+	ConfigKeyNot grindKeepHunting 1
 	call {
 		[
 			log PHASE1: reshuffle AFK facing via step
@@ -1163,6 +1251,7 @@ automacro Grind_Phase2Start {
 	ConfigKeyNot grindPhase2 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindKeepHunting 1
 	call grind_phase2_begin
 }
 
@@ -2539,9 +2628,10 @@ sub Grind_ApplySoloHunt {
 }
 
 sub Grind_StartHunt {
-	return 1 if $config{grindAfk};
+	return 1 if ($config{grindAfk} && !$config{grindKeepHunting});
 	# Phase1 park: no hunt unless Phase2 Swordman/Merchant path is active
-	if ($config{grindPhase1Done} && !$config{grindPhase2}) {
+	# (skipped when grindKeepHunting — fleet keeps grinding 24/7)
+	if ($config{grindPhase1Done} && !$config{grindPhase2} && !$config{grindKeepHunting}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
@@ -2576,13 +2666,13 @@ sub Grind_StartHunt {
 }
 
 sub Grind_ResumeHuntLock {
-	if ($config{grindAfk}) {
+	if ($config{grindAfk} && !$config{grindKeepHunting}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
 		return 1;
 	}
-	if ($config{grindPhase1Done} && !$config{grindPhase2}) {
+	if ($config{grindPhase1Done} && !$config{grindPhase2} && !$config{grindKeepHunting}) {
 		Commands::run("conf attackAuto 0");
 		Commands::run("conf route_randomWalk 0");
 		Commands::run("conf lockMap none");
@@ -2703,7 +2793,15 @@ sub Grind_Phase2WeaponName {
 }
 
 sub Grind_Phase2HasWeapon {
-	return Grind_Phase2HasItem(Grind_Phase2WeaponName());
+	return 1 if Grind_Phase2HasItem(Grind_Phase2WeaponName());
+	# 24/7 fleet: don't soft-lock broke Merchants/Swordmen waiting forever on Axe/Blade
+	if (($config{grindKeepHunting} || "") eq "1") {
+		return 1 if Grind_Phase2HasItem("Knife");
+		return 1 if Grind_Phase2HasItem("Blade");
+		return 1 if Grind_Phase2HasItem("Axe");
+		return 1 if Grind_Phase2HasItem("Sword");
+	}
+	return 0;
 }
 
 sub Grind_Phase2MissingWeapon {
