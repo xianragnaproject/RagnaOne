@@ -1,0 +1,13 @@
+Phase1 job-weapon fix (equip free changejob rewards; stop selling them)
+
+Runtime paths:
+  openkore/control/macros.txt
+  openkore/control/items_control.txt
+  openkore/plugins/phase1Weapon/phase1Weapon.pl
+  openkore/control/sys.txt (+ profiles/bot*/sys.txt) must list phase1Weapon in loadPlugins_list
+
+Apply:
+  cp scripts/phase1-weapon/macros.txt openkore/control/macros.txt
+  cp scripts/phase1-weapon/phase1Weapon.pl openkore/plugins/phase1Weapon/phase1Weapon.pl
+  # merge loadPlugins_list to include phase1Weapon
+  # items_control keep flags for Blade / Composite Bow / Chain are in repo openkore/control/items_control.txt

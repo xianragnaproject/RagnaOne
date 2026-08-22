@@ -1,0 +1,38 @@
+#
+# Fresh grind route weights — prefer town NPCs / Alberta over orc fields
+#
+
+PORTAL 20
+# Prefer kafra/NPC warps over long field walks when safe
+NPC 50
+COMMAND 20
+WARPTOSAVEMAP 200
+AIRSHIP 200
+ZENY 0.05
+TICKET 100
+
+bat_room 10000
+moc_para01 10000
+prt_maze01 10000
+prt_fild08a 10000
+
+# Never route through Geffen orc fields (lethal around base 25)
+gef_fild00 10000
+gef_fild01 10000
+gef_fild02 10000
+gef_fild03 10000
+gef_fild04 10000
+gef_fild05 10000
+gef_fild06 10000
+gef_fild07 10000
+gef_fild08 10000
+gef_fild09 10000
+gef_fild10 10000
+gef_fild11 10000
+gef_fild12 10000
+gef_fild13 10000
+gef_fild14 10000
+
+# Prefer Alberta approach to pay_fild03
+alberta -200
+payon -100

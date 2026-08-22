@@ -1,0 +1,162 @@
+# ============================================================
+# Field Scout on prt_fild08
+# Working NPCs: Field Scout#prt08a (160,370), Field Scout#prt08b (180,370)
+# Main Field Scout#prt08 (170,360) is often missing from the actor list.
+# TalkNPC requires the NPC already in sight - walk first, then talk.
+# Quest 60202 | mission 10363 | 50 runs/day
+# Reward: 500 Base / 500 Job / 1000 Zeny / 20 Red Potions
+# Accept steps: c c r0 | Turn-in steps: c c
+# Disable: conf ragnaFieldScoutOff 1
+# ============================================================
+
+# --- Accept: walk toward scouts when no active quest ---
+automacro Ragna_FieldScout_Accept_Go {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	NpcNotNear /Field Scout#prt08/
+	timeout 30
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to accept
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_Accept_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 25
+	QuestInactive 60202
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout accept hunt 20 kills
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 160 370 c c r0
+			pause 12
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			log Ragna Field Scout active hunting prt_fild08
+		]
+	}
+}
+
+# Accept via prt08a only (Go walks to 160,368). prt08b accept removed to avoid talk races.
+
+# Pull novices on other maps toward the scout
+automacro Ragna_FieldScout_GoField {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	JobLevel < 10
+	BaseLevel <= 20
+	QuestInactive 60202
+	ConfigKeyNot lockMap prt_fild08
+	timeout 90
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout route novice to prt_fild08
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+		]
+	}
+}
+
+# --- Turn-in: walk to scout when 20/20 ---
+automacro Ragna_FieldScout_TurnIn_Go {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNotNear /Field Scout#prt08/
+	timeout 25
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout walk to turn in
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do move 160 368
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn_Talk {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08a/
+	timeout 20
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout turn in 20 of 20
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 160 370 c c
+			pause 12
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Ragna Field Scout turn-in done resume hunt
+		]
+	}
+}
+
+automacro Ragna_FieldScout_TurnIn_TalkB {
+	ConfigKeyNot ragnaFieldScoutOff 1
+	JobID 0
+	QuestHuntCompleted 60202 10363
+	IsInMapAndCoordinate prt_fild08
+	NpcNear /Field Scout#prt08b/
+	timeout 55
+	exclusive 1
+	call {
+		[
+			log Ragna Field Scout turn in via prt08b
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			pause 2
+			do talknpc 180 370 c c
+			pause 12
+			do conf attackRouteMaxPathDistance 50
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_maxRouteTime 60
+			do conf lockMap prt_fild08
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Ragna Field Scout turn-in done resume hunt
+		]
+	}
+}

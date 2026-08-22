@@ -1,0 +1,1884 @@
+# =============================================================================
+# Phase 1 — early leveling (CustomRO)
+# =============================================================================
+# Goal: farm Prontera fields until base ~30, auto-heal, sell/store, buy pots.
+# At Job Level 10 (Novice): go to Prontera fountain, pick a random 1st class,
+# equip job-change rewards, then resume grinding.
+# Every 30 min: stop grind → random fountain spot → random facing → AFK 5–10 min.
+#
+# Start manually:   macro phase1
+# Job change now:   macro phase1_changeJob
+# Rent cart now:    macro phase1_rentCart
+# AFK break now:    macro phase1_afkBreak
+# Stop / reset:     macro phase1_stop
+# Re-apply build:   macro phase1_applyBuild
+#
+# Auto stats/skills: raiseStat + raiseSkill plugins (statsAddAuto / skillsAddAuto).
+# After job change the server resets stats → Phase1_ApplyBuild re-applies class build.
+#   Mage: INT+DEX | Archer: DEX+AGI | Swordman: STR+AGI | etc.
+# Merchant: learns Pushcart early, then Phase1_MerchantCart rents at fountain Rental Clerk.
+#
+# If the fountain NPC dialogue differs on your server, edit Phase1JobTalk
+# and/or Phase1JobNPC_x / Phase1JobNPC_y below (set via phase1).
+# =============================================================================
+
+automacro Phase1_AutoStart {
+	base <= 30
+	timeout 30
+	exclusive 1
+	eval $::config{Phase} ne "Phase1" && $::config{Phase} ne "Phase1Done" && $::config{Phase} ne "Phase2" && $::config{Phase} ne "Phase2Done"
+	call phase1
+}
+
+# Job Lv 10 Novice → Prontera fountain job change (random class)
+automacro Phase1_ChangeJob {
+	class Novice
+	job >= 10
+	timeout 20
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1JobDone} ne "1" && $::config{Phase1Busy} ne "1"
+	call phase1_changeJob
+}
+
+# Keep free changejob weapons equipped (Blade / Composite Bow / Rod / Axe / Cutter / Chain…)
+# Also re-runs after sellAuto used to strip rewards before equip fired.
+automacro Phase1_EnsureJobWeapon {
+	timeout 90
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{Phase1JobDone} eq "1" && $::char && $::char->inventory->isReady && !($::jobs_lut{$::char->{jobID}} eq "Novice")
+	call phase1_ensureJobWeapon
+}
+
+# Apply/re-apply stats+skills when build flag does not match current class
+# (covers Novice on start, and 1st class after changejob/stat reset/relog)
+automacro Phase1_ApplyBuild {
+	timeout 20
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::char && defined $::char->{jobID} && $::jobs_lut{$::char->{jobID}} && $::config{Phase1BuildApplied} ne $::jobs_lut{$::char->{jobID}}
+	call phase1_applyBuild
+}
+
+# Safety: if Busy stuck past Phase1BusyUntil, force resume grind
+automacro Phase1_UnstickBusy {
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} eq "1" && $::config{Phase1BusyUntil} && time >= $::config{Phase1BusyUntil}
+	call phase1_unstick
+}
+
+# Re-kick raiseStat/raiseSkill after they go INACTIVE (only if auto flags got turned off)
+automacro Phase1_KickRaise {
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && (($::config{statsAddAuto} ne "1" && $::config{statsAddAuto_list}) || ($::config{skillsAddAuto} ne "1" && $::config{skillsAddAuto_list}))
+	call phase1_kickRaise
+}
+
+# After death / weird AI off: ensure combat is on while Phase1 farming
+# Re-enable combat if something turned it off — but NEVER while town-healing
+automacro Phase1_EnsureCombat {
+	timeout 90
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{attackAuto} ne "2" && !($::field && $::field->isCity && $::char && $::char->{hp} < $::char->{hp_max} * 0.60)
+	call phase1_ensureCombat
+}
+
+# Every ~30 minutes: AFK at fountain plaza only (mid Prontera, per-char corner)
+# First AFK only after Phase1NextAfk timestamp (set when Phase1 starts).
+# Never start AFK while dead/low-HP town-healing — that cancels lockMap and looks like "idle".
+automacro Phase1_AfkBreak {
+	timeout 60
+	exclusive 1
+	hp > 80%
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{Phase1NextAfk} && time >= $::config{Phase1NextAfk} && !$::char->{dead}
+	call phase1_afkBreak
+}
+
+# If stuck in town too long while Phase1 farming, force return to lockMap
+# Only leave when HP is safe — otherwise death-loops at save → field → die
+automacro Phase1_LeaveTown {
+	timeout 120
+	exclusive 1
+	hp > 60%
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{lockMap} && $::field && $::field->isCity && $::field->baseName ne $::config{lockMap}
+	call phase1_leaveTown
+}
+
+# Low HP in town: sit and recover instead of walking out at 1–5% HP
+automacro Phase1_TownHeal {
+	timeout 30
+	exclusive 1
+	hp < 60%
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::field && $::field->isCity
+	call phase1_townHeal
+}
+
+# After town sit-regen, restore combat flags so LeaveTown / field farming can run
+automacro Phase1_TownHealDone {
+	timeout 20
+	exclusive 1
+	hp > 80%
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::field && $::field->isCity && $::config{attackAuto} eq "0"
+	call phase1_townHealDone
+}
+
+macro phase1_townHeal {
+	[
+		log Phase1 town heal — sit until HP safe (combat off while healing)
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf sitAuto_idle 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do sit
+	]
+}
+
+macro phase1_townHealDone {
+	[
+		log Phase1 town heal done — combat back on
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do stand
+	]
+}
+
+macro phase1_leaveTown {
+	[
+		log Phase1 leave town — stand + scatter then lockMap
+		# Keep buy enabled so low pots can route to Tool Dealer (prt_in 126,76)
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do stand
+	]
+	# Per-char scatter near south gate so bots don't sit stacked
+	$sx = @eval(140 + (ord(substr($::char->{name}, -1)) % 30))
+	$sy = @eval(28 + (ord(substr($::char->{name}, 0, 1)) % 25))
+	log Phase1 leave scatter $sx $sy (char-based)
+	do move $sx $sy
+	pause 2
+	call phase1_setLock
+	[
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+	]
+	# Explicitly route to lockMap — otherwise LeaveTown re-scatters every 120s
+	# while still in town and never exits Prontera.
+	do move @config(lockMap)
+	do ai on
+}
+
+# If stuck outside lockMap (and not in town), re-apply lock so AI walks back
+automacro Phase1_ReturnToField {
+	base <= 30
+	timeout 45
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{lockMap} && $::field && !$::field->isCity && $::field->baseName ne $::config{lockMap}
+	call phase1_setLock
+}
+
+# Advance lock map within Phase 1 as you level
+automacro Phase1_LevelBand {
+	base > 0
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1"
+	call phase1_setLock
+}
+
+# Low Red Potions + have zeny → ensure buyAuto points at Tool Dealer
+automacro Phase1_LowPots {
+	inventory "Red Potion" < 5
+	inventory "Novice Potion" < 5
+	zeny >= 50
+	base <= 30
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1"
+	call phase1_buyPots
+}
+
+# No zeny → disable all buyAuto (ignore shopping until we can afford it)
+automacro Phase1_NoZenySkipBuy {
+	zeny < 50
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{buyAuto_0_disabled} ne "1"
+	call phase1_disableBuy
+}
+
+# Got enough zeny again → re-enable Tool Dealer buy
+automacro Phase1_HasZenyEnableBuy {
+	zeny >= 50
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{Phase1BuyPaused} eq "1"
+	call phase1_enableBuy
+}
+
+# Merchant without cart → Prontera fountain Rental Clerk (needs Pushcart skill)
+automacro Phase1_MerchantCart {
+	class Merchant
+	timeout 90
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::config{Phase1CartDone} ne "1" && $::char && !$::char->cartActive && (($::char->{skills}{MC_PUSHCART}{lv} || 0) >= 1)
+	call phase1_rentCart
+}
+
+macro phase1 {
+	[
+		log ========================================
+		log Phase 1 START — early Prontera fields
+		log ========================================
+		do conf Phase Phase1
+		do conf Phase1Busy 0
+		do conf Phase1JobDone 0
+		do conf Phase1CartDone 0
+		do conf Phase1BuildApplied
+
+		# Job Master stands south of fountain plaza (155,180). NOT 156,198 (water).
+		do conf Phase1JobNPC_x 155
+		do conf Phase1JobNPC_y 180
+		# Cart rental clerk next to Job Master (confirmed RagnaOne)
+		do conf Phase1CartNPC_x 159
+		do conf Phase1CartNPC_y 180
+		# Talk: continue → pick Cart (menu 0). Free if Pushcart skill owned.
+		do conf Phase1CartTalk c r0
+		# Talk: select class index → confirm. RagnaOne Job Master menu:
+		# 0 Swordsman, 1 Magician, 2 Archer, 3 Acolyte, 4 Merchant, 5 Thief
+		do conf Phase1JobTalk r
+
+		# Combat / loot
+		do conf attackAuto 2
+		do conf attackAuto_party 1
+		do conf attackAuto_notInTown 1
+		do conf itemsTakeAuto 2
+		do conf itemsGatherAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf route_randomWalk_inTown 0
+
+		# Survival — sit at 20% HP, stand/resume once at 90%
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		# No Fly Wing / Teleport — deadly teleport just queues then die
+		do conf teleportAuto_hp 0
+		do conf teleportAuto_deadly 0
+		do conf teleportAuto_maxDmg 0
+		do conf teleportAuto_dropTargetEngaged 1
+		do conf dcOnDeath 0
+		do conf autoMoveOnDeath 1
+		do conf autoMoveOnDeath_map prontera
+		do conf autoMoveOnDeath_x 155
+		do conf autoMoveOnDeath_y 50
+
+		# Home / shop / storage (Prontera)
+		do conf saveMap prontera
+		do conf saveMap_x 155
+		do conf saveMap_y 50
+		do conf saveMap_warpToBuyOrSell 1
+
+		do conf sellAuto 1
+		do conf sellAuto_npc prontera 64 125
+		do conf sellAuto_distance 5
+
+		do conf itemsMaxWeight 85
+		# Sell/store sooner so junk turns into zeny (was 48 — bots stayed broke with half bags)
+		do conf itemsMaxWeight_sellOrStore 28
+		do conf itemsMaxNum_sellOrStore 40
+		# Prefer selling over Kafra until they have cash (storage blocked sells when it fails/loops)
+		do conf storageAuto 0
+		do conf minStorageZeny 500
+
+		# Heal with what we actually farm — RagnaOne has no working potion buy NPC yet.
+		# Red/Novice Potion kept as slots for when buy is mapped; Apple/Herb are the real heal.
+		do conf -f useSelf_item_0 Apple
+		do conf -f useSelf_item_0_hp < 65%
+		do conf -f useSelf_item_0_timeout 0.8
+		do conf -f useSelf_item_1 Red Herb
+		do conf -f useSelf_item_1_hp < 55%
+		do conf -f useSelf_item_1_timeout 0.8
+		do conf -f useSelf_item_2 Red Potion
+		do conf -f useSelf_item_2_hp < 50%
+		do conf -f useSelf_item_3 Novice Potion
+		do conf -f useSelf_item_3_hp < 50%
+
+		# Keep heal items; NEVER store/sell them (sell was eating Apples before)
+		do iconf Apple 30 0 0
+		do iconf Red Herb 20 0 0
+		do iconf Red Potion 30 0 0
+		do iconf Novice Potion 20 0 0
+		do iconf Butterfly Wing 5 0 0
+		do iconf Fly Wing 20 0 0
+		do iconf Jellopy 0 0 1
+		do iconf Feather 0 0 1
+		do iconf Chrysalis 0 0 1
+		do iconf Fluff 0 0 1
+		do iconf Clover 0 0 1
+		do iconf Shell 0 0 1
+		do iconf Empty Bottle 0 0 1
+		do iconf Sticky Mucus 0 0 1
+		do iconf Grasshopper's Leg 0 0 1
+
+		# Do not sell/store common job-reward gear
+		# IMPORTANT: job rewards are slotted names (Rod [3], Axe [3], …).
+		# Unslotted "iconf Rod" does NOT protect Rod [3] from sellAuto.
+		# Use nameIDs here — macro parser treats [ ] as block syntax.
+		do iconf Cotton Shirt 1 0 0
+		do iconf Adventurer's Suit 1 0 0
+		do iconf Shoes 1 0 0
+		do iconf Boots 1 0 0
+		do iconf Cap 1 0 0
+		# Sell unidentified Hats (extras); equipped items are never sold
+		do iconf Hat 0 0 1
+		do iconf Hood 1 0 0
+		do iconf Guard 1 0 0
+		do iconf Shield 1 0 0
+		do iconf Buckler 1 0 0
+		do iconf Sandals 1 0 0
+		# RagnaOne job rewards (nameIDs — slotted names break macro [ ] parser)
+		do iconf 1101 1 0 0
+		do iconf 1107 1 0 0
+		do iconf 1109 1 0 0
+		do iconf 1201 1 0 0
+		do iconf 1204 1 0 0
+		do iconf 1207 1 0 0
+		do iconf 1301 1 0 0
+		do iconf 1501 1 0 0
+		do iconf 1504 1 0 0
+		do iconf 1519 1 0 0
+		do iconf 1601 1 0 0
+		do iconf 1607 1 0 0
+		do iconf 1701 1 0 0
+		do iconf 1704 1 0 0
+		do iconf 1705 1 0 0
+		do iconf 1706 1 0 0
+		do iconf 2303 1 0 0
+		do iconf Arrow 500 0 0
+
+		# Phase 1 targets — avoid Poporing/Rocker (one-shot base12 knife)
+		do mconf all 1 0 0
+		do mconf Poring 2 0 0
+		do mconf Drops 2 0 0
+		do mconf Lunatic 2 0 0
+		do mconf Fabre 2 0 0
+		do mconf Chonchon 2 0 0
+		do mconf Roda Frog 2 0 0
+		do mconf Willow 1 0 0
+		do mconf Picky 1 0 0
+		do mconf Condor 1 0 0
+		do mconf Spore 1 0 0
+		do mconf Poporing 0 1 0
+		do mconf Rocker 0 1 0
+		do mconf Zombie 0 1 0
+		do mconf Familiar 0 1 0
+		do mconf Baby Desert Wolf 0 1 0
+		do mconf Wolf 0 1 0
+	]
+	call phase1_buyPotsSetup
+	call phase1_setLock
+	call phase1_applyBuild
+	[
+		# First AFK: ~30 min + per-char stagger (0–12 min) so bots don't AFK together
+		do conf Phase1NextAfk @eval(time + 1800 + (ord(substr($::char->{name}, -1)) % 8) * 90)
+	]
+	log Phase 1 configured. Auto stats/skills on. Job10 → fountain changejob. Stop: macro phase1_stop
+}
+
+macro phase1_buyPotsSetup {
+	[
+		# RagnaOne Tool Dealer is INSIDE the north Prontera shop (not outdoor 57/64,125).
+		# Manual shop: portal prontera 134,221 → prt_in → Tool Dealer#prt1 (126,76).
+		# Red Potion 50z confirmed 2026-08-16.
+		do conf buyAuto_0 Red Potion
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf buyAuto_0_npc_steps b
+		do conf buyAuto_0_minAmount 10
+		do conf buyAuto_0_maxAmount 30
+		do conf buyAuto_0_price 50
+		do conf buyAuto_0_zeny >= 50
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+		do conf minStorageZeny 50
+		# Sell at Butcher near west market
+		do conf sellAuto_npc prontera 64 125
+	]
+}
+
+macro phase1_disableBuy {
+	[
+		log Phase1 — not enough zeny ($.zeny), skip buying pots/items
+		do conf buyAuto_0_disabled 1
+		do conf Phase1BuyPaused 1
+	]
+}
+
+macro phase1_enableBuy {
+	[
+		log Phase1 — zeny ok ($.zeny), buyAuto ON (Tool Dealer prt_in 126,76)
+		do conf buyAuto_0 Red Potion
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf buyAuto_0_npc_steps b
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+	]
+}
+
+macro phase1_setLock {
+	$blvl = $.lvl
+	# Stay on prt_fild08 until Phase2 (base 30). Knife chars deal ~3 to Poporing on fild07.
+	if ($blvl < 30) {
+		do conf lockMap prt_fild08
+		do conf lockMap_x none
+		do conf lockMap_y none
+		do mconf Poporing 0 0 0
+		do mconf Rocker 0 0 0
+		do mconf Poring 2 0 0
+		do mconf Lunatic 2 0 0
+		do mconf Drops 2 0 0
+		do mconf 1007 2 0 0
+		do mconf Pupa 2 0 0
+		log Phase1 lock prt_fild08 (base $blvl) — avoid Poporing until Phase2
+	} else {
+		do conf lockMap pay_fild08
+		do conf lockMap_x none
+		do conf lockMap_y none
+		do mconf Poporing 2 0 0
+		do mconf Rocker 1 0 0
+		do mconf Spore 2 0 0
+		do mconf Willow 2 0 0
+		log Phase1 lock pay_fild08 (base $blvl) — handoff to Phase2
+	}
+}
+
+macro phase1_buyPots {
+	[
+		log Phase1 low potions ($.zeny zeny) — enabling Tool Dealer buy (prt_in 126,76)
+		do conf buyAuto_0 Red Potion
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf buyAuto_0_npc_steps b
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+	]
+}
+
+# -----------------------------------------------------------------------------
+# Merchant cart rental at Prontera fountain (Rental Clerk)
+# -----------------------------------------------------------------------------
+macro phase1_rentCart {
+	[
+		log ========================================
+		log Phase1 CART RENTAL — Merchant has Pushcart, no cart
+		log Going to Prontera Rental Clerk (fountain)
+		log ========================================
+		do conf Phase1Busy 1
+		do conf Phase1BusyUntil @eval(time + 600)
+		do ai manual
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+	]
+	pause 1
+
+	$cx = @config(Phase1CartNPC_x)
+	$cy = @config(Phase1CartNPC_y)
+	$ctalk = @config(Phase1CartTalk)
+	do move prontera $cx $cy
+	$wait = 0
+
+	:cartWaitPron
+	if ($.map == prontera) goto cartAtPron
+	$wait++
+	if ($wait > 90) goto cartFail
+	pause 5
+	goto cartWaitPron
+
+	:cartAtPron
+	pause 2
+	do move prontera $cx $cy
+	pause 3
+
+	log Phase1 talk Rental Clerk at $cx $cy steps: $ctalk
+	do talknpc $cx $cy $ctalk
+	pause 3
+
+	# Fallback: continue-only (some servers auto-rent cart with no menu)
+	do talknpc $cx $cy c
+	pause 2
+
+	:cartCheck
+	[
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+	]
+	# Mark done only if cart is actually active — else retry later
+	$hascart = @eval($::char && $::char->cartActive ? 1 : 0)
+	if ($hascart == 1) goto cartOk
+	[
+		log Phase1 cart rental FAILED — will retry when Pushcart/NPC ok
+		do conf Phase1CartDone 0
+	]
+	goto cartResume
+
+	:cartOk
+	[
+		log Phase1 cart rental OK
+		do conf Phase1CartDone 1
+	]
+	goto cartResume
+
+	:cartFail
+	[
+		log Phase1 cart rental aborted — never reached Prontera
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf Phase1CartDone 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf storageAuto 1
+		do conf sellAuto 1
+	]
+
+	:cartResume
+	call phase1_setLock
+	do ai on
+	log Phase1 cart rental END — back to farming
+}
+
+# -----------------------------------------------------------------------------
+# Job change at Prontera fountain (random 1st class) + equip rewards
+# -----------------------------------------------------------------------------
+macro phase1_changeJob {
+	[
+		log ========================================
+		log Phase1 JOB CHANGE — Job Lv $.joblvl Novice
+		log Going to Prontera fountain (random class)
+		log ========================================
+		do conf Phase1Busy 1
+		do conf Phase1BusyUntil @eval(time + 1200)
+		do ai manual
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf storageAuto 0
+		do conf sellAuto 0
+		do conf buyAuto_0_disabled 1
+	]
+	pause 1
+
+	# Walk to fountain / Job Master and WAIT until we are actually in Prontera
+	$jx = @config(Phase1JobNPC_x)
+	$jy = @config(Phase1JobNPC_y)
+	do move prontera $jx $jy
+	$wait = 0
+
+	:waitPron
+	if ($.map == prontera) goto atPron
+	$wait++
+	if ($wait > 90) goto jobFail
+	pause 5
+	goto waitPron
+
+	:atPron
+	pause 2
+	do move prontera $jx $jy
+	pause 3
+
+	# Random first class (explicit — @listitem is unreliable in this OpenKore build)
+	$pick = @rand(0, 5)
+	if ($pick == 0) goto setSword
+	if ($pick == 1) goto setMage
+	if ($pick == 2) goto setArcher
+	if ($pick == 3) goto setAco
+	if ($pick == 4) goto setMerch
+	goto setThief
+
+	:setSword
+	$jobname = Swordman
+	goto setDone
+	:setMage
+	$jobname = Mage
+	goto setDone
+	:setArcher
+	$jobname = Archer
+	goto setDone
+	:setAco
+	$jobname = Acolyte
+	goto setDone
+	:setMerch
+	$jobname = Merchant
+	goto setDone
+	:setThief
+	$jobname = Thief
+	goto setDone
+
+	:setDone
+	do conf Phase1PickedJob $jobname
+	log Phase1 random class pick: $jobname (menu index $pick)
+
+	# RagnaOne Job Master: select class → confirm (no intermediate ChangeJob menu)
+	do talknpc $jx $jy r$pick r0
+	pause 3
+	# Still Novice at Job10+ → retry with name match + confirm
+	if ($.joblvl >= 10) goto tryNamed
+	goto afterTalk
+
+	:tryNamed
+	log Phase1 talk retry with class name: $jobname
+	do talknpc $jx $jy r~/Swordsman|Magician|Archer|Acolyte|Merchant|Thief/i r0
+	pause 3
+
+	:afterTalk
+	# Abort cleanly if still Novice (do not mark JobDone)
+	if ($.joblvl >= 10) goto jobFail
+	# Rewards often arrive a few seconds after the job packet — wait, then equip
+	# BEFORE re-enabling sellAuto (Composite Bow / Blade were being sold).
+	[
+		do conf sellAuto 0
+		do conf storageAuto 0
+		log Phase1 after talk — waiting for job-reward items then equipping
+	]
+	pause 5
+	call phase1_equipRewards
+	pause 2
+	call phase1_equipRewards
+	pause 1
+
+	# Server resets stats after changejob — clear build flag, wait, re-apply class build
+	[
+		do conf Phase1JobDone 1
+		do conf Phase1WeaponDone 1
+		do conf Phase1BuildApplied
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+	]
+	pause 3
+	call phase1_applyBuild
+	pause 1
+	goto jobOk
+
+	:jobFail
+	[
+		log Phase1 JOB CHANGE FAILED — still Novice or never reached Prontera; retry later
+		do talk
+		do conf Phase1JobDone 0
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+	]
+	call phase1_setLock
+	do ai clear
+	do ai on
+	stop
+
+	:jobOk
+	[
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+	]
+	if ($.zeny < 50) goto jobNobuy
+	[
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+	]
+	goto jobResume
+
+	:jobNobuy
+	[
+		do conf buyAuto_0_disabled 1
+		do conf Phase1BuyPaused 1
+		log Phase1 job done — no zeny, buying stays off
+	]
+
+	:jobResume
+	call phase1_setLock
+	do ai on
+	log ========================================
+	log Phase1 JOB CHANGE DONE — class=$jobname — stats/skills re-applied — grinding resumes
+	log ========================================
+}
+
+macro phase1_equipRewards {
+	[
+		log Phase1 equipping job-change rewards...
+		do conf sellAuto 0
+		do conf storageAuto 0
+		do is Job Change Ticket
+		do is Novice Pack
+		do is Beginner Pack
+		do is Starter Pack
+		do is Job Reward Box
+		do is Reward Box
+	]
+	pause 2
+	do phase1equip
+	pause 1
+	do phase1equip
+	[
+		do conf Phase1WeaponDone 1
+		log Phase1 reward equip pass finished
+	]
+}
+
+# Periodic: equip free job weapons still sitting unequipped; buy replacement if already sold.
+macro phase1_ensureJobWeapon {
+	$jobname = @eval($::jobs_lut{$::char->{jobID}})
+	if ($jobname == Novice) goto ewStop
+
+	do phase1equip
+	pause 1
+	do phase1weaponcheck
+	if (@config(Phase1NeedWeaponBuy) == 1) goto ewMaybeBuy
+	goto ewStop
+
+	:ewMaybeBuy
+	do phase1weaponcanbuy
+	if (@config(Phase1WeaponBuyNow) == 1) goto ewBuy
+	goto ewStop
+
+	:ewBuy
+	[
+		log Phase1 job weapon missing (likely sold) — buying shop replacement
+		do conf -f Phase1WeaponBuyAt @eval(time + 3600)
+		do conf Phase1NeedWeaponBuy 0
+		do conf sellAuto 0
+		do conf buyAuto_0_disabled 1
+		do conf Phase1Busy 1
+		do conf Phase1BusyUntil @eval(time + 600)
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do ai on
+	]
+	do phase1weaponbuysetup
+	pause 1
+	if (@config(Phase1WeaponBuyMap) == prt_church) goto ewChurch
+	do move prt_in 172 128
+	goto ewWaitMap
+
+	:ewChurch
+	do move prt_church 108 122
+
+	:ewWaitMap
+	$w = 0
+
+	:ewWaitLoop
+	if (@config(Phase1WeaponBuyMap) == prt_church) goto ewCheckChurch
+	if ($.map == prt_in) goto ewAtShop
+	goto ewWaitCont
+
+	:ewCheckChurch
+	if ($.map == prt_church) goto ewAtShop
+
+	:ewWaitCont
+	$w++
+	if ($w > 50) goto ewBuyDone
+	pause 5
+	goto ewWaitLoop
+
+	:ewAtShop
+	log Phase1 at weapon shop — waiting for buyAuto
+	pause 45
+	do phase1equip
+	pause 2
+	do phase1equip
+
+	:ewBuyDone
+	[
+		do conf buyAuto_1_disabled 1
+		do conf buyAuto_0_disabled 0
+		do conf Phase1NeedWeaponBuy 0
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf sellAuto 1
+		do conf storageAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+	]
+	call phase1_setLock
+	do ai on
+
+	:ewStop
+}
+
+# -----------------------------------------------------------------------------
+# Auto stats + skills by class (raiseStat / raiseSkill)
+# After changejob reset, re-run this so points go into the class build again.
+# -----------------------------------------------------------------------------
+macro phase1_applyBuild {
+	$jobname = @eval($::jobs_lut{$::char->{jobID}})
+	if ($jobname == Novice) goto buildNovice
+	if ($jobname == Swordman) goto buildSword
+	if ($jobname == Mage) goto buildMage
+	if ($jobname == Archer) goto buildArcher
+	if ($jobname == Acolyte) goto buildAco
+	if ($jobname == Merchant) goto buildMerch
+	if ($jobname == Thief) goto buildThief
+
+	# Job packet not updated yet after changejob — use picked class
+	$jobname = @config(Phase1PickedJob)
+	if ($jobname == Swordman) goto buildSword
+	if ($jobname == Mage) goto buildMage
+	if ($jobname == Archer) goto buildArcher
+	if ($jobname == Acolyte) goto buildAco
+	if ($jobname == Merchant) goto buildMerch
+	if ($jobname == Thief) goto buildThief
+	log Phase1 class unknown — using Novice build
+	goto buildNovice
+
+	:buildNovice
+	[
+		log Phase1 build NOVICE — Basic Skill + early farm stats
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 15 str, 12 agi, 12 vit, 10 dex
+		do conf skillsAddAuto_list NV_BASIC 9
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAdd_over_99 1
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Novice
+	]
+	stop
+
+	:buildSword
+	[
+		log Phase1 build SWORDMAN — STR+AGI (vit/dex support)
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 40 str, 25 agi, 20 vit, 20 dex
+		do conf skillsAddAuto_list SM_SWORD 10, SM_BASH 10, SM_PROVOKE 5, SM_MAGNUM 10, SM_RECOVERY 5, SM_ENDURE 5
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Swordman
+		do conf Phase1PickedJob Swordman
+	]
+	stop
+
+	:buildMage
+	[
+		log Phase1 build MAGE — INT+DEX + cast skills
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 50 int, 40 dex, 10 vit
+		do conf skillsAddAuto_list MG_SIGHT 1, MG_NAPALMBEAT 4, MG_SOULSTRIKE 5, MG_COLDBOLT 5, MG_FIREBOLT 10, MG_LIGHTNINGBOLT 5, MG_STONECURSE 5, MG_SRECOVERY 5
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		# Combat skills — prefer currently learned first; Fire Bolt when available
+		do conf -f attackSkillSlot_0 Soul Strike
+		do conf -f attackSkillSlot_0_lvl 10
+		do conf -f attackSkillSlot_0_dist 1
+		do conf -f attackSkillSlot_0_maxDist 9
+		do conf -f attackSkillSlot_0_sp >= 15
+		do conf -f attackSkillSlot_1 Napalm Beat
+		do conf -f attackSkillSlot_1_lvl 10
+		do conf -f attackSkillSlot_1_dist 1
+		do conf -f attackSkillSlot_1_maxDist 9
+		do conf -f attackSkillSlot_1_sp >= 10
+		do conf -f attackSkillSlot_2 Fire Bolt
+		do conf -f attackSkillSlot_2_lvl 10
+		do conf -f attackSkillSlot_2_dist 1
+		do conf -f attackSkillSlot_2_maxDist 9
+		do conf -f attackSkillSlot_2_sp >= 10
+		do conf attackDistance 3
+		do conf attackMaxDistance 9
+		do conf attackUseWeapon 1
+		do conf Phase1BuildApplied Mage
+		do conf Phase1PickedJob Mage
+	]
+	stop
+
+	:buildArcher
+	[
+		log Phase1 build ARCHER — DEX+AGI
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 50 dex, 40 agi, 10 str
+		do conf skillsAddAuto_list AC_OWL 10, AC_VULTURE 10, AC_DOUBLE 10, AC_CONCENTRATION 5, AC_SHOWER 5
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Archer
+		do conf Phase1PickedJob Archer
+	]
+	stop
+
+	:buildAco
+	[
+		log Phase1 build ACOLYTE — INT+DEX (vit support)
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 40 int, 25 dex, 20 vit, 10 agi
+		do conf skillsAddAuto_list AL_HEAL 10, AL_INCAGI 5, AL_BLESSING 5, AL_ANGELUS 5, AL_CURE 1, AL_RUWACH 1, AL_TELEPORT 2, AL_DP 5
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Acolyte
+		do conf Phase1PickedJob Acolyte
+	]
+	stop
+
+	:buildMerch
+	[
+		log Phase1 build MERCHANT — STR+DEX (vit support)
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 40 str, 25 dex, 20 vit, 10 agi
+		do conf skillsAddAuto_list MC_INCCARRY 5, MC_PUSHCART 10, MC_DISCOUNT 10, MC_OVERCHARGE 10, MC_IDENTIFY 1, MC_VENDING 10, MC_MAMMONITE 10
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Merchant
+		do conf Phase1PickedJob Merchant
+	]
+	stop
+
+	:buildThief
+	[
+		log Phase1 build THIEF — AGI+DEX (str support)
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf statsAddAuto_dontUseBonus 1
+		do conf statsAddAuto_list 40 agi, 30 dex, 20 str, 10 luk
+		do conf skillsAddAuto_list TF_DOUBLE 10, TF_MISS 10, TF_STEAL 10, TF_HIDING 10, TF_POISON 10, TF_DETOXIFY 1
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf Phase1BuildApplied Thief
+		do conf Phase1PickedJob Thief
+	]
+	stop
+}
+
+# -----------------------------------------------------------------------------
+# AFK break: every 30 min → Prontera fountain (mid town), per-char random tile + facing
+# -----------------------------------------------------------------------------
+macro phase1_afkBreak {
+	[
+		log ========================================
+		log Phase1 AFK BREAK — fountain plaza (mid Prontera)
+		log ========================================
+		do conf Phase1Busy 1
+		do conf Phase1BusyUntil @eval(time + 1200)
+		do ai manual
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf storageAuto 0
+		do conf sellAuto 0
+		do conf buyAuto_0_disabled 1
+		do conf sitAuto_idle 0
+		do stand
+	]
+	pause 1
+
+	# Fountain / middle Prontera only (avoid fountain water ~156,198).
+	# 4 corners around the plaza from char name so bots don't stack on one tile.
+	$zone = @eval( (ord(substr($::char->{name}, 0, 1)) + ord(substr($::char->{name}, -1)) + length($::char->{name})) % 4 )
+	if ($zone == 0) goto afkZ0
+	if ($zone == 1) goto afkZ1
+	if ($zone == 2) goto afkZ2
+	goto afkZ3
+
+	:afkZ0
+	# SW of fountain
+	$ax = @rand(148, 154)
+	$ay = @rand(172, 182)
+	goto afkGo
+
+	:afkZ1
+	# SE of fountain
+	$ax = @rand(158, 164)
+	$ay = @rand(172, 182)
+	goto afkGo
+
+	:afkZ2
+	# NW of fountain
+	$ax = @rand(148, 154)
+	$ay = @rand(186, 194)
+	goto afkGo
+
+	:afkZ3
+	# NE of fountain
+	$ax = @rand(158, 164)
+	$ay = @rand(186, 194)
+	goto afkGo
+
+	:afkGo
+	# Small per-char jitter within the corner
+	$ox = @eval( (ord(substr($::char->{name}, -1)) % 5) - 2 )
+	$oy = @eval( (ord(substr($::char->{name}, 0, 1)) % 5) - 2 )
+	$ax = @eval( $ax + $ox )
+	$ay = @eval( $ay + $oy )
+	log Phase1 AFK fountain corner $zone walk to prontera $ax $ay
+	do move prontera $ax $ay
+	$wait = 0
+
+	:afkWaitMap
+	if ($.map == prontera) goto afkAtPron
+	$wait++
+	if ($wait > 90) goto afkAbort
+	pause 5
+	goto afkWaitMap
+
+	:afkAtPron
+	do move $ax $ay
+	pause 8
+	do move $ax $ay
+	pause 4
+
+	$body = @rand(0, 7)
+	$head = @rand(0, 2)
+	do look $body $head
+	log Phase1 AFK facing body=$body head=$head at $.posx $.posy
+	pause 1
+	do sit
+
+	$afk = @rand(300, 600)
+	log Phase1 AFK idle for $afk seconds
+	pause $afk
+
+	$body2 = @rand(0, 7)
+	$head2 = @rand(0, 2)
+	do look $body2 $head2
+	pause 2
+	do stand
+	pause 1
+	goto afkDone
+
+	:afkAbort
+	[
+		log Phase1 AFK aborted — never reached Prontera
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf Phase1NextAfk @eval(time + 1800 + (ord(substr($::char->{name}, -1)) % 8) * 90)
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_idle 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+	]
+	call phase1_setLock
+	do ai on
+	stop
+
+	:afkDone
+	[
+		log Phase1 AFK done — resuming grind
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_idle 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf Phase1NextAfk @eval(time + 1800 + (ord(substr($::char->{name}, -1)) % 8) * 90)
+	]
+	if ($.zeny < 50) goto afkNobuy
+	[
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+	]
+	goto afkResume
+
+	:afkNobuy
+	[
+		do conf buyAuto_0_disabled 1
+		do conf Phase1BuyPaused 1
+		log Phase1 AFK done — no zeny, skip buying
+	]
+
+	:afkResume
+	call phase1_setLock
+	do ai on
+	log ========================================
+	log Phase1 AFK BREAK END — back to farming
+	log ========================================
+}
+
+macro phase1_unstick {
+	[
+		log Phase1 UNSTICK — Busy flag timed out, forcing resume
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf storageAuto 1
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf Phase1NextAfk @eval(time + 1800)
+	]
+	if ($.zeny < 50) goto unstickNobuy
+	[
+		do conf buyAuto_0_disabled 0
+		do conf Phase1BuyPaused 0
+	]
+	goto unstickResume
+
+	:unstickNobuy
+	[
+		do conf buyAuto_0_disabled 1
+		do conf Phase1BuyPaused 1
+	]
+
+	:unstickResume
+	call phase1_setLock
+	do ai on
+}
+
+macro phase1_kickRaise {
+	[
+		log Phase1 kick raiseStat/raiseSkill (free points available)
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+	]
+	pause 1
+	[
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+	]
+}
+
+macro phase1_ensureCombat {
+	[
+		log Phase1 ensure combat/walk enabled
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do ai on
+	]
+	call phase1_setLock
+}
+
+macro phase1_stop {
+	[
+		log Phase 1 STOP
+		do conf Phase none
+		do conf Phase1Busy 0
+		do conf Phase1BusyUntil
+		do conf Phase1JobDone 0
+		do conf Phase1CartDone 0
+		do conf Phase1BuildApplied
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+		do conf lockMap none
+		do conf route_randomWalk_inLockOnly 0
+		do conf buyAuto_0_disabled 1
+		do conf storageAuto 0
+		do conf sellAuto 0
+		do mconf all 1 0 0
+		do ai on
+	]
+}
+
+automacro Phase1_Complete {
+	base > 30
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase1" && $::config{Phase1Busy} ne "1" && $::char && $::char->{lv} > 30
+	call phase1_done
+}
+
+macro phase1_done {
+	[
+		log ========================================
+		log Phase 1 COMPLETE (base > 30) — starting Phase 2
+		log ========================================
+		do conf Phase Phase1Done
+	]
+	call phase2
+}
+
+# =============================================================================
+# Phase 2 — mid leveling (base ~30 → ~60)
+# =============================================================================
+# Goal: stronger Prontera/Payon/Morocc fields, keep heal/buy/AFK/cart habits.
+# Map ladder:
+#   <40  pay_fild08 (Spore/Willow)
+#   <50  pay_fild09
+#   <60  moc_fild02
+# Complete at base > 60.
+#
+# Start:  macro phase2   (also auto from Phase1_Complete)
+# Stop:   macro phase2_stop
+# =============================================================================
+
+automacro Phase2_AutoStart {
+	base > 30
+	base <= 60
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase1Done"
+	call phase2
+}
+
+automacro Phase2_EnsureCombat {
+	timeout 90
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{attackAuto} ne "2" && !($::field && $::field->isCity && $::char && $::char->{hp} < $::char->{hp_max} * 0.60)
+	call phase2_ensureCombat
+}
+
+automacro Phase2_AfkBreak {
+	timeout 60
+	exclusive 1
+	hp > 80%
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{Phase2NextAfk} && time >= $::config{Phase2NextAfk} && !$::char->{dead}
+	call phase2_afkBreak
+}
+
+automacro Phase2_LeaveTown {
+	timeout 120
+	exclusive 1
+	hp > 60%
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{lockMap} && $::field && $::field->isCity && $::field->baseName ne $::config{lockMap}
+	call phase2_leaveTown
+}
+
+automacro Phase2_TownHeal {
+	timeout 30
+	exclusive 1
+	hp < 60%
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::field && $::field->isCity
+	call phase2_townHeal
+}
+
+automacro Phase2_TownHealDone {
+	timeout 20
+	exclusive 1
+	hp > 80%
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::field && $::field->isCity && $::config{attackAuto} eq "0"
+	call phase2_townHealDone
+}
+
+automacro Phase2_ReturnToField {
+	base <= 60
+	timeout 45
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{lockMap} && $::field && !$::field->isCity && $::field->baseName ne $::config{lockMap}
+	call phase2_setLock
+}
+
+automacro Phase2_LevelBand {
+	base > 30
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1"
+	call phase2_setLock
+}
+
+automacro Phase2_LowPots {
+	inventory "Red Potion" < 5
+	zeny >= 50
+	base <= 60
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1"
+	call phase2_buyPots
+}
+
+automacro Phase2_NoZenySkipBuy {
+	zeny < 50
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{buyAuto_0_disabled} ne "1"
+	call phase2_disableBuy
+}
+
+automacro Phase2_HasZenyEnableBuy {
+	zeny >= 50
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{Phase2BuyPaused} eq "1"
+	call phase2_enableBuy
+}
+
+# Only use Kafra when we can afford fees / aren't broke — sell-first economy
+automacro Phase2_BrokeNoStorage {
+	zeny < 1000
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{storageAuto} ne "0"
+	call phase2_disableStorage
+}
+
+automacro Phase2_RichEnableStorage {
+	zeny >= 5000
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{storageAuto} ne "1"
+	call phase2_enableStorage
+}
+
+automacro Phase2_MerchantCart {
+	class Merchant
+	timeout 90
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::config{Phase2CartDone} ne "1" && $::char && !$::char->cartActive && (($::char->{skills}{MC_PUSHCART}{lv} || 0) >= 1)
+	call phase2_rentCart
+}
+
+automacro Phase2_UnstickBusy {
+	timeout 60
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} eq "1" && $::config{Phase2BusyUntil} && time >= $::config{Phase2BusyUntil}
+	call phase2_unstick
+}
+
+automacro Phase2_KickRaise {
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && (($::config{statsAddAuto} ne "1" && $::config{statsAddAuto_list}) || ($::config{skillsAddAuto} ne "1" && $::config{skillsAddAuto_list}))
+	call phase2_kickRaise
+}
+
+automacro Phase2_Complete {
+	base > 60
+	timeout 300
+	exclusive 1
+	eval $::config{Phase} eq "Phase2" && $::config{Phase2Busy} ne "1" && $::char && $::char->{lv} > 60
+	call phase2_done
+}
+
+macro phase2 {
+	[
+		log ========================================
+		log Phase 2 START — mid fields (base ~30-60)
+		log ========================================
+		do conf Phase Phase2
+		do conf -f Phase2Busy 0
+		do conf -f Phase2CartDone 0
+		do conf Phase1Busy 0
+
+		do conf Phase1CartNPC_x 159
+		do conf Phase1CartNPC_y 180
+		do conf Phase1CartTalk c r0
+
+		do conf attackAuto 2
+		do conf attackAuto_party 1
+		do conf attackAuto_notInTown 1
+		do conf itemsTakeAuto 2
+		do conf itemsGatherAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf route_randomWalk_inTown 0
+
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do conf teleportAuto_hp 0
+		do conf teleportAuto_deadly 0
+		do conf teleportAuto_maxDmg 0
+		do conf teleportAuto_dropTargetEngaged 1
+		do conf dcOnDeath 0
+		do conf autoMoveOnDeath 1
+		do conf autoMoveOnDeath_map prontera
+		do conf autoMoveOnDeath_x 155
+		do conf autoMoveOnDeath_y 50
+
+		do conf saveMap prontera
+		do conf saveMap_x 155
+		do conf saveMap_y 50
+		do conf saveMap_warpToBuyOrSell 1
+		do conf storageAuto 0
+		do conf storageAuto_npc prontera 151 29
+		do conf storageAuto_distance 5
+		do conf storageAuto_npc_type 1
+		do conf sellAuto 1
+		do conf sellAuto_npc prontera 64 125
+		do conf sellAuto_distance 5
+		do conf itemsMaxWeight 85
+		do conf itemsMaxWeight_sellOrStore 28
+		do conf itemsMaxNum_sellOrStore 40
+		do conf minStorageZeny 500
+
+		do conf -f useSelf_item_0 Apple
+		do conf -f useSelf_item_0_hp < 65%
+		do conf -f useSelf_item_0_timeout 0.8
+		do conf -f useSelf_item_1 Red Herb
+		do conf -f useSelf_item_1_hp < 55%
+		do conf -f useSelf_item_1_timeout 0.8
+		do conf -f useSelf_item_2 Red Potion
+		do conf -f useSelf_item_2_hp < 50%
+		do conf -f useSelf_item_3 Green Potion
+		do conf -f useSelf_item_3_hp < 40%
+
+		do iconf Apple 30 0 0
+		do iconf Red Herb 20 0 0
+		do iconf Red Potion 40 0 0
+		do iconf Green Potion 10 0 0
+		do iconf Butterfly Wing 5 0 0
+		do iconf Fly Wing 20 0 0
+		do iconf 1201 1 0 0
+		do iconf 1204 1 0 0
+		do iconf 1207 1 0 0
+		do iconf 1301 1 0 0
+		do iconf Hat 0 0 1
+		do iconf Tree Root 0 0 1
+		do iconf Resin 0 0 1
+		do iconf Mushroom Spore 0 0 1
+		do iconf Animal Skin 0 0 1
+
+		do conf buyAuto_0 Red Potion
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf -f buyAuto_0_npc_steps b
+		do conf buyAuto_0_minAmount 15
+		do conf buyAuto_0_maxAmount 40
+		do conf buyAuto_0_price 50
+		do conf buyAuto_0_zeny >= 50
+		do conf buyAuto_0_disabled 0
+		do conf -f Phase2BuyPaused 0
+		do conf minStorageZeny 500
+
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+		do conf -f Phase2NextAfk @eval(time + 1800 + (ord(substr($::char->{name}, -1)) % 8) * 90)
+	]
+	call phase2_setLock
+	call phase2_applyMonsters
+	do ai on
+	log Phase 2 configured. Stop: macro phase2_stop
+}
+
+macro phase2_setLock {
+	$blvl = $.lvl
+	if ($blvl < 40) {
+		do conf lockMap pay_fild08
+		do conf lockMap_x none
+		do conf lockMap_y none
+		log Phase2 lock pay_fild08 (base $blvl)
+	} else {
+		if ($blvl < 50) {
+			do conf lockMap pay_fild09
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Phase2 lock pay_fild09 (base $blvl)
+		} else {
+			do conf lockMap moc_fild02
+			do conf lockMap_x none
+			do conf lockMap_y none
+			log Phase2 lock moc_fild02 (base $blvl)
+		}
+	}
+	call phase2_applyMonsters
+}
+
+macro phase2_applyMonsters {
+	[
+		do mconf all 1 0 0
+		do mconf Spore 2 0 0
+		do mconf Willow 2 0 0
+		do mconf Elder Willow 2 0 0
+		do mconf Creamy 2 0 0
+		do mconf Poring 1 0 0
+		do mconf Poporing 1 0 0
+		do mconf Pupa 1 0 0
+		do mconf Lunatic 1 0 0
+		do mconf Chonchon 2 0 0
+		do mconf Steel Chonchon 1 0 0
+		do mconf Condor 2 0 0
+		do mconf Drops 1 0 0
+		do mconf Muka 1 0 0
+		do mconf Smokie 2 0 0
+		do mconf Coco 2 0 0
+		do mconf Rocker 0 1 0
+		do mconf Wolf 0 1 0
+		do mconf Baby Desert Wolf 0 1 0
+		do mconf Desert Wolf 0 1 0
+		do mconf Zombie 0 1 0
+		do mconf Skeleton 0 1 0
+		do mconf Archer Skeleton 0 1 0
+		do mconf Soldier Skeleton 0 1 0
+		do mconf Familiar 0 1 0
+	]
+}
+
+macro phase2_buyPots {
+	[
+		log Phase2 low potions — Tool Dealer buy enabled
+		do conf buyAuto_0 Red Potion
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf -f buyAuto_0_npc_steps b
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+	]
+}
+
+macro phase2_disableBuy {
+	[
+		log Phase2 — not enough zeny ($.zeny), buy off
+		do conf buyAuto_0_disabled 1
+		do conf Phase2BuyPaused 1
+	]
+}
+
+macro phase2_enableBuy {
+	[
+		log Phase2 — zeny ok ($.zeny), buy on
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+	]
+}
+
+macro phase2_disableStorage {
+	[
+		log Phase2 broke ($.zeny) — storage OFF, sell-only
+		do conf storageAuto 0
+	]
+}
+
+macro phase2_enableStorage {
+	[
+		log Phase2 zeny ok ($.zeny) — storage ON
+		do conf storageAuto 1
+		do conf storageAuto_npc prontera 151 29
+		do conf storageAuto_npc_type 1
+	]
+}
+
+macro phase2_townHeal {
+	[
+		log Phase2 town heal — sit until HP safe
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf sitAuto_idle 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do sit
+	]
+}
+
+macro phase2_townHealDone {
+	[
+		log Phase2 town heal done — combat on
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do stand
+	]
+}
+
+macro phase2_leaveTown {
+	[
+		log Phase2 leave town — scatter then lockMap
+		do conf buyAuto_0_npc prt_in 126 76
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf sitAuto_idle 1
+		do stand
+	]
+	$sx = @eval(140 + (ord(substr($::char->{name}, -1)) % 30))
+	$sy = @eval(28 + (ord(substr($::char->{name}, 0, 1)) % 25))
+	log Phase2 leave scatter $sx $sy
+	do move $sx $sy
+	pause 2
+	call phase2_setLock
+	do move @config(lockMap)
+	do ai on
+}
+
+macro phase2_ensureCombat {
+	[
+		log Phase2 ensure combat/walk enabled
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do ai on
+	]
+	call phase2_setLock
+}
+
+macro phase2_kickRaise {
+	[
+		log Phase2 kick raiseStat/raiseSkill
+		do conf statsAddAuto 0
+		do conf skillsAddAuto 0
+	]
+	pause 1
+	[
+		do conf statsAddAuto 1
+		do conf skillsAddAuto 1
+	]
+}
+
+macro phase2_unstick {
+	[
+		log Phase2 UNSTICK — Busy timed out
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+		do conf storageAuto 0
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf Phase2NextAfk @eval(time + 1800)
+	]
+	if ($.zeny < 50) goto p2unstickNobuy
+	[
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+	]
+	goto p2unstickResume
+	:p2unstickNobuy
+	[
+		do conf buyAuto_0_disabled 1
+		do conf Phase2BuyPaused 1
+	]
+	:p2unstickResume
+	call phase2_setLock
+	do ai on
+}
+
+macro phase2_rentCart {
+	[
+		log Phase2 CART RENTAL — Merchant Pushcart, no cart
+		do conf Phase2Busy 1
+		do conf Phase2BusyUntil @eval(time + 600)
+		do ai manual
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+	]
+	pause 1
+	$cx = @config(Phase1CartNPC_x)
+	$cy = @config(Phase1CartNPC_y)
+	$ctalk = @config(Phase1CartTalk)
+	do move prontera $cx $cy
+	$wait = 0
+	:p2cartWait
+	if ($.map == prontera) goto p2cartAt
+	$wait++
+	if ($wait > 90) goto p2cartFail
+	pause 5
+	goto p2cartWait
+	:p2cartAt
+	pause 2
+	do move prontera $cx $cy
+	pause 3
+	do talknpc $cx $cy $ctalk
+	pause 3
+	do talknpc $cx $cy c
+	pause 2
+	[
+		do conf storageAuto 0
+		do conf sellAuto 1
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+	]
+	$hascart = @eval($::char && $::char->cartActive ? 1 : 0)
+	if ($hascart == 1) goto p2cartOk
+	[
+		log Phase2 cart rental FAILED
+		do conf Phase2CartDone 0
+	]
+	goto p2cartResume
+	:p2cartOk
+	[
+		log Phase2 cart rental OK
+		do conf Phase2CartDone 1
+	]
+	goto p2cartResume
+	:p2cartFail
+	[
+		log Phase2 cart rental aborted
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+		do conf Phase2CartDone 0
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+	]
+	:p2cartResume
+	call phase2_setLock
+	do ai on
+}
+
+macro phase2_afkBreak {
+	[
+		log Phase2 AFK BREAK — fountain plaza
+		do conf Phase2Busy 1
+		do conf Phase2BusyUntil @eval(time + 1200)
+		do ai manual
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf storageAuto 0
+		do conf sellAuto 0
+		do conf buyAuto_0_disabled 1
+		do conf sitAuto_idle 0
+		do stand
+	]
+	pause 1
+	$zone = @eval( (ord(substr($::char->{name}, 0, 1)) + ord(substr($::char->{name}, -1)) + length($::char->{name})) % 4 )
+	if ($zone == 0) goto p2afkZ0
+	if ($zone == 1) goto p2afkZ1
+	if ($zone == 2) goto p2afkZ2
+	goto p2afkZ3
+	:p2afkZ0
+	$ax = @rand(148, 154)
+	$ay = @rand(172, 182)
+	goto p2afkGo
+	:p2afkZ1
+	$ax = @rand(158, 164)
+	$ay = @rand(172, 182)
+	goto p2afkGo
+	:p2afkZ2
+	$ax = @rand(148, 154)
+	$ay = @rand(186, 194)
+	goto p2afkGo
+	:p2afkZ3
+	$ax = @rand(158, 164)
+	$ay = @rand(186, 194)
+	:p2afkGo
+	$ox = @eval( (ord(substr($::char->{name}, -1)) % 5) - 2 )
+	$oy = @eval( (ord(substr($::char->{name}, 0, 1)) % 5) - 2 )
+	$ax = @eval( $ax + $ox )
+	$ay = @eval( $ay + $oy )
+	log Phase2 AFK walk prontera $ax $ay
+	do move prontera $ax $ay
+	$wait = 0
+	:p2afkWait
+	if ($.map == prontera) goto p2afkAt
+	$wait++
+	if ($wait > 90) goto p2afkAbort
+	pause 5
+	goto p2afkWait
+	:p2afkAt
+	do move $ax $ay
+	pause 8
+	$body = @rand(0, 7)
+	$head = @rand(0, 2)
+	do look $body $head
+	do sit
+	$afk = @rand(300, 600)
+	log Phase2 AFK idle $afk seconds
+	pause $afk
+	do stand
+	pause 1
+	goto p2afkDone
+	:p2afkAbort
+	[
+		log Phase2 AFK aborted
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+		do conf Phase2NextAfk @eval(time + 1800)
+		do conf storageAuto 0
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+	]
+	call phase2_setLock
+	do ai on
+	stop
+	:p2afkDone
+	[
+		log Phase2 AFK done
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+		do conf storageAuto 0
+		do conf sellAuto 1
+		do conf attackAuto 2
+		do conf route_randomWalk 1
+		do conf route_randomWalk_inLockOnly 1
+		do conf sitAuto_idle 1
+		do conf sitAuto_hp_lower 20
+		do conf sitAuto_hp_upper 90
+		do conf Phase2NextAfk @eval(time + 1800 + (ord(substr($::char->{name}, -1)) % 8) * 90)
+	]
+	if ($.zeny < 50) goto p2afkNobuy
+	[
+		do conf buyAuto_0_disabled 0
+		do conf Phase2BuyPaused 0
+	]
+	goto p2afkResume
+	:p2afkNobuy
+	[
+		do conf buyAuto_0_disabled 1
+		do conf Phase2BuyPaused 1
+	]
+	:p2afkResume
+	call phase2_setLock
+	do ai on
+	log Phase2 AFK END — farming
+}
+
+macro phase2_stop {
+	[
+		log Phase 2 STOP
+		do conf Phase none
+		do conf Phase2Busy 0
+		do conf Phase2BusyUntil
+		do conf Phase2CartDone 0
+		do conf lockMap none
+		do conf route_randomWalk_inLockOnly 0
+		do conf buyAuto_0_disabled 1
+		do conf storageAuto 0
+		do conf sellAuto 0
+		do mconf all 1 0 0
+		do ai on
+	]
+}
+
+macro phase2_done {
+	[
+		log ========================================
+		log Phase 2 COMPLETE (base > 60)
+		log Ready for Phase 3 / 2nd job later
+		log ========================================
+		do conf Phase Phase2Done
+		do conf lockMap none
+	]
+}

@@ -1,0 +1,100 @@
+# mon_control.txt — hunt sensible targets, avoid bosses / players' MVPs
+# format: monster_name  attack_auto  teleport_auto  search_auto  skillcancel  attack_lvl  attack_job  skill_lvl  skill_job
+# attack_auto: -1 avoid, 0 don't attack, 1 attack if attacked, 2 always attack
+
+# Early field
+Poring 2 0 1
+Drops 2 0 1
+Poporing 2 0 1
+Lunatic 2 0 1
+Fabre -1 # 1007
+Pupa 2 0 1
+Condor 2 0 1
+Picky 2 0 0
+Picky 2 1 0 0
+Willow 2 0 1
+Spore 2 0 1
+Chonchon 2 0 1
+Rocker 2 0 1
+Thief 2 Egg 0 0 0
+Thief 2 2 0 1
+Female 2 Bug 2 0 1
+Male 2 Bug 2 0 1
+Familiar 2 0 1
+Zombie 2 0 1
+Skeleton 2 0 1
+Poporing 2 0 1
+Roda 2 2 0 1
+Wormtail 2 0 1
+Wolf 2 0 1
+Snake 2 0 1
+Anaconda 2 0 0
+Yoyo 2 0 0
+Smokie 2 0 0
+Coco 2 0 0
+Horn 2 0 0
+Ambernite 2 0 0
+Crab 2 0 0
+Shellfish 2 0 0
+Aster 2 0 0
+Marina 2 0 0
+Vadon 2 0 0
+Kukre 2 0 0
+Cornutus 2 0 0
+Hydra 2 0 0
+Orc 2 2 0 1
+Orc 2 2 0 1
+High 2 1 0 0
+Orc 2 1 0 0
+Goblin 2 0 0
+Goblin 2 1 0 0
+Kobold 2 0 0
+Kobold 2 1 0 0
+Desert 2 2 0 1
+Desert 2 Baby 2 0 1
+Scorpion 2 0 0
+Metaller 2 0 0
+Magnolia 2 0 0
+Muka 2 0 0
+Peco 2 2 0 1
+Peco 2 Egg 0 0 0
+Mummy 2 0 0
+Soldier 2 2 0 1
+Archer 2 1 0 0
+Frilldora 2 0 0
+Hode 2 0 0
+Golem 2 1 0
+Sandman 2 0 0
+Drainliar 2 0 0
+Argos 2 1 0
+Argiope 2 1 0
+Savage 2 2 0 1
+Savage 2 1 0
+Elder 2 2 0 1
+Caramel 2 0 0
+Creamy -1 # 1
+Horn 2 0 0
+Steel 2 2 0 1
+Goblin 2 1 0 0
+
+# Avoid bosses / mini-boss style
+Angelings -1 1 0
+Deviling -1 1 0
+Golden 2 Bug -1 1 0
+Drake -1 1 0
+Eddga -1 1 0
+Mistress -1 1 0
+Moonlight 2 -1 0 0
+Pharaoh -1 1 0
+Phreeoni -1 1 0
+Orc 2 -1 0 0
+Orc 2 -1 0 0
+Baphomet -1 1 0
+Doppelganger -1 1 0
+Osiris -1 1 0
+Maya -1 1 0
+Knight 2 Abyss -1 1 0
+
+# Default: attack if aggressive only
+all 2 0 1
+Chonchon 2 0 1

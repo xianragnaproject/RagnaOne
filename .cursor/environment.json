@@ -1,0 +1,17 @@
+{
+  "install": "bash ./scripts/setup-openkore.sh",
+  "start": "bash ./scripts/start-phase12-fleet.sh",
+  "ports": [
+    {
+      "name": "fleet-panel",
+      "port": 8787
+    }
+  ],
+  "terminals": [
+    {
+      "name": "always-on-24x7",
+      "command": "bash /home/ubuntu/openkore/scripts/always-on-24x7.sh",
+      "description": "In-pod heal loop. For real keep-alive: external ping \u2014 docs/CLOUD_AGENT_PING_KEEPALIVE.md (API follow-ups every 20m). KEEP AGENT RUNNING."
+    }
+  ]
+}
