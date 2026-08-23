@@ -1,7 +1,7 @@
 #!/usr/bin/env expect
 # Create a character on an empty account via OpenKore profile.
 # Usage: create-char.exp <Profile> <CharName> <Sex:M|F> [hair_style] [hair_color]
-set timeout 60
+set timeout 120
 set profile [lindex $argv 0]
 set charname [lindex $argv 1]
 set sex [lindex $argv 2]
