@@ -14,7 +14,6 @@
 # 2) Payon savepoint (Kafra 181,104)
 # 3) Weapon: Swordman Blade @ Payon; Merchant Axe @ Alberta weapon shop idx 6
 # 4) Hunt pay_fild08; buy potions + sell in Payon
-# 5) AFK near Payon Kafra
 #
 # Class statsAddAuto (Grind_ApplyClassStats):
 #   1 SW: STR/VIT (+dex) | 2 MG: INT/DEX | 3 AC: AGI/DEX
@@ -2180,94 +2179,6 @@ macro grind_phase2_sell_payon {
 	]
 }
 
-# AFK break near Payon Kafra only after full gear
-# Disabled for Party12: this sets attackAuto 0 and walks to Payon, so the
-# leader "pauses" and never closes on monsters. Solo grinders can re-enable.
-automacro Grind_Phase2PayonAfk {
-	disabled 1
-	exclusive 1
-	timeout 900
-	priority 3
-	InMap pay_fild08
-	JobID 1, 5
-	ConfigKey grindPhase2 1
-	ConfigKey grindP2Gear 1
-	ConfigKeyNot grindAfk 1
-	ConfigKeyNot grindSelling 1
-	ConfigKeyNot grindP2Buying 1
-	ConfigKeyNot grindP2BuyingBlade 1
-	ConfigKeyNot grindP2BuyingAxe 1
-	ConfigKeyNot grindKeepHunting 1
-	# Party12 fleet must keep hunting — AFK detours break follow/assist glue
-	ConfigKeyNot partyRole leader
-	ConfigKeyNot partyRole member
-	call grind_phase2_payon_afk
-}
-
-macro grind_phase2_payon_afk {
-	[
-		log PHASE2: AFK near Payon Kafra for 5-10 min
-		do conf grindAfk 1
-		do conf attackAuto 0
-		do conf route_randomWalk 0
-		do conf lockMap none
-		do conf sitAuto_idle 0
-		do stand
-		do eval AI::clear("move", "route", "mapRoute", "attack")
-		do move payon 181 104
-		pause 50
-		do eval Grind_Phase2SitNearKafra()
-		pause 20
-	]
-	call grind_afk_face_sit
-	[
-		pause 450
-		do stand
-		log PHASE2: AFK done - resume pay_fild08
-		do conf grindAfk 0
-		do conf -f grindHuntMap pay_fild08
-		do conf lockMap pay_fild08
-		do conf attackAuto 2
-		do conf route_randomWalk 1
-		do conf sitAuto_idle 1
-	]
-}
-
-automacro Grind_Phase2AfkResit {
-	exclusive 1
-	timeout 90
-	priority 3
-	InMap payon
-	ConfigKey grindPhase2 1
-	ConfigKey grindAfk 1
-	Eval !$char->{sitting}
-	Eval $char && abs(($char->{pos}{x} || 0) - 181) <= 12 && abs(($char->{pos}{y} || 0) - 104) <= 12
-	call {
-		[
-			do eval Grind_AfkSit()
-			pause 3
-		]
-	}
-}
-
-automacro Grind_Phase2ShuffleLook {
-	exclusive 1
-	timeout 180
-	priority 4
-	InMap payon
-	ConfigKey grindPhase2 1
-	ConfigKey grindAfk 1
-	call {
-		[
-			log PHASE2: reshuffle Payon AFK facing
-			do conf sitAuto_idle 0
-			do eval Grind_Phase2SitNearKafra()
-			pause 8
-		]
-		call grind_afk_face_sit
-	}
-}
-
 ###############################################################################
 # Perl helpers (phase 1 + phase 2)
 ###############################################################################
@@ -3630,21 +3541,6 @@ sub Grind_Phase2FinishArmorBuyFromAlberta {
 	return 1;
 }
 
-# Sit tile near Payon Kafra (181,104) — keep clear of NPC cell
-sub Grind_Phase2SitNearKafra {
-	return 0 unless $field && $field->baseName eq 'payon' && $char;
-	my @spots = (
-		[178, 100], [184, 100], [175, 104], [187, 104],
-		[178, 108], [184, 108], [181, 98], [181, 110],
-		[176, 101], [186, 101], [179, 106], [183, 106],
-	);
-	my $s = $spots[int(rand(scalar @spots))];
-	my ($x, $y) = ($s->[0], $s->[1]);
-	Commands::run("stand") if $char->{sitting};
-	Commands::run("move $x $y");
-	Log::message("[Grind] PHASE2 Payon kafra AFK → $x,$y\n", "success");
-	return 1;
-}
 
 # One-shot zeny dump for operators
 automacro Grind_ReportZeny {
