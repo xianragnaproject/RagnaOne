@@ -2810,12 +2810,38 @@ sub Grind_StartHunt {
 	return 1;
 }
 
+# Unfinished Novice members: solo prt_fild08 (or Job Master) — never follow into death zones
+sub Party12_NoviceSoloUntilJob {
+	Commands::run("conf follow 0");
+	Commands::run("conf followBot 0");
+	Commands::run("conf partyAuto 2");
+	my $jl = $char ? ($char->{lv_job} // 0) : 0;
+	if ($jl >= 10) {
+		# Job Master macros own movement; do not hunt while jobbing
+		configModify('attackAuto', 0) if (($config{attackAuto} // '') ne '0');
+		Commands::run("conf route_randomWalk 0") if (($config{route_randomWalk} // '') ne '0');
+		return 1;
+	}
+	my $map = ($field && $field->baseName) ? $field->baseName : '';
+	Commands::run("conf lockMap prt_fild08") if (($config{lockMap} // '') ne 'prt_fild08');
+	Commands::run("conf -f grindHuntMap prt_fild08") if (($config{grindHuntMap} // '') ne 'prt_fild08');
+	Commands::run("conf route_randomWalk 1") if (($config{route_randomWalk} // '') ne '1');
+	Commands::run("conf attackAuto_inLockOnly 1") if (($config{attackAuto_inLockOnly} // '') ne '1');
+	configModify('attackAuto', 2) if (($config{attackAuto} // '') ne '2');
+	# Stranded on desert / pay routes: clear follow AI and walk back to starter field
+	if ($map ne '' && $map ne 'prt_fild08' && $map ne 'prontera' && $map ne 'prt_in') {
+		AI::clear("attack", "route", "mapRoute", "follow");
+		Commands::run("move prt_fild08");
+	}
+	return 1;
+}
+
 # Hard party follow: assist-only + drop solo attack AI when master not nearby
 sub Party12_ApplyMemberFollow {
 	
-	# job-ready Novice: do not force follow away from Job Master
-	if ($char && (($char->{jobID} // 0) == 0) && (($char->{lv_job} // 0) >= 10) && (($config{grindJob1st} || '') ne '1')) {
-		Commands::run("conf follow 0");
+	# Unfinished Novice: solo until 1st job — do not force follow
+	if ($char && (($char->{jobID} // 0) == 0) && (($config{grindJob1st} || '') ne '1')) {
+		Party12_NoviceSoloUntilJob();
 		return 1;
 	}
 	my $lead = $config{partyLeaderName} || $config{followTarget} || 'IvanCroftLd';
@@ -2859,10 +2885,9 @@ sub Party12_StickToLeader {
 	# Let job-change / sell macros own movement
 	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
 
-	# job-ready Novice: stay for Job Master — do not yank to leader mid-change
-	if ($char && (($char->{jobID} // 0) == 0) && (($char->{lv_job} // 0) >= 10) && (($config{grindJob1st} || '') ne '1')) {
-		Commands::run("conf follow 0");
-		configModify('attackAuto', -1) if (($config{attackAuto} // '') ne '-1');
+	# Unfinished Novice: solo prt_fild08 / Job Master — do not yank to pay_fild08
+	if ($char && (($char->{jobID} // 0) == 0) && (($config{grindJob1st} || '') ne '1')) {
+		Party12_NoviceSoloUntilJob();
 		return 1;
 	}
 	Party12_ApplyMemberFollow();
@@ -3704,6 +3729,8 @@ automacro Party12_MemberRefollow {
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot follow 1
+	# Unfinished Novices solo until 1st job — do not re-enable follow
+	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			log Party12: re-enable HARD follow/assist
