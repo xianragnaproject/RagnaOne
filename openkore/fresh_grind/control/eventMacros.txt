@@ -2815,6 +2815,10 @@ sub Party12_NoviceSoloUntilJob {
 	Commands::run("conf follow 0");
 	Commands::run("conf followBot 0");
 	Commands::run("conf partyAuto 2");
+	# Sell/AFK flags must not trap unfinished novices off the starter field
+	Commands::run("conf grindSelling 0") if (($config{grindSelling} || '') eq '1');
+	Commands::run("conf grindAfk 0") if (($config{grindAfk} || '') eq '1');
+	Commands::run("conf sellAuto 0") if (($config{sellAuto} // '') ne '0');
 	my $jl = $char ? ($char->{lv_job} // 0) : 0;
 	if ($jl >= 10) {
 		# Job Master macros own movement; do not hunt while jobbing
@@ -2827,10 +2831,14 @@ sub Party12_NoviceSoloUntilJob {
 	Commands::run("conf -f grindHuntMap prt_fild08") if (($config{grindHuntMap} // '') ne 'prt_fild08');
 	Commands::run("conf route_randomWalk 1") if (($config{route_randomWalk} // '') ne '1');
 	Commands::run("conf attackAuto_inLockOnly 1") if (($config{attackAuto_inLockOnly} // '') ne '1');
+	Commands::run("conf attackCheckLOS 0") if (($config{attackCheckLOS} // '') ne '0');
+	Commands::run("conf attackMaxRouteDistance 120") if (($config{attackMaxRouteDistance} // '') ne '120');
+	Commands::run("conf attackDistance 1") if (($config{attackDistance} // '') ne '1');
+	Commands::run("conf attackMaxDistance 2") if (($config{attackMaxDistance} // '') ne '2');
 	configModify('attackAuto', 2) if (($config{attackAuto} // '') ne '2');
-	# Stranded on desert / pay routes: clear follow AI and walk back to starter field
+	# Stranded on desert / pay routes: clear follow/sell AI and walk back to starter field
 	if ($map ne '' && $map ne 'prt_fild08' && $map ne 'prontera' && $map ne 'prt_in') {
-		AI::clear("attack", "route", "mapRoute", "follow");
+		AI::clear("attack", "route", "mapRoute", "follow", "sellAuto");
 		Commands::run("move prt_fild08");
 	}
 	return 1;
@@ -2882,14 +2890,16 @@ sub Party12_ApplyMemberFollow {
 
 sub Party12_StickToLeader {
 	return 1 unless (($config{partyRole} || '') eq 'member');
-	# Let job-change / sell macros own movement
-	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
 
-	# Unfinished Novice: solo prt_fild08 / Job Master — do not yank to pay_fild08
+	# Unfinished Novice: always solo (even if sell/afk flags stuck on)
 	if ($char && (($char->{jobID} // 0) == 0) && (($config{grindJob1st} || '') ne '1')) {
 		Party12_NoviceSoloUntilJob();
 		return 1;
 	}
+
+	# Let job-change / sell macros own movement
+	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
+
 	Party12_ApplyMemberFollow();
 	my $lead = $config{followTarget} || $config{partyLeaderName} || '';
 	return 1 if $lead eq '';
