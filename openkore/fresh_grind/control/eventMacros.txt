@@ -469,13 +469,16 @@ automacro Grind_JobChange_Talk {
 	NpcNear /Job Master/
 	call {
 		[
-			log Grind: talking Job Master random 1st job
+			log Grind: spend skill points then talk Job Master
 			do conf grindJobbing 1
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf lockMap none
 			do stand
-			pause 2
+			do conf skillsAddAuto 1
+			do conf skillsAddAuto_list Basic Skill 9
+			do eval Grind_SpendSkillPoints()
+			pause 8
 			do eval Grind_TalkJobMaster()
 			pause 18
 		]
@@ -2191,6 +2194,9 @@ automacro Grind_Phase2PayonAfk {
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot grindP2BuyingAxe 1
+	# Party12 fleet must keep hunting — AFK detours break follow/assist glue
+	ConfigKeyNot partyRole leader
+	ConfigKeyNot partyRole member
 	call grind_phase2_payon_afk
 }
 
@@ -2464,6 +2470,36 @@ sub Grind_RandomFountainTile {
 	return ($s->[0], $s->[1]);
 }
 
+
+# Dump free skill points into raisable skills (Basic Skill first) before Job Master.
+sub Grind_SpendSkillPoints {
+	return 0 unless $char && $messageSender;
+	my $before = $char->{points_skill} // 0;
+	return 1 if $before < 1;
+	my $sent = 0;
+	my @handles = @skillsID;
+	@handles = sort {
+		(($a eq 'NV_BASIC') ? 0 : 1) <=> (($b eq 'NV_BASIC') ? 0 : 1)
+	} @handles;
+	for my $handle (@handles) {
+		last if ($char->{points_skill} // 0) < 1;
+		next unless $char->{skills}{$handle};
+		next unless ($char->{skills}{$handle}{up} // 0);
+		my $skill = Skill->new(handle => $handle);
+		next unless $skill && $skill->getIDN;
+		while (($char->{points_skill} // 0) > 0 && ($char->{skills}{$handle}{up} // 0)) {
+			$messageSender->sendAddSkillPoint($skill->getIDN);
+			$sent++;
+			# Optimistic local update so we do not flood before ACK
+			$char->{points_skill}--;
+			$char->{skills}{$handle}{lv} = ($char->{skills}{$handle}{lv} // 0) + 1;
+			last if $sent >= 15;
+		}
+	}
+	Log::message("[Grind] Spent skill points (sent=$sent, had=$before)\n", "success") if $sent;
+	return 1;
+}
+
 sub Grind_TalkJobMaster {
 	my $job = lc($config{grindTargetJob} || 'random');
 	my @pool = qw(Swordman Magician Archer Acolyte Merchant Thief);
@@ -2492,6 +2528,7 @@ sub Grind_TalkJobMaster {
 	my $r = $menu{$job} || 'r5';
 	# RagnaOne Job Master (prontera 155,180): class choice then confirm — no 'c'
 	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
+	Grind_SpendSkillPoints();
 	Commands::run("stand");
 	Commands::run("talknpc 155 180 c $r r0");
 	return 1;
@@ -2506,6 +2543,15 @@ sub Grind_AfterJobChange {
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
 	Grind_EquipJobChangeGear();
+
+	# Party12 members: skip solo Phase1 AFK / Phase2 gear path — resume follow
+	if (($config{partyRole} || '') eq 'member') {
+		Log::message("[Grind] Party member jobbed — resume HARD follow/assist\n", "success");
+		Commands::run("conf grindAfk 0");
+		Commands::run("conf grindPhase1Done 1");
+		Party12_ApplyMemberFollow();
+		return 1;
+	}
 	my $base = $char ? ($char->{lv} // 0) : 0;
 	my $jid = $char ? ($char->{jobID} // 0) : 0;
 	if ($base >= 15 && ($jid == 1 || $jid == 5)) {
