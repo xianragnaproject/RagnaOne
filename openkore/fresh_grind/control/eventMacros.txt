@@ -2821,10 +2821,11 @@ sub Party12_StickToLeader {
 			last;
 		}
 	}
-	# Far from master: do NOT fight (Porings en-route block follow + EXP share).
+	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
+	# while walking — that stalls follow + blocks EXP Even Share).
 	# Near master: assist-only (attackAuto 1) so they help kill his targets.
 	if (!$near) {
-		Commands::run("conf attackAuto 0") if (($config{attackAuto} // '') ne '0');
+		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
 		AI::clear("attack");
 	} else {

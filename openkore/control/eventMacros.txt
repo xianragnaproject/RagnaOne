@@ -2821,15 +2821,21 @@ sub Party12_StickToLeader {
 			last;
 		}
 	}
-	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
-	# while walking — that stalls follow + blocks EXP Even Share).
+	# Far from master: attackAuto -1 via configModify (conf -1 is flaky in macros).
+	# attackAuto 0 still retaliates when Porings slap you while walking.
 	# Near master: assist-only (attackAuto 1) so they help kill his targets.
 	if (!$near) {
-		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
+		if (($config{attackAuto} // '') ne '-1') {
+			configModify('attackAuto', -1);
+		}
 		if ($char) { eval { $char->sendAttackStop }; }
-		AI::clear("attack");
+		AI::clear("attack", "route");
+		# re-queue follow only — don't leave a hole that restarts hunt
+		ai_follow($lead) if defined &ai_follow;
 	} else {
-		Commands::run("conf attackAuto 1") if (($config{attackAuto} // '') ne '1');
+		if (($config{attackAuto} // '') ne '1') {
+			configModify('attackAuto', 1);
+		}
 		Commands::run("conf attackAuto_party 1");
 		Commands::run("conf attackAuto_followTarget 1");
 		Commands::run("conf attackChangeTarget 1");
@@ -2837,8 +2843,8 @@ sub Party12_StickToLeader {
 		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
 			AI::clear("move", "route");
 		}
+		ai_follow($lead) if defined &ai_follow;
 	}
-	ai_follow($lead) if defined &ai_follow;
 	return 1;
 }
 
