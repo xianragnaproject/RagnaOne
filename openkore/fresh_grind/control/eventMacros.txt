@@ -2530,7 +2530,7 @@ sub Grind_TalkJobMaster {
 	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
 	Grind_SpendSkillPoints();
 	Commands::run("stand");
-	Commands::run("talknpc 155 180 c $r r0");
+	Commands::run("talknpc 155 180 $r c r0");
 	return 1;
 }
 
