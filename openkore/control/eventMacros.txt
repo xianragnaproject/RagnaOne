@@ -3374,7 +3374,8 @@ automacro Party12_LeaderInvite {
 	priority 2
 	ConfigKey partyRole leader
 	BaseLevel >= 1
-	SkillLevel Basic Skill >= 7
+	# SkillLevel "Basic Skill" breaks eventMacro (space in name) — JobLevel 7 ≈ Basic Skill 7 for party
+	JobLevel >= 7
 	call {
 		[
 			log Party12: create/invite party
