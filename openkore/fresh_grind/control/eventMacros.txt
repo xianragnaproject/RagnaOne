@@ -2775,18 +2775,14 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf lockMap none");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf lockMap_y none");
-	# Do not override attackAuto while job-changing / selling
-	unless (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1') {
-		# 1 = assist party/followTarget only (NOT aggressive solo farm)
-		Commands::run("conf attackAuto 1");
-	}
+	# attackAuto owned by Party12_StickToLeader (0 while seeking, 1 when near)
 	Commands::run("conf attackAuto_party 1");
 	Commands::run("conf attackAuto_followTarget 1");
 	Commands::run("conf attackAuto_inLockOnly 0");
 	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf attackDistance 2");
 	Commands::run("conf attackMaxDistance 14");
-	Commands::run("conf followDistanceMax 5");
+	Commands::run("conf followDistanceMax 3");
 	Commands::run("conf followDistanceMin 1");
 	Commands::run("conf route_randomWalk 0");
 	# Loot hard: take kills + gather ground drops (party kills too)
