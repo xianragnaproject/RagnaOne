@@ -278,17 +278,23 @@ def write_profile(
         ]
     else:
         lines += [
-            "######## MEMBER follow+assist ########",
+            "######## MEMBER HARD follow+assist (attackAuto 1) ########",
             "follow 1",
             f"followTarget {leader_char}",
             "followBot 1",
-            "followDistanceMax 6",
-            "followDistanceMin 2",
-            "partyAuto 1",
-            "attackAuto 2",
+            "followDistanceMax 4",
+            "followDistanceMin 1",
+            "partyAuto 2",
+            "attackAuto 1",
             "attackAuto_party 1",
             "attackAuto_followTarget 1",
+            "attackChangeTarget 1",
             "route_randomWalk 0",
+            "itemsGatherAuto 2",
+            "itemsTakeAuto 2",
+            "itemsTakeAuto_party 1",
+            "itemsMaxWeight 89",
+            "itemsMaxWeight_sellOrStore 50",
             "lockMap",
             "teleportAuto_idle 0",
             "sitAuto_idle 0",
@@ -383,20 +389,23 @@ automacro Party12_LeaderInvite {{
 
 automacro Party12_MemberRefollow {{
 	exclusive 1
-	timeout 60
+	timeout 15
 	priority 3
 	ConfigKey partyRole member
 	ConfigKeyNot follow 1
 	call {{
 		[
-			log Party12: re-enable follow/assist
+			log Party12: re-enable HARD follow/assist
 			do conf follow 1
 			do conf followBot 1
 			do conf followTarget {leader_char}
-			do conf attackAuto 2
+			do conf attackAuto 1
 			do conf attackAuto_party 1
 			do conf attackAuto_followTarget 1
+			do conf followDistanceMax 4
+			do conf followDistanceMin 1
 			do conf route_randomWalk 0
+			do conf itemsGatherAuto 0
 		]
 	}}
 }}

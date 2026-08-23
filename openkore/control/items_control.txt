@@ -73,3 +73,25 @@ Rod [4] 0 0 1
 Bow [4] 0 0 1
 Club [4] 0 0 1
 Main Gauche [4] 0 0 1
+
+# ---- Free job-change kit (never sell) ----
+Sword 1 0 0
+Sword [3] 1 0 0
+Rod 1 0 0
+Rod [3] 1 0 0
+Staff 1 0 0
+Bow 1 0 0
+Bow [3] 1 0 0
+Club 1 0 0
+Club [3] 1 0 0
+Mace 1 0 0
+Main Gauche 1 0 0
+Main Gauche [3] 1 0 0
+Dagger 1 0 0
+Novice Guard 1 0 0
+Novice False Eggshell 1 0 0
+Sandals 1 0 0
+Hood 1 0 0
+Cap 1 0 0
+Arrow 200 0 0
+Iron Arrow 100 0 0

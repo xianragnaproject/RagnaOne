@@ -206,6 +206,7 @@ automacro Grind_EnsureLock08 {
 	timeout 30
 	priority 5
 	InMap prt_fild08
+	ConfigKeyNot partyRole member
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -228,6 +229,7 @@ automacro Grind_KeepAggressive08 {
 	timeout 30
 	priority 8
 	InMap prt_fild08
+	ConfigKeyNot partyRole member
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -253,6 +255,7 @@ automacro Grind_FixAttackPathDistance {
 	timeout 20
 	priority 7
 	InMap prt_fild08,pay_fild08,pay_fild03
+	ConfigKeyNot partyRole member
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -317,6 +320,7 @@ automacro Grind_RestoreHunt {
 	exclusive 1
 	timeout 40
 	priority 6
+	ConfigKeyNot partyRole member
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -343,6 +347,7 @@ automacro Grind_Novice_EnablePotionBuy_DISABLED {
 	JobID 0
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot partyRole member
 	call {
 		do eval Grind_EnableBuyItem("Red Potion")
 	}
@@ -2110,6 +2115,7 @@ automacro Grind_Phase2KeepAggressive {
 	InMap pay_fild08
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
+	ConfigKeyNot partyRole member
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
@@ -2499,6 +2505,7 @@ sub Grind_AfterJobChange {
 	Commands::run("conf statsAddAuto 0");
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
+	Grind_EquipJobChangeGear();
 	my $base = $char ? ($char->{lv} // 0) : 0;
 	my $jid = $char ? ($char->{jobID} // 0) : 0;
 	if ($base >= 15 && ($jid == 1 || $jid == 5)) {
@@ -2529,6 +2536,49 @@ sub Grind_AfterJobChange {
 	Log::message("[Grind] Base $base < 15 — resume prt_fild08 as 1st job\n", "success");
 	Commands::run("conf -f grindHuntMap prt_fild08");
 	Grind_StartHunt();
+	return 1;
+}
+
+
+# Equip free starter gear granted on 1st job change (weapon + cotton shirt + guard)
+sub Grind_EquipJobChangeGear {
+	return 0 unless $char;
+	my $jid = $char->{jobID} // 0;
+	my %weapons = (
+		1 => ['Sword', 'Sword [3]', 'Blade', 'Knife', 'Knife [3]'],
+		2 => ['Rod', 'Rod [3]', 'Staff', 'Knife', 'Knife [3]'],
+		3 => ['Bow', 'Bow [3]', 'Arrow'],
+		4 => ['Club', 'Club [3]', 'Mace', 'Rod', 'Rod [3]'],
+		5 => ['Axe', 'Axe [3]', 'Axe [4]', 'Knife', 'Knife [3]'],
+		6 => ['Main Gauche', 'Main Gauche [3]', 'Main Gauche', 'Main Gauche [3]', 'Knife', 'Knife [3]', 'Dagger'],
+	);
+	my @armor = ('Cotton Shirt', 'Cotton Shirt [1]', 'Cotton Shirt', 'Novice False Eggshell', 'Novice Guard', 'Guard', 'Sandals', 'Hood', 'Cap');
+	my @try = @{ $weapons{$jid} || ['Knife', 'Knife [3]', 'Sword'] };
+	push @try, @armor;
+	my $equipped = 0;
+	for my $name (@try) {
+		next if $name eq 'Arrow'; # arrows use eq arrow
+		my $item = Actor::Item::get($name, undef, 1);
+		next unless $item;
+		next if $item->{equipped};
+		eval { $item->equip(); };
+		if ($item->{equipped} || !$@) {
+			Commands::run("eq $name");
+			$equipped++;
+			Log::message("[Grind] Equipped job-change gear: $name\n", "success");
+		}
+	}
+	# Archers need arrows equipped into arrow slot
+	if ($jid == 3) {
+		for my $an ('Arrow', 'Iron Arrow', 'Fire Arrow') {
+			my $a = Actor::Item::get($an, undef, 1);
+			next unless $a;
+			Commands::run("eq $an");
+			Log::message("[Grind] Equipped arrows: $an\n", "success");
+			last;
+		}
+	}
+	Commands::run("conf -f grindJobGearEquipped 1") if $equipped;
 	return 1;
 }
 
@@ -2665,31 +2715,24 @@ sub Grind_StartHunt {
 		Commands::run("conf lockMap none");
 		return 1;
 	}
-	# Party12 members: follow/assist only — never solo hunt lock
+	# Party12 members: follow/assist ONLY (attackAuto 1).
+	# attackAuto 2 solo-pulls and blocks processFollow — party never sticks.
 	if (($config{partyRole} || '') eq 'member') {
-		my $lead = $config{partyLeaderName} || $config{followTarget} || '';
-		Commands::run("conf follow 1");
-		Commands::run("conf followBot 1");
-		Commands::run("conf followTarget $lead") if $lead ne '';
-		Commands::run("conf lockMap none");
-		Commands::run("conf lockMap_x none");
-		Commands::run("conf attackAuto 2");
-		Commands::run("conf attackAuto_party 1");
-		Commands::run("conf attackAuto_followTarget 1");
-		Commands::run("conf attackAuto_inLockOnly 0");
-		Commands::run("conf route_randomWalk 0");
-		Commands::run("conf grindPartyMode 1");
-		Commands::run("conf sellAuto 0");
-		Commands::run("conf teleportAuto_hp 0");
-		Commands::run("conf sitAuto_hp_lower 35");
-		Log::message("[Grind] Party member follow/assist $lead\n", "success");
-		return 1;
+		return Party12_ApplyMemberFollow();
 	}
 	Commands::run("conf follow 0");
 	Commands::run("conf followTarget");
 	Commands::run("conf grindPartyMode 0");
 	my $map = $config{grindHuntMap};
-	if ($config{grindPhase2} && $config{grindP2Gear}) {
+	# Party leader: stay where the party can stick (prt early; pay after Phase2 gear)
+	if (($config{partyRole} || '') eq 'leader') {
+		if ($config{grindPhase2} && $config{grindP2Gear}) {
+			$map = 'pay_fild08';
+		} else {
+			$map = $config{grindPartyHuntMap} || 'prt_fild08';
+		}
+		Commands::run("conf -f grindHuntMap $map");
+	} elsif ($config{grindPhase2} && $config{grindP2Gear}) {
 		$map = 'pay_fild08';
 		Commands::run("conf -f grindHuntMap $map");
 	} elsif (!$map || $map eq '' || $map eq 'none') {
@@ -2706,10 +2749,133 @@ sub Grind_StartHunt {
 	Commands::run("conf attackChangeTarget 0");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
+	Commands::run("conf itemsTakeAuto 2");
+	Commands::run("conf itemsTakeAuto_party 1");
+	Commands::run("conf itemsGatherAuto 2");
+	Commands::run("conf itemsMaxWeight 89");
+	Commands::run("conf itemsMaxWeight_sellOrStore 50");
 	Commands::run("conf sellAuto 0");
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_hp_lower 35");
 	Log::message("[Grind] Solo hunting $map\n", "success");
+	return 1;
+}
+
+# Hard party follow: assist-only + drop solo attack AI when master not nearby
+sub Party12_ApplyMemberFollow {
+	my $lead = $config{partyLeaderName} || $config{followTarget} || 'IvanCroftLd';
+	Commands::run("conf follow 1");
+	Commands::run("conf followBot 1");
+	Commands::run("conf followTarget $lead");
+	Commands::run("conf partyLeaderName $lead");
+	Commands::run("conf partyAuto 2");
+	Commands::run("conf lockMap none");
+	Commands::run("conf lockMap_x none");
+	Commands::run("conf lockMap_y none");
+	# Do not override attackAuto while job-changing / selling
+	unless (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1') {
+		# 1 = assist party/followTarget only (NOT aggressive solo farm)
+		Commands::run("conf attackAuto 1");
+	}
+	Commands::run("conf attackAuto_party 1");
+	Commands::run("conf attackAuto_followTarget 1");
+	Commands::run("conf attackAuto_inLockOnly 0");
+	Commands::run("conf attackChangeTarget 1");
+	Commands::run("conf followDistanceMax 4");
+	Commands::run("conf followDistanceMin 1");
+	Commands::run("conf route_randomWalk 0");
+	# Loot hard: take kills + gather ground drops (party kills too)
+	Commands::run("conf itemsTakeAuto 2");
+	Commands::run("conf itemsTakeAuto_party 1");
+	Commands::run("conf itemsGatherAuto 2");
+	Commands::run("conf grindPartyMode 1");
+	# sellAuto stays off during follow; Party12_SellOverweight handles OW sells
+	unless (($config{grindSelling} || '') eq '1') {
+		Commands::run("conf sellAuto 0");
+	}
+	Commands::run("conf teleportAuto_idle 0");
+	Commands::run("conf teleportAuto_hp 0");
+	Commands::run("conf sitAuto_idle 0");
+	Commands::run("conf sitAuto_hp_lower 35");
+	Log::message("[Grind] Party member HARD follow/assist $lead (attackAuto 1)\n", "success");
+	return 1;
+}
+
+sub Party12_StickToLeader {
+	return 1 unless (($config{partyRole} || '') eq 'member');
+	# Let job-change / sell macros own movement
+	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
+	Party12_ApplyMemberFollow();
+	my $lead = $config{followTarget} || $config{partyLeaderName} || '';
+	return 1 if $lead eq '';
+	my $near = 0;
+	my $max = ($config{followDistanceMax} || 4) + 3;
+	if ($playersList) {
+		for my $p (@$playersList) {
+			next unless $p;
+			my $n = eval { $p->name };
+			next unless defined $n && $n eq $lead;
+			my $d = blockDistance($char->{pos_to}, $p->{pos_to});
+			$near = 1 if defined $d && $d <= $max;
+			last;
+		}
+	}
+	# Solo/stuck attack or broken move blocks follow — clear until master nearby
+	if (!$near) {
+		if (AI::inQueue("attack")) {
+			$char->sendAttackStop if $char;
+			AI::clear("attack");
+		}
+	} else {
+		# Near master: drop stuck route/move so assist can fire
+		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
+			AI::clear("move", "route");
+		}
+	}
+	ai_follow($lead) if defined &ai_follow;
+	return 1;
+}
+
+
+# Route to nearest tool dealer and sell (Payon if pay_*, else Prontera)
+sub Party12_SellRoute {
+	my $map = ($field && $field->baseName) ? $field->baseName : '';
+	my ($npc, $stand, $warp);
+	if ($map =~ /^pay/ || ($config{grindPhase2} || '') eq '1' || ($config{grindHuntMap} || '') =~ /^pay/) {
+		$npc = 'payon_in01 5 49';
+		$stand = 'payon_in01 7 49';
+		$warp = 'payon 141 85';
+		Commands::run("move $warp");
+		# talknpc path handled by sellAuto after pause in macro — also queue move into shop
+		Commands::run("conf sellAuto_npc $npc");
+		Commands::run("conf sellAuto_standpoint $stand");
+		Commands::run("conf sellAuto_distance 10");
+		Commands::run("conf sellAuto_maxDistance 14");
+		Commands::run("conf sellAuto 1");
+		# defer actual shop enter via AI after arriving — use move into shop
+		Commands::run("move payon_in01 7 49");
+		AI::queue("sellAuto");
+	} else {
+		$npc = 'prt_in 126 76';
+		$stand = 'prt_in 130 72';
+		Commands::run("move prontera 160 70");
+		Commands::run("conf sellAuto_npc $npc");
+		Commands::run("conf sellAuto_standpoint $stand");
+		Commands::run("conf sellAuto_distance 10");
+		Commands::run("conf sellAuto_maxDistance 14");
+		Commands::run("conf sellAuto 1");
+		Commands::run("move prt_in 130 72");
+		AI::queue("sellAuto");
+	}
+	return 1;
+}
+
+sub Party12_AfterSell {
+	if (($config{partyRole} || '') eq 'member') {
+		Party12_ApplyMemberFollow();
+	} else {
+		Grind_StartHunt();
+	}
 	return 1;
 }
 
@@ -3430,25 +3596,16 @@ automacro Party12_LeaderInvite {
 
 automacro Party12_MemberEnforce {
 	exclusive 1
-	timeout 5
+	timeout 3
 	priority -1
 	ConfigKey partyRole member
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindAfk 1
 	call {
 		[
-			log Party12: enforce follow/assist
-			do conf follow 1
-			do conf followBot 1
-			do conf followTarget IvanCroftLd
-			do conf partyLeaderName IvanCroftLd
-			do conf partyAuto 2
-			do conf attackAuto 2
-			do conf attackAuto_party 1
-			do conf attackAuto_followTarget 1
-			do conf attackAuto_inLockOnly 0
-			do conf route_randomWalk 0
-			do conf lockMap none
-			do conf grindPartyMode 1
-			do conf sellAuto 0
+			log Party12: HARD enforce follow/assist
+			do eval Party12_StickToLeader()
 			do conf buyAuto_0_disabled 1
 			do conf buyAuto_1_disabled 1
 			do conf buyAuto_2_disabled 1
@@ -3476,20 +3633,86 @@ automacro Party12_MemberEnforce {
 
 automacro Party12_MemberRefollow {
 	exclusive 1
-	timeout 60
+	timeout 15
 	priority 3
 	ConfigKey partyRole member
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
 	ConfigKeyNot follow 1
 	call {
 		[
-			log Party12: re-enable follow/assist
-			do conf follow 1
-			do conf followBot 1
-			do conf followTarget IvanCroftLd
-			do conf attackAuto 2
-			do conf attackAuto_party 1
-			do conf attackAuto_followTarget 1
-			do conf route_randomWalk 0
+			log Party12: re-enable HARD follow/assist
+			do eval Party12_ApplyMemberFollow()
+		]
+	}
+}
+
+
+# Party12 — loot hard + sell when overweight (all roles)
+automacro Party12_LootEnforce {
+	exclusive 0
+	timeout 20
+	priority 5
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot itemsTakeAuto 2
+	call {
+		[
+			log Party12: enable loot take/gather
+			do conf itemsTakeAuto 2
+			do conf itemsTakeAuto_party 1
+			do conf itemsGatherAuto 2
+			do conf itemsMaxWeight 89
+			do conf itemsMaxWeight_sellOrStore 50
+		]
+	}
+}
+
+automacro Party12_SellOverweight {
+	exclusive 1
+	timeout 45
+	priority 1
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindAfk 1
+	Eval (Misc::percent_weight($char) >= 50) && !(AI::inQueue("sellAuto") || AI::inQueue("buyAuto") || AI::is("sellAuto","buyAuto","NPC"))
+	call party12_sell_overweight
+}
+
+macro party12_sell_overweight {
+	[
+		log Party12: OW>=50% — sell junk for zeny
+		do conf grindSelling 1
+		do conf follow 0
+		do conf attackAuto 0
+		do conf route_randomWalk 0
+		do conf lockMap none
+		do conf sellAuto 0
+		do stand
+		do eval AI::clear("move", "route", "mapRoute", "attack", "sellAuto")
+	]
+	do eval Party12_SellRoute()
+	[
+		pause 55
+		do conf sellAuto 0
+		do conf grindSelling 0
+		do eval Party12_AfterSell()
+		log Party12: sell done — resume party/hunt
+	]
+}
+
+automacro Party12_EquipJobGear {
+	exclusive 1
+	timeout 30
+	priority 2
+	JobID 1, 2, 3, 4, 5, 6
+	ConfigKeyNot grindJobGearEquipped 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Party12: equip free job-change gear
+			do eval Grind_EquipJobChangeGear()
 		]
 	}
 }
