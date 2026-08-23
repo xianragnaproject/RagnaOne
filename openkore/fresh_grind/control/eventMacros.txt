@@ -2181,7 +2181,10 @@ macro grind_phase2_sell_payon {
 }
 
 # AFK break near Payon Kafra only after full gear
+# Disabled for Party12: this sets attackAuto 0 and walks to Payon, so the
+# leader "pauses" and never closes on monsters. Solo grinders can re-enable.
 automacro Grind_Phase2PayonAfk {
+	disabled 1
 	exclusive 1
 	timeout 900
 	priority 3
@@ -2194,6 +2197,7 @@ automacro Grind_Phase2PayonAfk {
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot grindP2BuyingAxe 1
+	ConfigKeyNot grindKeepHunting 1
 	# Party12 fleet must keep hunting — AFK detours break follow/assist glue
 	ConfigKeyNot partyRole leader
 	ConfigKeyNot partyRole member
@@ -2274,6 +2278,33 @@ sub Grind_IsInPronteraTown {
 }
 
 # Leave indoor maps / field and stand on outdoor prontera.
+# Route Job10 novices to Prontera from any map (prefer kafra when on payon*).
+sub Grind_JobChangeRouteToProntera {
+	return 0 unless $field && $char;
+	my $m = $field->baseName;
+	Commands::run("stand") if $char->{sitting};
+	AI::clear("move", "route", "mapRoute", "attack", "sitting");
+	if ($m eq 'prontera' || $m eq 'prt_in') {
+		Commands::run("move prontera 155 180");
+		return 1;
+	}
+	if ($m eq 'prt_fild08') {
+		Commands::run("move 170 375");
+		return 1;
+	}
+	# Payon / pay fields: walk to kafra; player must have >=1200z for warp.
+	if ($m eq 'payon' || $m =~ /^pay_/) {
+		Commands::run("move payon 181 104");
+		return 1;
+	}
+	if ($m eq 'morocc' || $m =~ /^moc_/) {
+		Commands::run("move morocc 156 97");
+		return 1;
+	}
+	Commands::run("move prontera 155 180");
+	return 1;
+}
+
 sub Grind_GoPronteraOutdoor {
 	return 0 unless $field && $char;
 	my $m = $field->baseName;
