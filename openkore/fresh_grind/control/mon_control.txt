@@ -1,5 +1,7 @@
-# mon_control — ALWAYS attack everything (aggressive)
-# attack: 2 = always auto-attack when it appears
-# Never leave mobs alone — no Fabre/-1 avoids
+# mon_control — hunt soft farm mobs; avoid Creamy (kills novices)
+# attack: 2 = always auto-attack when it appears; -1 = avoid
+
+Creamy -1 0 0
+Elder Willow -1 0 0
 
 all 2 0 0

@@ -1,0 +1,13 @@
+# profile	class	role	char	username	password	sex	leader_char
+PSwdLead	Swordman	leader	IvanCroftLd	p226ac2a8	Qf45bd9r7RTE	M	IvanCroftLd
+PSwd2	Swordman	member	AvaBeckd2	p99b2fd93	mmdpTJkfFywX	M	IvanCroftLd
+PMag1	Magician	member	AvaLaneg1	pd276f634	BvEuylYDsWYR	F	IvanCroftLd
+PMag2	Magician	member	KurtCroftg2	p0043d53b	N1ga_CWgvLPe	F	IvanCroftLd
+PArc1	Archer	member	CassAshc1	pe09800fd	JlSuZuk3mtdW	M	IvanCroftLd
+PArc2	Archer	member	PiersDalec2	p4f5fa31f	_SE5B-sPBnON	F	IvanCroftLd
+PAco1	Acolyte	member	CoraIveso1	pddfebc0f	5Dw-ptcyBznS	M	IvanCroftLd
+PAco2	Acolyte	member	NiallCrofto2	p5de278bf	80Nsqz3rZYom	F	IvanCroftLd
+PMer1	Merchant	member	BrynnGaler1	pf90b33f6	XwrHkVqdp_78	F	IvanCroftLd
+PMer2	Merchant	member	GarethMossr2	p921a8c38	U1m-UsdhAJIh	M	IvanCroftLd
+PThf1	Thief	member	DanaGalef1	p0891f0a6	sWVaNUSPrrEi	F	IvanCroftLd
+PThf2	Thief	member	IvanOakf2	p391f0c1d	BLtWdkk9fhax	M	IvanCroftLd
