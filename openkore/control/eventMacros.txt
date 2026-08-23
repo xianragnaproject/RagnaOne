@@ -2811,6 +2811,12 @@ sub Grind_StartHunt {
 
 # Hard party follow: assist-only + drop solo attack AI when master not nearby
 sub Party12_ApplyMemberFollow {
+	
+	# job-ready Novice: do not force follow away from Job Master
+	if ($char && (($char->{jobID} // 0) == 0) && (($char->{lv_job} // 0) >= 10) && (($config{grindJob1st} || '') ne '1')) {
+		Commands::run("conf follow 0");
+		return 1;
+	}
 	my $lead = $config{partyLeaderName} || $config{followTarget} || 'IvanCroftLd';
 	Commands::run("conf follow 1");
 	Commands::run("conf followBot 1");
@@ -2851,6 +2857,13 @@ sub Party12_StickToLeader {
 	return 1 unless (($config{partyRole} || '') eq 'member');
 	# Let job-change / sell macros own movement
 	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
+
+	# job-ready Novice: stay for Job Master — do not yank to leader mid-change
+	if ($char && (($char->{jobID} // 0) == 0) && (($char->{lv_job} // 0) >= 10) && (($config{grindJob1st} || '') ne '1')) {
+		Commands::run("conf follow 0");
+		configModify('attackAuto', -1) if (($config{attackAuto} // '') ne '-1');
+		return 1;
+	}
 	Party12_ApplyMemberFollow();
 	my $lead = $config{followTarget} || $config{partyLeaderName} || '';
 	return 1 if $lead eq '';
