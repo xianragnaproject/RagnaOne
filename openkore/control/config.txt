@@ -2,8 +2,8 @@
 
 master RagnaOne
 server 0
-username CHANGE_ME
-password CHANGE_ME
+username
+password
 loginPinCode
 char 0
 

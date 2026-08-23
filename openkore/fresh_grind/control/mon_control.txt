@@ -1,5 +1,0 @@
-# mon_control — ALWAYS attack everything (aggressive)
-# attack: 2 = always auto-attack when it appears
-# Never leave mobs alone — no Fabre/-1 avoids
-
-all 2 0 0
