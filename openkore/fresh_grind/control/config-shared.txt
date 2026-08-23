@@ -551,3 +551,7 @@ attackSkillSlot Envenom {
 }
 
 # grindSkillList_Swordman / etc. are set at runtime; defaults unused
+
+attackDistance 2
+attackMaxDistance 14
+attackChangeTarget 1

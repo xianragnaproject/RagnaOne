@@ -326,3 +326,7 @@ useSelf_item Green Potion {
 	timeout 3
 	dcOnEmpty 0
 }
+
+attackDistance 2
+attackMaxDistance 14
+attackChangeTarget 1

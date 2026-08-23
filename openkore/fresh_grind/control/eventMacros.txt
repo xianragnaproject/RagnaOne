@@ -242,7 +242,7 @@ automacro Grind_KeepAggressive08 {
 			do conf attackAuto 2
 			do conf attackRouteMaxPathDistance 50
 			do conf attackMinPlayerDistance 0
-			do conf attackChangeTarget 0
+			do conf attackChangeTarget 1
 			do conf route_randomWalk 1
 			do conf lockMap prt_fild08
 		]
@@ -265,7 +265,7 @@ automacro Grind_FixAttackPathDistance {
 			log Grind: set attackRouteMaxPathDistance 50 - was ignoring mobs
 			do conf attackRouteMaxPathDistance 50
 			do conf attackMinPlayerDistance 0
-			do conf attackChangeTarget 0
+			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf route_randomWalk 1
 		]
@@ -2698,7 +2698,7 @@ sub Grind_ApplySoloHunt {
 	Commands::run("conf attackAuto_party 0");
 	Commands::run("conf attackRouteMaxPathDistance 50");
 	Commands::run("conf attackMinPlayerDistance 0");
-	Commands::run("conf attackChangeTarget 0");
+	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf sellAuto 0");
 	Commands::run("conf runFromTarget 0");
@@ -2742,11 +2742,14 @@ sub Grind_StartHunt {
 	Commands::run("conf lockMap $map");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf attackAuto 2");
-	Commands::run("conf attackAuto_inLockOnly 1");
+	Commands::run("conf attackAuto_inLockOnly 0");
+	Commands::run("conf attackAuto_party 1");
 	Commands::run("conf attackAuto_followTarget 0");
+	Commands::run("conf attackDistance 2");
+	Commands::run("conf attackMaxDistance 14");
 	Commands::run("conf attackRouteMaxPathDistance 50");
 	Commands::run("conf attackMinPlayerDistance 0");
-	Commands::run("conf attackChangeTarget 0");
+	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("conf runFromTarget 0");
 	Commands::run("conf itemsTakeAuto 2");
@@ -2781,7 +2784,9 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf attackAuto_followTarget 1");
 	Commands::run("conf attackAuto_inLockOnly 0");
 	Commands::run("conf attackChangeTarget 1");
-	Commands::run("conf followDistanceMax 4");
+	Commands::run("conf attackDistance 2");
+	Commands::run("conf attackMaxDistance 14");
+	Commands::run("conf followDistanceMax 5");
 	Commands::run("conf followDistanceMin 1");
 	Commands::run("conf route_randomWalk 0");
 	# Loot hard: take kills + gather ground drops (party kills too)
@@ -2820,13 +2825,17 @@ sub Party12_StickToLeader {
 			last;
 		}
 	}
-	# Solo/stuck attack or broken move blocks follow — clear until master nearby
+	# Far from master: do NOT fight (Porings en-route block follow + EXP share).
+	# Near master: assist-only (attackAuto 1) so they help kill his targets.
 	if (!$near) {
-		if (AI::inQueue("attack")) {
-			$char->sendAttackStop if $char;
-			AI::clear("attack");
-		}
+		Commands::run("conf attackAuto 0") if (($config{attackAuto} // '') ne '0');
+		if ($char) { eval { $char->sendAttackStop }; }
+		AI::clear("attack");
 	} else {
+		Commands::run("conf attackAuto 1") if (($config{attackAuto} // '') ne '1');
+		Commands::run("conf attackAuto_party 1");
+		Commands::run("conf attackAuto_followTarget 1");
+		Commands::run("conf attackChangeTarget 1");
 		# Near master: drop stuck route/move so assist can fire
 		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
 			AI::clear("move", "route");
@@ -3713,6 +3722,100 @@ automacro Party12_EquipJobGear {
 		[
 			log Party12: equip free job-change gear
 			do eval Grind_EquipJobChangeGear()
+		]
+	}
+}
+
+
+# Party12 — keep Even Share + leader aggressive farm
+automacro Party12_LeaderEvenShare {
+	exclusive 1
+	timeout 45
+	priority 2
+	ConfigKey partyRole leader
+	ConfigKeyNot grindSelling 1
+	call {
+		[
+			log Party12: force Even Share EXP/item/div
+			do conf partyAutoShare 1
+			do conf partyAutoShareItem 1
+			do conf partyAutoShareItemDiv 1
+			do conf attackAuto 0
+			pause 2
+			do party share 1
+			pause 1
+			do party shareitem 1
+			pause 1
+			do party sharediv 1
+			pause 1
+			do conf attackAuto 2
+			do conf attackMaxDistance 14
+			do conf attackChangeTarget 1
+		]
+	}
+}
+
+automacro Party12_LeaderAggressive {
+	exclusive 1
+	timeout 8
+	priority -2
+	ConfigKey partyRole leader
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot attackAuto 2
+	call {
+		[
+			log Party12: leader restore aggressive attack
+			do conf attackAuto 2
+			do conf attackAuto_party 1
+			do conf attackAuto_inLockOnly 0
+			do conf attackChangeTarget 1
+			do conf attackDistance 2
+			do conf attackMaxDistance 14
+			do conf attackRouteMaxPathDistance 50
+			do conf route_randomWalk 1
+		]
+	}
+}
+
+automacro Party12_LeaderDistanceFix {
+	exclusive 1
+	timeout 30
+	priority 4
+	ConfigKey partyRole leader
+	ConfigKeyNot attackMaxDistance 14
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Party12: leader attackMaxDistance 14 (was ignoring distant mobs)
+			do conf attackDistance 2
+			do conf attackMaxDistance 14
+			do conf attackChangeTarget 1
+			do conf attackAuto 2
+		]
+	}
+}
+
+automacro Party12_MemberAssistFix {
+	exclusive 1
+	timeout 6
+	priority -2
+	ConfigKey partyRole member
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindAfk 1
+	call {
+		[
+			do conf attackAuto_party 1
+			do conf attackAuto_followTarget 1
+			do conf attackChangeTarget 1
+			do conf attackDistance 2
+			do conf attackMaxDistance 14
+			do conf follow 1
+			do conf followBot 1
+			do eval Party12_StickToLeader()
 		]
 	}
 }

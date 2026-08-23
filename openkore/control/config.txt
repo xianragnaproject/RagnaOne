@@ -29,9 +29,9 @@ attackAuto_notInTown 1
 attackAuto_notWhile_storageAuto 1
 attackAuto_notWhile_buyAuto 1
 attackAuto_notWhile_sellAuto 1
-attackDistance 1
+attackDistance 2
 attackDistanceAuto 1
-attackMaxDistance 1
+attackMaxDistance 14
 attackRouteMaxPathDistance 50
 attackMaxRouteTime 6
 attackMinPlayerDistance 0
@@ -403,3 +403,7 @@ saveMap_warpChatCommand
 ######## Optional: disconnect when done leveling ########
 # dcOnLevel 99 already set above
 macro_orphans terminate
+
+partyAutoShare 1
+partyAutoShareItem 1
+partyAutoShareItemDiv 1
