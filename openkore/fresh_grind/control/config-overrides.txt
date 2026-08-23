@@ -95,7 +95,7 @@ buyAuto Fly Wing {
 	minAmount 2
 	maxAmount 20
 	zeny > 5000
-	disabled 0
+	disabled 1
 }
 buyAuto Red Potion {
 	npc prt_in 126 76

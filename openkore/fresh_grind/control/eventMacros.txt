@@ -335,7 +335,7 @@ automacro Grind_RestoreHunt {
 ###############################################################################
 # Novice Red Potion buyAuto (tool dealer)
 ###############################################################################
-automacro Grind_Novice_EnablePotionBuy {
+automacro Grind_Novice_EnablePotionBuy_DISABLED {
 	exclusive 1
 	timeout 300
 	run-once 1
@@ -2622,6 +2622,7 @@ sub Grind_DisableBuyItem {
 
 sub Grind_EnableBuyItem {
 	my ($name) = @_;
+	return 0 if (($config{partyRole} || '') eq 'member');
 	return 0 unless defined $name && $name ne '';
 	my $changed = 0;
 	for (my $i = 0; exists $config{"buyAuto_$i"}; $i++) {
@@ -3428,7 +3429,7 @@ automacro Party12_LeaderInvite {
 
 automacro Party12_MemberEnforce {
 	exclusive 1
-	timeout 20
+	timeout 5
 	priority -1
 	ConfigKey partyRole member
 	call {
@@ -3446,6 +3447,28 @@ automacro Party12_MemberEnforce {
 			do conf route_randomWalk 0
 			do conf lockMap none
 			do conf grindPartyMode 1
+			do conf sellAuto 0
+			do conf buyAuto_0_disabled 1
+			do conf buyAuto_1_disabled 1
+			do conf buyAuto_2_disabled 1
+			do conf buyAuto_3_disabled 1
+			do conf buyAuto_4_disabled 1
+			do conf buyAuto_5_disabled 1
+			do conf buyAuto_6_disabled 1
+			do conf buyAuto_7_disabled 1
+			do conf buyAuto_8_disabled 1
+			do conf buyAuto_9_disabled 1
+			do conf buyAuto_10_disabled 1
+			do conf buyAuto_11_disabled 1
+			do conf buyAuto_12_disabled 1
+			do conf buyAuto_13_disabled 1
+			do conf buyAuto_14_disabled 1
+			do conf buyAuto_15_disabled 1
+			do conf buyAuto_16_disabled 1
+			do conf buyAuto_17_disabled 1
+			do conf buyAuto_18_disabled 1
+			do conf buyAuto_19_disabled 1
+			do eval AI::clear("buyAuto", "NPC")
 		]
 	}
 }

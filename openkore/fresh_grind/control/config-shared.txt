@@ -101,9 +101,8 @@ buyAuto Fly Wing {
 	distance 5
 	minAmount 2
 	maxAmount 20
-	# Don't pull broke novices into Prontera tool-shop loops
 	zeny > 5000
-	disabled 0
+	disabled 1
 }
 buyAuto Red Potion {
 	npc prt_in 126 76
