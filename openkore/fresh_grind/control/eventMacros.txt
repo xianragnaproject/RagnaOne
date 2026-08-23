@@ -13,7 +13,7 @@
 # 1) Alberta buy Guard (+ Shoes / Muffler / Wooden Mail)
 # 2) Payon savepoint (Kafra 181,104)
 # 3) Weapon: Swordman Blade @ Payon; Merchant Axe @ Alberta weapon shop idx 6
-# 4) Hunt pay_fild08; buy potions + sell in Payon
+# 4) Hunt pay_dun01; buy potions + sell in Payon
 #
 # Class statsAddAuto (Grind_ApplyClassStats):
 #   1 SW: STR/VIT (+dex) | 2 MG: INT/DEX | 3 AC: AGI/DEX
@@ -500,7 +500,7 @@ automacro Grind_JobDone {
 
 ###############################################################################
 # Phase 1 complete
-# - Swordman (1) / Merchant (5): auto-start Phase 2 (Alberta gear → pay_fild08)
+# - Swordman (1) / Merchant (5): auto-start Phase 2 (Alberta gear → pay_dun01)
 # - Other 1st jobs: Prontera fountain AFK
 ###############################################################################
 automacro Grind_Phase1Complete_ToPhase2_Swordman {
@@ -1038,7 +1038,7 @@ automacro Grind_Phase1WrongMapPayFild08 {
 	exclusive 1
 	timeout 45
 	priority 0
-	InMap pay_fild08
+	InMap pay_dun01
 	JobID 2, 3, 4, 6
 	ConfigKey grindPhase1Done 1
 	ConfigKeyNot grindPhase2 1
@@ -1247,7 +1247,7 @@ automacro Grind_Phase1ShuffleLook {
 
 ###############################################################################
 # PHASE 2 — Swordman (JobID 1) OR Merchant (JobID 5), base >= 15
-# Alberta Guard/armor → Payon save → weapon (Blade at Payon / Axe at Alberta) → pay_fild08
+# Alberta Guard/armor → Payon save → weapon (Blade at Payon / Axe at Alberta) → pay_dun01
 ###############################################################################
 
 
@@ -2048,7 +2048,7 @@ automacro Grind_Phase2GearAudit {
 	}
 }
 
-# Hunt pay_fild08 after full gear (grindP2Gear only set when Blade+Guard+armor owned)
+# Hunt pay_dun01 after full gear (grindP2Gear only set when Blade+Guard+armor owned)
 automacro Grind_Phase2HuntPay08 {
 	exclusive 1
 	timeout 40
@@ -2061,13 +2061,13 @@ automacro Grind_Phase2HuntPay08 {
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot grindP2BuyingAxe 1
-	ConfigKeyNot lockMap pay_fild08
+	ConfigKeyNot lockMap pay_dun01
 	call {
 		[
-			log PHASE2: lockMap pay_fild08
+			log PHASE2: lockMap pay_dun01
 			do conf grindAfk 0
-			do conf -f grindHuntMap pay_fild08
-			do conf lockMap pay_fild08
+			do conf -f grindHuntMap pay_dun01
+			do conf lockMap pay_dun01
 			do conf lockMap_x none
 			do conf lockMap_y none
 			do conf attackAuto 2
@@ -2078,7 +2078,7 @@ automacro Grind_Phase2HuntPay08 {
 	}
 }
 
-# Leave Payon/indoors toward east gate portal → pay_fild08
+# Leave Payon/field toward Payon Cave floor 2 (pay_arche → pay_dun00 → pay_dun01)
 automacro Grind_Phase2ToFieldPortal {
 	exclusive 1
 	timeout 50
@@ -2086,25 +2086,25 @@ automacro Grind_Phase2ToFieldPortal {
 	JobID 1, 5
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
-	ConfigKey lockMap pay_fild08
+	ConfigKey lockMap pay_dun01
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindP2Buying 1
 	ConfigKeyNot grindP2BuyingBlade 1
 	ConfigKeyNot grindP2BuyingAxe 1
-	InMapRegex /^(payon|payon_in01)$/
+	InMapRegex /^(payon|payon_in01|pay_fild08|pay_arche|pay_dun00)$/
 	call {
 		[
-			log PHASE2: walk Payon east gate → pay_fild08
+			log PHASE2: route to pay_dun01
 			do stand
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do eval AI::clear("move", "route", "mapRoute")
-			do move payon 267 89
-			pause 55
+			do move pay_dun01
+			pause 90
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do conf lockMap pay_fild08
+			do conf lockMap pay_dun01
 		]
 	}
 }
@@ -2114,7 +2114,7 @@ automacro Grind_Phase2KeepAggressive {
 	timeout 35
 	priority 8
 	JobID 1, 5
-	InMap pay_fild08
+	InMap pay_dun01
 	ConfigKey grindPhase2 1
 	ConfigKey grindP2Gear 1
 	ConfigKeyNot partyRole member
@@ -2124,10 +2124,10 @@ automacro Grind_Phase2KeepAggressive {
 	ConfigKeyNot attackAuto 2
 	call {
 		[
-			log PHASE2: restore attackAuto 2 on pay_fild08
+			log PHASE2: restore attackAuto 2 on pay_dun01
 			do conf attackAuto 2
 			do conf route_randomWalk 1
-			do conf lockMap pay_fild08
+			do conf lockMap pay_dun01
 		]
 	}
 }
@@ -2171,11 +2171,11 @@ macro grind_phase2_sell_payon {
 		do move payon 181 100
 		pause 12
 		do conf grindSelling 0
-		do conf -f grindHuntMap pay_fild08
-		do conf lockMap pay_fild08
+		do conf -f grindHuntMap pay_dun01
+		do conf lockMap pay_dun01
 		do conf attackAuto 2
 		do conf route_randomWalk 1
-		log PHASE2: sell done - resume pay_fild08
+		log PHASE2: sell done - resume pay_dun01
 	]
 }
 
@@ -2715,13 +2715,13 @@ sub Grind_StartHunt {
 	# Party leader: stay where the party can stick (prt early; pay after Phase2 gear)
 	if (($config{partyRole} || '') eq 'leader') {
 		if ($config{grindPhase2} && $config{grindP2Gear}) {
-			$map = 'pay_fild08';
+			$map = 'pay_dun01';
 		} else {
 			$map = $config{grindPartyHuntMap} || 'prt_fild08';
 		}
 		Commands::run("conf -f grindHuntMap $map");
 	} elsif ($config{grindPhase2} && $config{grindP2Gear}) {
-		$map = 'pay_fild08';
+		$map = 'pay_dun01';
 		Commands::run("conf -f grindHuntMap $map");
 	} elsif (!$map || $map eq '' || $map eq 'none') {
 		$map = 'prt_fild08';
@@ -3435,8 +3435,8 @@ sub Grind_Phase2MarkGearIfComplete {
 	Commands::run("conf grindP2Buying 0");
 	# Kick hunt immediately when gear completes
 	Commands::run("conf grindAfk 0");
-	Commands::run("conf -f grindHuntMap pay_fild08");
-	Commands::run("conf lockMap pay_fild08");
+	Commands::run("conf -f grindHuntMap pay_dun01");
+	Commands::run("conf lockMap pay_dun01");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf lockMap_y none");
 	Commands::run("conf attackAuto 2");
@@ -3517,9 +3517,9 @@ sub Grind_Phase2FinishArmorBuy {
 		Commands::run("conf route_randomWalk 0");
 		return 0;
 	}
-	Log::message("[Grind] PHASE2 armor OK — resume pay_fild08\n", "success");
-	Commands::run("conf -f grindHuntMap pay_fild08");
-	Commands::run("conf lockMap pay_fild08");
+	Log::message("[Grind] PHASE2 armor OK — resume pay_dun01\n", "success");
+	Commands::run("conf -f grindHuntMap pay_dun01");
+	Commands::run("conf lockMap pay_dun01");
 	Commands::run("conf attackAuto 2");
 	Commands::run("conf route_randomWalk 1");
 	Commands::run("move payon 267 89");
