@@ -2486,11 +2486,14 @@ sub Grind_AfterJobChange {
 	Grind_ApplyClassSkills();
 	Grind_EquipJobChangeGear();
 
-	# Party12 members: skip solo Phase1 AFK / Phase2 gear path — resume follow
+	# Party12 members: after 1st job change, leave prt_fild08 and join leader
 	if (($config{partyRole} || '') eq 'member') {
-		Log::message("[Grind] Party member jobbed — resume HARD follow/assist\n", "success");
+		Log::message("[Grind] Party member jobbed — join leader follow/assist\n", "success");
 		Commands::run("conf grindAfk 0");
 		Commands::run("conf grindPhase1Done 1");
+		Commands::run("conf grindJob1st 1");
+		Commands::run("conf lockMap none");
+		Commands::run("conf follow 1");
 		Party12_ApplyMemberFollow();
 		return 1;
 	}
@@ -3624,11 +3627,13 @@ automacro Party12_LeaderInvite {
 automacro Party12_MemberEnforce {
 	exclusive 1
 	timeout 3
-	priority -1
+	priority 1
 	ConfigKey partyRole member
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindAfk 1
+	# Unfinished Novices farm prt_fild08 — StickToLeader still routes them, but skip buyAuto spam
+	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			log Party12: HARD enforce follow/assist
@@ -3778,7 +3783,7 @@ automacro Party12_LeaderEvenShare {
 automacro Party12_LeaderAggressive {
 	exclusive 1
 	timeout 8
-	priority -2
+	priority 0
 	ConfigKey partyRole leader
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
@@ -3818,14 +3823,35 @@ automacro Party12_LeaderDistanceFix {
 	}
 }
 
+# Unfinished Novices: solo prt_fild08 until 1st job — never follow leader yet
+automacro Party12_NoviceFarmUntilJob {
+	exclusive 1
+	timeout 8
+	priority 0
+	ConfigKey partyRole member
+	JobID 0
+	ConfigKeyNot grindJob1st 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Party12: Novice — farm prt_fild08 until job change (no follow)
+			do conf follow 0
+			do conf followBot 0
+			do eval Party12_NoviceSoloUntilJob()
+		]
+	}
+}
+
 automacro Party12_MemberAssistFix {
 	exclusive 1
 	timeout 6
-	priority -2
+	priority 1
 	ConfigKey partyRole member
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
+	# Unfinished Novices farm prt_fild08 alone — do not force follow
+	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			do conf attackAuto_party 1
