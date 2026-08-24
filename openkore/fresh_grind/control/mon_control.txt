@@ -1,11 +1,17 @@
 # mon_control — hunt soft farm mobs; avoid Creamy (kills novices)
 # attack: 2 = always auto-attack when it appears; 0 = ignore; -1 = avoid
-# Specific lines override "all".
+# Specific lines override "all" (matched by lc name or nameID).
 
 Creamy -1 0 0
 Elder Willow -1 0 0
 
-# Decorative plants block LOS / "Can't reach" loops on pay_fild*
+# Decorative plants — ID + name (prevents pay_fild "Can't reach" loops)
+1078 0 0 0
+1079 0 0 0
+1080 0 0 0
+1081 0 0 0
+1082 0 0 0
+1083 0 0 0
 Green Plant 0 0 0
 Yellow Plant 0 0 0
 White Plant 0 0 0
@@ -15,7 +21,7 @@ Shining Plant 0 0 0
 Black Mushroom 0 0 0
 Red Mushroom 0 0 0
 
-# Pupa / Fabre: ignore (low value / waste time)
+# Pupa / Fabre: ignore
 1008 0 0 0
 Fabre 0 0 0
 
