@@ -4,7 +4,7 @@
 Classes: Swordman, Magician, Archer, Acolyte, Merchant, Thief (2 each).
 Leader = first Swordman. Members follow + assist only.
 Job change at JobLevel 10 via shared eventMacros + grindTargetJob.
-Sell on overweight + equip loot via shared pack. Target base 60.
+Sell on overweight + equip loot via shared pack. Target base 99 on prt_fild08.
 """
 from __future__ import annotations
 
@@ -253,7 +253,7 @@ def write_profile(
         "grindAfk 0",
         "grindPhase2 0",
         "grindP2Gear 0",
-        "dcOnLevel 60",
+        "dcOnLevel 99",
         "itemsMaxWeight 89",
         "itemsMaxWeight_sellOrStore 50",
         "",
@@ -316,7 +316,7 @@ def create_char(profile: str, char_name: str, sex: str, hs: int, hc: int) -> tup
     proc = subprocess.run(
         [
             "timeout",
-            "90",
+            "180",
             "expect",
             str(CREATE_EXP),
             profile,
@@ -328,7 +328,7 @@ def create_char(profile: str, char_name: str, sex: str, hs: int, hc: int) -> tup
         cwd=str(OK),
         capture_output=True,
         text=True,
-        timeout=100,
+        timeout=200,
         env=os.environ.copy(),
     )
     out = (proc.stdout or "") + "\n" + (proc.stderr or "")
@@ -361,33 +361,43 @@ def classify(rc: int, out: str) -> str:
 
 
 def append_party_macros(leader_char: str, member_chars: list[str]) -> None:
-    block = f"""
-###############################################################################
-# Party12 — leader invites; members follow/assist {leader_char}
-###############################################################################
-automacro Party12_LeaderInvite {{
+    """Ensure LeaderInvite roster + StopAt99 exist; preserve other Party12 macros."""
+    invite_body = "\t\t[\n\t\t\tlog Party12: create/invite party\n\t\t\tdo party create P99\n\t\t\tpause 2\n\t\t]\n"
+    for ch in member_chars:
+        invite_body += f"\t\t[\n\t\t\tdo party request {ch}\n\t\t\tpause 3\n\t\t]\n"
+
+    invite_block = f"""automacro Party12_LeaderInvite {{
 	exclusive 1
 	timeout 45
 	priority 2
 	ConfigKey partyRole leader
 	BaseLevel >= 1
+	JobLevel >= 7
+	call {{
+{invite_body}	}}
+}}
+"""
+
+    stop_block = f"""automacro Party12_StopAt99 {{
+	exclusive 1
+	timeout 120
+	priority 0
+	BaseLevel >= 99
 	call {{
 		[
-			log Party12: create/invite party
-			do party create P60
-			pause 2
+			log Party12: base 99 reached — park
+			do conf attackAuto 0
+			do conf route_randomWalk 0
+			do conf follow 0
+			do conf lockMap prontera
+			do move 156 190
+			do sit
 		]
-"""
-    for ch in member_chars:
-        block += f"""		[
-			do party request {ch}
-			pause 3
-		]
-"""
-    block += f"""	}}
+	}}
 }}
+"""
 
-automacro Party12_MemberRefollow {{
+    refollow_block = f"""automacro Party12_MemberRefollow {{
 	exclusive 1
 	timeout 15
 	priority 3
@@ -409,25 +419,24 @@ automacro Party12_MemberRefollow {{
 		]
 	}}
 }}
-
-automacro Party12_StopAt60 {{
-	exclusive 1
-	timeout 120
-	priority 0
-	BaseLevel >= 60
-	call {{
-		[
-			log Party12: base 60 reached — park
-			do conf attackAuto 0
-			do conf route_randomWalk 0
-			do conf follow 0
-			do conf lockMap prontera
-			do move 156 190
-			do sit
-		]
-	}}
-}}
 """
+
+    def replace_automacro(text: str, name: str, new_block: str) -> str:
+        marker = f"automacro {name} {{"
+        start = text.find(marker)
+        if start < 0:
+            return text.rstrip() + "\n\n" + new_block
+        # find matching closing brace at automacro top-level
+        i = start + len(marker)
+        depth = 1
+        while i < len(text) and depth:
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+            i += 1
+        return text[:start] + new_block + text[i:]
+
     for rel in (
         OK / "fresh_grind" / "control" / "eventMacros.txt",
         OK / "control" / "eventMacros.txt",
@@ -435,10 +444,21 @@ automacro Party12_StopAt60 {{
         if not rel.exists():
             continue
         text = rel.read_text()
-        if "Party12_LeaderInvite" in text:
-            continue
-        rel.write_text(text.rstrip() + "\n" + block)
-        print(f"macros → {rel}")
+        text = replace_automacro(text, "Party12_LeaderInvite", invite_block)
+        text = replace_automacro(text, "Party12_MemberRefollow", refollow_block)
+        # migrate StopAt60 -> StopAt99
+        if "automacro Party12_StopAt60 {" in text:
+            text = replace_automacro(text, "Party12_StopAt60", stop_block)
+        else:
+            text = replace_automacro(text, "Party12_StopAt99", stop_block)
+        text = re.sub(
+            r"(# Party12 — leader invites; members follow/assist )\S+",
+            rf"\1{leader_char}",
+            text,
+            count=1,
+        )
+        rel.write_text(text)
+        print(f"updated Party12 macros in {rel}")
 
 
 def main() -> int:

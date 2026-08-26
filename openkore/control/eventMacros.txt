@@ -74,22 +74,123 @@ automacro Grind_Leave_new11 {
 
 automacro Grind_Leave_new12 {
 	exclusive 1
-	timeout 40
-	priority 1
+	timeout 35
+	priority 0
 	InMap new_1-2
 	ConfigKeyNot grindLeftTraining 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log Grind: talking warp NPC to Prontera
+			log Grind leave training via receptionist
 			do conf attackAuto -1
 			do conf route_randomWalk 0
 			do conf lockMap none
-			do move 118 108
-			pause 3
-			do talknpc 118 108 c c c r0 c c c r0 c
+			do talk cancel
+			do ai clear
+			do move 100 29
+			pause 4
+			do talknpc 100 29 c
+			pause 2
+			do eval Commands::run("talk text ".$char->{name}) if $char
+			pause 2
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk resp 1
 			pause 8
+		]
+	}
+}
+
+automacro Grind_Leave_ShionIsland {
+	exclusive 1
+	timeout 40
+	priority 0
+	InMap new_2-1, new_3-1, new_4-1, new_5-1
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Grind leave Shion island toward castle portal
+			do conf attackAuto -1
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do move 144 112
+			pause 15
+		]
+	}
+}
+
+automacro Grind_Leave_TrainingCastle {
+	exclusive 1
+	timeout 35
+	priority 0
+	InMap new_2-2, new_3-2, new_4-2, new_5-2
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Grind castle receptionist Direct access
+			do conf attackAuto -1
+			do conf route_randomWalk 0
+			do conf lockMap none
+			do talk cancel
+			do ai clear
+			do move 100 29
+			pause 4
+			do talknpc 100 29 c
+			pause 2
+			do eval Commands::run("talk text ".$char->{name}) if $char
+			pause 2
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk cont
+			pause 1
+			do talk resp 1
+			pause 8
+		]
+	}
+}
+
+automacro Grind_Leave_MoroccToField {
+	exclusive 1
+	timeout 40
+	priority 2
+	InMap morocc
+	ConfigKeyNot grindLeftTraining 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot grindJobbing 1
+	call {
+		[
+			log Grind Morocc done lock field
+			do conf grindLeftTraining 1
+			do conf attackAuto 2
+			do conf route_randomWalk 1
+			do conf route_randomWalk_inLockOnly 1
+			do conf lockMap prt_fild08
+			do conf -f grindHuntMap prt_fild08
+			do move prt_fild08
+			pause 25
 		]
 	}
 }
@@ -430,7 +531,7 @@ macro grind_to_prontera {
 ###############################################################################
 automacro Grind_JobChange_Go {
 	exclusive 1
-	timeout 120
+	timeout 50
 	priority 0
 	JobID 0
 	JobLevel >= 10
@@ -448,13 +549,10 @@ automacro Grind_JobChange_Go {
 			do conf lockMap none
 			do stand
 		]
-		# From payon/pay_fild*: kafra warp is reliable (walked mapRoute often stalls).
-		# From prt_fild08: use portal helper. Always qualify Prontera coords with map name
-		# so we never walk to payon 155,180 by mistake.
-		do eval Grind_JobChangeRouteToProntera()
+		call grind_to_prontera
 		[
-			do move prontera 155 180
-			pause 40
+			do move 155 180
+			pause 35
 		]
 	}
 }
@@ -2415,6 +2513,7 @@ sub Grind_RandomFountainTile {
 	return ($s->[0], $s->[1]);
 }
 
+
 # Dump free skill points into raisable skills (Basic Skill first) before Job Master.
 sub Grind_SpendSkillPoints {
 	return 0 unless $char && $messageSender;
@@ -2470,10 +2569,9 @@ sub Grind_TalkJobMaster {
 		Log::message("[Grind] Random class selected: $pick\n", "success");
 	}
 	my $r = $menu{$job} || 'r5';
-	# Always spend leftover points first — Job Master rejects otherwise
-	Grind_SpendSkillPoints();
-	# RagnaOne Job Master (prontera 155,180): class choice then confirm
+	# RagnaOne Job Master (prontera 155,180): class choice then confirm — no 'c'
 	Log::message("[Grind] Job Master talk for '$job' ($r) at prontera 155,180\n", "success");
+	Grind_SpendSkillPoints();
 	Commands::run("stand");
 	Commands::run("talknpc 155 180 c $r c r0");
 	return 1;
@@ -2488,6 +2586,7 @@ sub Grind_AfterJobChange {
 	Grind_DisableBuyItem('Red Potion');
 	Grind_ApplyClassSkills();
 	Grind_EquipJobChangeGear();
+
 	# Party12 members: after 1st job change, leave prt_fild08 and join leader
 	if (($config{partyRole} || '') eq 'member') {
 		Log::message("[Grind] Party member jobbed — join leader follow/assist\n", "success");
@@ -2799,7 +2898,7 @@ sub Party12_ApplyMemberFollow {
 		Party12_NoviceSoloUntilJob();
 		return 1;
 	}
-	my $lead = $config{partyLeaderName} || $config{followTarget} || 'IvanCroftLd';
+	my $lead = $config{partyLeaderName} || $config{followTarget} || 'DanaJayLd';
 	Commands::run("conf follow 1");
 	Commands::run("conf followBot 1");
 	Commands::run("conf followTarget $lead");
@@ -2862,21 +2961,15 @@ sub Party12_StickToLeader {
 			last;
 		}
 	}
-	# Far from master: attackAuto -1 via configModify (conf -1 is flaky in macros).
-	# attackAuto 0 still retaliates when Porings slap you while walking.
+	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
+	# while walking — that stalls follow + blocks EXP Even Share).
 	# Near master: assist-only (attackAuto 1) so they help kill his targets.
 	if (!$near) {
-		if (($config{attackAuto} // '') ne '-1') {
-			configModify('attackAuto', -1);
-		}
+		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
-		AI::clear("attack", "route");
-		# re-queue follow only — don't leave a hole that restarts hunt
-		ai_follow($lead) if defined &ai_follow;
+		AI::clear("attack");
 	} else {
-		if (($config{attackAuto} // '') ne '1') {
-			configModify('attackAuto', 1);
-		}
+		Commands::run("conf attackAuto 1") if (($config{attackAuto} // '') ne '1');
 		Commands::run("conf attackAuto_party 1");
 		Commands::run("conf attackAuto_followTarget 1");
 		Commands::run("conf attackChangeTarget 1");
@@ -2884,8 +2977,8 @@ sub Party12_StickToLeader {
 		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
 			AI::clear("move", "route");
 		}
-		ai_follow($lead) if defined &ai_follow;
 	}
+	ai_follow($lead) if defined &ai_follow;
 	return 1;
 }
 
@@ -3552,6 +3645,7 @@ sub Grind_Phase2FinishArmorBuyFromAlberta {
 	return 1;
 }
 
+
 # One-shot zeny dump for operators
 automacro Grind_ReportZeny {
 	exclusive 1
@@ -3568,7 +3662,7 @@ automacro Grind_ReportZeny {
 }
 
 ###############################################################################
-# Party12 — leader invites; members follow/assist IvanCroftLd
+# Party12 — leader invites; members follow/assist DanaJayLd
 ###############################################################################
 automacro Party12_LeaderInvite {
 	exclusive 1
@@ -3576,60 +3670,60 @@ automacro Party12_LeaderInvite {
 	priority 2
 	ConfigKey partyRole leader
 	BaseLevel >= 1
-	# SkillLevel "Basic Skill" breaks eventMacro (space in name) — JobLevel 7 ≈ Basic Skill 7 for party
 	JobLevel >= 7
 	call {
 		[
 			log Party12: create/invite party
-			do party create P60
+			do party create P99
 			pause 2
 		]
 		[
-			do party request AvaBeckd2
+			do party request CoraEdged2
 			pause 3
 		]
 		[
-			do party request AvaLaneg1
+			do party request FelixEdgeg1
 			pause 3
 		]
 		[
-			do party request KurtCroftg2
+			do party request DorianEdgeg2
 			pause 3
 		]
 		[
-			do party request CassAshc1
+			do party request DanaCroftc1
 			pause 3
 		]
 		[
-			do party request PiersDalec2
+			do party request ElsaGalec2
 			pause 3
 		]
 		[
-			do party request CoraIveso1
+			do party request HanaOako1
 			pause 3
 		]
 		[
-			do party request NiallCrofto2
+			do party request EllisEdgeo2
 			pause 3
 		]
 		[
-			do party request BrynnGaler1
+			do party request FayeHoltr1
 			pause 3
 		]
 		[
-			do party request GarethMossr2
+			do party request DanaEdger2
 			pause 3
 		]
 		[
-			do party request DanaGalef1
+			do party request FayeIvesf1
 			pause 3
 		]
 		[
-			do party request IvanOakf2
+			do party request GarethOakf2
 			pause 3
 		]
 	}
 }
+
 
 automacro Party12_MemberEnforce {
 	exclusive 1
@@ -3675,18 +3769,24 @@ automacro Party12_MemberRefollow {
 	timeout 15
 	priority 3
 	ConfigKey partyRole member
-	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot grindSelling 1
 	ConfigKeyNot follow 1
-	# Unfinished Novices solo until 1st job — do not re-enable follow
-	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			log Party12: re-enable HARD follow/assist
-			do eval Party12_ApplyMemberFollow()
+			do conf follow 1
+			do conf followBot 1
+			do conf followTarget DanaJayLd
+			do conf attackAuto 1
+			do conf attackAuto_party 1
+			do conf attackAuto_followTarget 1
+			do conf followDistanceMax 4
+			do conf followDistanceMin 1
+			do conf route_randomWalk 0
+			do conf itemsGatherAuto 0
 		]
 	}
 }
+
 
 
 # Party12 — loot hard + sell when overweight (all roles)
@@ -3841,7 +3941,7 @@ automacro Party12_NoviceFarmUntilJob {
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log Party12: Novice — farm prt_fild08 until job change (no follow)
+			log Party12 novice solo nofollow
 			do conf follow 0
 			do conf followBot 0
 			do eval Party12_NoviceSoloUntilJob()
@@ -3873,14 +3973,14 @@ automacro Party12_MemberAssistFix {
 	}
 }
 
-automacro Party12_StopAt60 {
+automacro Party12_StopAt99 {
 	exclusive 1
 	timeout 120
 	priority 0
-	BaseLevel >= 60
+	BaseLevel >= 99
 	call {
 		[
-			log Party12: base 60 reached — park
+			log Party12: base 99 reached — park
 			do conf attackAuto 0
 			do conf route_randomWalk 0
 			do conf follow 0
@@ -3890,3 +3990,4 @@ automacro Party12_StopAt60 {
 		]
 	}
 }
+

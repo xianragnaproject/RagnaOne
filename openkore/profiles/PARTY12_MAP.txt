@@ -1,13 +1,13 @@
 # profile	class	role	char	username	password	sex	leader_char
-PSwdLead	Swordman	leader	IvanCroftLd	p226ac2a8	Qf45bd9r7RTE	M	IvanCroftLd
-PSwd2	Swordman	member	AvaBeckd2	p99b2fd93	mmdpTJkfFywX	M	IvanCroftLd
-PMag1	Magician	member	AvaLaneg1	pd276f634	BvEuylYDsWYR	F	IvanCroftLd
-PMag2	Magician	member	KurtCroftg2	p0043d53b	N1ga_CWgvLPe	F	IvanCroftLd
-PArc1	Archer	member	CassAshc1	pe09800fd	JlSuZuk3mtdW	M	IvanCroftLd
-PArc2	Archer	member	PiersDalec2	p4f5fa31f	_SE5B-sPBnON	F	IvanCroftLd
-PAco1	Acolyte	member	CoraIveso1	pddfebc0f	5Dw-ptcyBznS	M	IvanCroftLd
-PAco2	Acolyte	member	NiallCrofto2	p5de278bf	80Nsqz3rZYom	F	IvanCroftLd
-PMer1	Merchant	member	BrynnGaler1	pf90b33f6	XwrHkVqdp_78	F	IvanCroftLd
-PMer2	Merchant	member	GarethMossr2	p921a8c38	U1m-UsdhAJIh	M	IvanCroftLd
-PThf1	Thief	member	DanaGalef1	p0891f0a6	sWVaNUSPrrEi	F	IvanCroftLd
-PThf2	Thief	member	IvanOakf2	p391f0c1d	BLtWdkk9fhax	M	IvanCroftLd
+PSwdLead	Swordman	leader	DanaJayLd	p48f77520	WM84oX34rj9V	M	DanaJayLd
+PSwd2	Swordman	member	CoraEdged2	p7d4c9cdf	JvIKPDyHj26F	M	DanaJayLd
+PMag1	Magician	member	FelixEdgeg1	p595c0fbe	AZKm2mz4biWx	F	DanaJayLd
+PMag2	Magician	member	DorianEdgeg2	pfc06f2f2	keWzOQPOjG4m	F	DanaJayLd
+PArc1	Archer	member	DanaCroftc1	pb2f7a1d0	cXvLIUKSigSu	F	DanaJayLd
+PArc2	Archer	member	ElsaGalec2	pa669a22b	U95hCtCpYzSS	M	DanaJayLd
+PAco1	Acolyte	member	HanaOako1	pbeb27fb6	lXU2v2mSxIsJ	M	DanaJayLd
+PAco2	Acolyte	member	EllisEdgeo2	p0154e3bf	1xHLTwK-MHkT	F	DanaJayLd
+PMer1	Merchant	member	FayeHoltr1	pb09c6ea6	SpBg9Kj_F6Wq	F	DanaJayLd
+PMer2	Merchant	member	DanaEdger2	p819799d4	MLTGFICtQiaT	F	DanaJayLd
+PThf1	Thief	member	FayeIvesf1	pbf573c96	dgT8SMVnjVCp	M	DanaJayLd
+PThf2	Thief	member	GarethOakf2	pf5851f07	fXix5ALBF6Ga	M	DanaJayLd

@@ -1,9 +1,7 @@
 ######## Class pack: Acolyte ########
 grindTargetJob Acolyte
 skillsAddAuto 1
-# Valid translated/kRO_english skillnametable names only.
-# Invalid names disable raiseSkill's entire skillsAddAuto list (blocked Basic Skill).
-skillsAddAuto_list Basic Skill 9, Heal 10, Increase Agility 10, Blessing 10, Angelus 5, Cure 1, Divine Protection 5, Demon Bane 3, Holy Light 1, Ruwach 1
+skillsAddAuto_list Basic Skill 9, Heal 10, Increase Healing 5, Blessing 10, Increase AGI 10, Angelus 5, Ruwach 1, Teleport 2, Warp Portal 1
 attackDistance 2
 attackMaxDistance 2
 attackDistanceAuto 0
@@ -21,10 +19,11 @@ partySkill Blessing {
 	notInTown 1
 	timeout 8
 }
-partySkill Increase Agility {
+partySkill Increase AGI {
 	lvl 5
-	target_whenStatusInactive Increase Agility
+	target_whenStatusInactive Increase AGI
 	sp > 20
 	notInTown 1
 	timeout 8
 }
+
