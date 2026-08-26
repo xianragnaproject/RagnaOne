@@ -3899,6 +3899,7 @@ automacro Party12_LeaderAggressive {
 	timeout 8
 	priority 0
 	ConfigKey partyRole leader
+	JobIDNot 0
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1

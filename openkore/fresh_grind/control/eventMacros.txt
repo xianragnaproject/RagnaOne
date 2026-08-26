@@ -3944,15 +3944,17 @@ automacro Party12_LeaderAggressiveNovice {
 	}
 }
 
+# Disabled: was forcing 14-cell locks that starve melee novices of kills.
+# Re-enable only for jobbed ranged leaders if needed.
 automacro Party12_LeaderDistanceFix {
 	exclusive 1
 	timeout 30
 	priority 4
 	ConfigKey partyRole leader
+	ConfigKey partyUseLongRangeLock 1
 	ConfigKeyNot attackMaxDistance 14
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	# Melee novices: do not force 14-cell lock (targets die before arrive)
 	JobIDNot 0
 	call {
 		[
