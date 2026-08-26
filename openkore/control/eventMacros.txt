@@ -448,6 +448,8 @@ automacro Grind_Novice_EnablePotionBuy_DISABLED {
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot partyRole member
+	# Party12 leader stays on lockMap — no town potion runs
+	ConfigKeyNot partyRole leader
 	call {
 		do eval Grind_EnableBuyItem("Red Potion")
 	}
@@ -3862,16 +3864,17 @@ automacro Party12_EquipJobGear {
 }
 
 
-# Party12 — keep Even Share + leader aggressive farm
+# Party12 — keep Even Share + leader aggressive farm (only when already in a party)
 automacro Party12_LeaderEvenShare {
 	exclusive 1
 	timeout 45
 	priority 2
 	ConfigKey partyRole leader
 	ConfigKeyNot grindSelling 1
+	Eval $char && $char->{party} && $char->{party}{joined}
 	call {
 		[
-			log Party12: force Even Share EXP/item/div
+			log Party12 force Even Share EXP item div
 			do conf partyAutoShare 1
 			do conf partyAutoShareItem 1
 			do conf partyAutoShareItemDiv 1
@@ -3901,7 +3904,7 @@ automacro Party12_LeaderAggressive {
 	ConfigKeyNot attackAuto 2
 	call {
 		[
-			log Party12: leader restore aggressive attack
+			log Party12 leader restore aggressive attack
 			do conf attackAuto 2
 			do conf attackAuto_party 1
 			do conf attackAuto_inLockOnly 0
@@ -3924,7 +3927,7 @@ automacro Party12_LeaderDistanceFix {
 	ConfigKeyNot grindJobbing 1
 	call {
 		[
-			log Party12: leader attackMaxDistance 14 (was ignoring distant mobs)
+			log Party12 leader attackMaxDistance fourteen for distant mobs
 			do conf attackDistance 2
 			do conf attackMaxDistance 14
 			do conf attackChangeTarget 1
