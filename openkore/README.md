@@ -1,6 +1,6 @@
 # RagnaOne OpenKore packs (2-1 jobs only)
 
-Human-like levelers for the Hercules pre-RE server (`PACKETVER 20180620`, `173.208.138.84`).
+Human-like levelers for the Hercules pre-RE server (`PACKETVER 20180620`, `93.127.139.197`).
 
 **Scope: classic 2-1 second jobs only** (no 2-2: Crusader / Sage / Monk / Alchemist / Rogue / Bard / Dancer).
 
