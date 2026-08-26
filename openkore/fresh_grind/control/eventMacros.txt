@@ -530,6 +530,8 @@ macro grind_to_prontera {
 
 ###############################################################################
 # Job Level 10 Novice -> Prontera Job Master (HIGH PRIORITY)
+# Episode 4 (new IP): Job Master missing at 150/155,180 — gated off by default.
+# Re-enable with: conf grindUseJobMaster 1
 ###############################################################################
 automacro Grind_JobChange_Go {
 	exclusive 1
@@ -537,6 +539,7 @@ automacro Grind_JobChange_Go {
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	ConfigKey grindUseJobMaster 1
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindSelling 1
@@ -565,6 +568,7 @@ automacro Grind_JobChange_Talk {
 	priority 0
 	JobID 0
 	JobLevel >= 10
+	ConfigKey grindUseJobMaster 1
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindAfk 1
 	ConfigKeyNot grindPhase1Done 1
