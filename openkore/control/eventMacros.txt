@@ -3918,6 +3918,31 @@ automacro Party12_LeaderAggressive {
 	}
 }
 
+# Novice leader restore attack without long-range lock
+automacro Party12_LeaderAggressiveNovice {
+	exclusive 1
+	timeout 8
+	priority 0
+	ConfigKey partyRole leader
+	JobID 0
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindAfk 1
+	ConfigKeyNot attackAuto 2
+	call {
+		[
+			log Party12 leader novice restore attack
+			do conf attackAuto 2
+			do conf attackAuto_party 0
+			do conf attackAuto_inLockOnly 0
+			do conf attackChangeTarget 0
+			do conf attackDistance 1
+			do conf attackMaxDistance 3
+			do conf route_randomWalk 1
+		]
+	}
+}
+
 automacro Party12_LeaderDistanceFix {
 	exclusive 1
 	timeout 30
@@ -3926,6 +3951,8 @@ automacro Party12_LeaderDistanceFix {
 	ConfigKeyNot attackMaxDistance 14
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
+	# Melee novices: do not force 14-cell lock (targets die before arrive)
+	JobIDNot 0
 	call {
 		[
 			log Party12 leader attackMaxDistance fourteen for distant mobs
@@ -3933,6 +3960,28 @@ automacro Party12_LeaderDistanceFix {
 			do conf attackMaxDistance 14
 			do conf attackChangeTarget 1
 			do conf attackAuto 2
+		]
+	}
+}
+
+# Party12 novice leader — stay on nearby melee targets
+automacro Party12_LeaderNoviceMelee {
+	exclusive 1
+	timeout 20
+	priority 4
+	ConfigKey partyRole leader
+	JobID 0
+	ConfigKeyNot grindSelling 1
+	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot attackMaxDistance 3
+	call {
+		[
+			log Party12 leader novice melee distance
+			do conf attackDistance 1
+			do conf attackMaxDistance 3
+			do conf attackChangeTarget 0
+			do conf attackAuto 2
+			do conf attackAuto_party 0
 		]
 	}
 }
