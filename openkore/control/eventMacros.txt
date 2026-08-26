@@ -378,6 +378,7 @@ automacro Grind_JobbingStuckOnField {
 	timeout 75
 	priority 0
 	InMap prt_fild08
+	ConfigKey grindUseJobMaster 1
 	ConfigKey grindJobbing 1
 	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindPhase1Done 1
