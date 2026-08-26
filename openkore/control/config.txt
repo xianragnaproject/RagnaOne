@@ -74,7 +74,7 @@ dcPause 1
 
 ######## Sit / heal — human pacing ########
 
-sitAuto_hp_lower 40
+sitAuto_hp_lower 50
 sitAuto_hp_upper 80
 sitAuto_sp_lower 20
 sitAuto_sp_upper 50
