@@ -448,6 +448,8 @@ automacro Grind_Novice_EnablePotionBuy_DISABLED {
 	ConfigKeyNot grindPhase1Done 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot partyRole member
+	# Party12 leader stays on lockMap — no town potion runs
+	ConfigKeyNot partyRole leader
 	call {
 		do eval Grind_EnableBuyItem("Red Potion")
 	}
