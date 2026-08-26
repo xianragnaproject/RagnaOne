@@ -3864,14 +3864,15 @@ automacro Party12_EquipJobGear {
 }
 
 
-# Party12 — keep Even Share + leader aggressive farm (only when already in a party)
+# Party12 — Even Share only when explicitly enabled after party join
 automacro Party12_LeaderEvenShare {
 	exclusive 1
 	timeout 45
 	priority 2
 	ConfigKey partyRole leader
 	ConfigKeyNot grindSelling 1
-	Eval $char && $char->{party} && $char->{party}{joined}
+	# Gate: set partyEvenShareActive 1 only after leader successfully creates/joins party
+	ConfigKey partyEvenShareActive 1
 	call {
 		[
 			log Party12 force Even Share EXP item div
