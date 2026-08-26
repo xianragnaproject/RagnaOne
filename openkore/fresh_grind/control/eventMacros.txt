@@ -3770,9 +3770,12 @@ automacro Party12_MemberRefollow {
 	priority 3
 	ConfigKey partyRole member
 	ConfigKeyNot follow 1
+	ConfigKeyNot grindJobbing 1
+	# Unfinished Novices solo-farm — do not force follow yet
+	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
-			log Party12: re-enable HARD follow/assist
+			log Party12 reenable follow assist
 			do conf follow 1
 			do conf followBot 1
 			do conf followTarget DanaJayLd
