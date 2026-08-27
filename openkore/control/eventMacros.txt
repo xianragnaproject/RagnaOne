@@ -2991,21 +2991,9 @@ sub Party12_StickToLeader {
 		return 1;
 	}
 
-	# Attack whenever on the same map as the follow target (or always if
-	# master not visible yet). Sight-based gating left members at attackAuto -1
-	# forever while the leader random-walked out of range.
-	my $sameMap = 1;
-	if ($field && $playersList) {
-		# If we can see the leader, we're definitely same-map.
-		# If not visible, still attack on lock/hunt field — follow will catch up.
-		$sameMap = 1;
-	}
-	if ($field && ($field->baseName || '') =~ /_(in|dun)/) {
-		# Inside buildings during sell/job — don't open-world farm
-		$sameMap = 0 if (($config{grindSelling} || '') eq '1' || ($config{grindJobbing} || '') eq '1');
-	}
-	# Active attack on field. Assist-only (1) fails here — party/follow dmg
-	# flags stay 0 so members never swing.
+	# Always attack on the field while following. Sight-based near/far gating
+	# left members at attackAuto -1 while the leader walked out of range.
+	# Assist-only (1) also fails here — party/follow dmg flags stay 0.
 	if (($field && $field->isCity) || (($config{grindSelling} || '') eq '1')) {
 		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
@@ -3908,7 +3896,7 @@ automacro Party12_LeaderAggressive {
 			do conf attackDistance 2
 			do conf attackMaxDistance 14
 			do conf attackRouteMaxPathDistance 50
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }
@@ -3933,7 +3921,7 @@ automacro Party12_LeaderAggressiveNovice {
 			do conf attackChangeTarget 0
 			do conf attackDistance 1
 			do conf attackMaxDistance 3
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }
@@ -3979,7 +3967,7 @@ automacro Party12_LeaderNoviceMelee {
 			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf attackAuto_party 0
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }

@@ -3896,7 +3896,7 @@ automacro Party12_LeaderAggressive {
 			do conf attackDistance 2
 			do conf attackMaxDistance 14
 			do conf attackRouteMaxPathDistance 50
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }
@@ -3921,7 +3921,7 @@ automacro Party12_LeaderAggressiveNovice {
 			do conf attackChangeTarget 0
 			do conf attackDistance 1
 			do conf attackMaxDistance 3
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }
@@ -3967,7 +3967,7 @@ automacro Party12_LeaderNoviceMelee {
 			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf attackAuto_party 0
-			do conf route_randomWalk 0
+			do conf route_randomWalk 1
 		]
 	}
 }
