@@ -3787,7 +3787,9 @@ automacro Party12_MemberRefollow {
 			do conf followDistanceMin 1
 			do conf route_randomWalk 0
 			do conf lockMap none
-			do conf itemsGatherAuto 2
+			do conf itemsTakeAuto 1
+			do conf itemsTakeAuto_party 1
+			do conf itemsGatherAuto 0
 			do eval Party12_StickToLeader()
 		]
 	}
@@ -3807,7 +3809,7 @@ automacro Party12_LootEnforce {
 	ConfigKeyNot itemsTakeAuto 1
 	call {
 		[
-			log Party12: soft loot (take kills only; gather off)
+			log Party12: soft loot - take kills only, gather off
 			do conf itemsTakeAuto 1
 			do conf itemsTakeAuto_party 1
 			do conf itemsGatherAuto 0
