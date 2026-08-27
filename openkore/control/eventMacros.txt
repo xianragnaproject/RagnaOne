@@ -2970,6 +2970,25 @@ sub Party12_StickToLeader {
 	Party12_ApplyMemberFollow();
 	my $lead = $config{followTarget} || $config{partyLeaderName} || '';
 	return 1 if $lead eq '';
+
+	# Don't yank sitAuto: forcing attackAuto 1 while low HP stands the bot
+	# and keeps it dying at 1-2% (seen on GarethOakf2).
+	my $hpPct = 100;
+	if ($char && $char->{hp_max}) {
+		$hpPct = int(($char->{hp} / $char->{hp_max}) * 100 + 0.5);
+	}
+	my $sitLower = $config{sitAuto_hp_lower} // 50;
+	my $sitUpper = $config{sitAuto_hp_upper} // 80;
+	my $recovering = ($hpPct <= $sitLower)
+		|| (($char && $char->{sitting}) && $hpPct < $sitUpper);
+	if ($recovering) {
+		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
+		if ($char) { eval { $char->sendAttackStop }; }
+		AI::clear("attack");
+		Commands::run("sit") if $char && !$char->{sitting} && $hpPct <= $sitLower;
+		return 1;
+	}
+
 	my $near = 0;
 	my $max = ($config{followDistanceMax} || 4) + 3;
 	if ($playersList) {
@@ -3754,7 +3773,6 @@ automacro Party12_MemberRefollow {
 			do conf follow 1
 			do conf followBot 1
 			do conf followTarget DanaJayLd
-			do conf attackAuto 1
 			do conf attackAuto_party 1
 			do conf attackAuto_followTarget 1
 			do conf followDistanceMax 4
@@ -3762,6 +3780,7 @@ automacro Party12_MemberRefollow {
 			do conf route_randomWalk 0
 			do conf lockMap none
 			do conf itemsGatherAuto 2
+			do eval Party12_StickToLeader()
 		]
 	}
 }
