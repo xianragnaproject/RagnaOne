@@ -2886,7 +2886,7 @@ sub Party12_EnsurePartyInvites {
 		next if $in{$name};
 		Commands::run("party request $name");
 	}
-	Commands::run("party share 0"); # Individual while spread novices; even share after stacked jobs
+	Commands::run("party share 1"); # Even share while party stacked on leader
 	return 1;
 }
 
@@ -2923,14 +2923,8 @@ sub Party12_NoviceSoloUntilJob {
 	return 1;
 }
 
-# Hard party follow: assist-only + drop solo attack AI when master not nearby
+# Hard party follow: assist leader targets (including unfinished novices)
 sub Party12_ApplyMemberFollow {
-	
-	# Unfinished Novice: solo until 1st job — do not force follow
-	if ($char && (($char->{jobID} // 0) == 0) && (($config{grindJob1st} || '') ne '1')) {
-		Party12_NoviceSoloUntilJob();
-		return 1;
-	}
 	my $lead = $config{partyLeaderName} || $config{followTarget} || 'DanaJayLd';
 	Commands::run("conf follow 1");
 	Commands::run("conf followBot 1");
@@ -2940,7 +2934,7 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf lockMap none");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf lockMap_y none");
-	# attackAuto owned by Party12_StickToLeader (0 while seeking, 1 when near)
+	# attackAuto owned by Party12_StickToLeader (-1 while seeking, 1 when near)
 	Commands::run("conf attackAuto_party 1");
 	Commands::run("conf attackAuto_followTarget 1");
 	Commands::run("conf attackAuto_inLockOnly 0");
@@ -2962,19 +2956,13 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf teleportAuto_idle 0");
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_idle 0");
-	Commands::run("conf sitAuto_hp_lower 35");
+	Commands::run("conf sitAuto_hp_lower 50");
 	Log::message("[Grind] Party member HARD follow/assist $lead (attackAuto 1)\n", "success");
 	return 1;
 }
 
 sub Party12_StickToLeader {
 	return 1 unless (($config{partyRole} || '') eq 'member');
-
-	# Unfinished Novice: always solo (even if sell/afk flags stuck on)
-	if ($char && (($char->{jobID} // 0) == 0) && (($config{grindJob1st} || '') ne '1')) {
-		Party12_NoviceSoloUntilJob();
-		return 1;
-	}
 
 	# Let job-change / sell macros own movement
 	return 1 if (($config{grindJobbing} || '') eq '1' || ($config{grindSelling} || '') eq '1' || ($config{grindAfk} || '') eq '1');
@@ -3723,8 +3711,6 @@ automacro Party12_MemberEnforce {
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindAfk 1
-	# Unfinished Novices farm prt_fild08 — StickToLeader still routes them, but skip buyAuto spam
-	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			log Party12: HARD enforce follow/assist
@@ -3761,8 +3747,7 @@ automacro Party12_MemberRefollow {
 	ConfigKey partyRole member
 	ConfigKeyNot follow 1
 	ConfigKeyNot grindJobbing 1
-	# Unfinished Novices solo-farm — do not force follow yet
-	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
+	ConfigKeyNot grindSelling 1
 	call {
 		[
 			log Party12 reenable follow assist
@@ -3775,7 +3760,8 @@ automacro Party12_MemberRefollow {
 			do conf followDistanceMax 4
 			do conf followDistanceMin 1
 			do conf route_randomWalk 0
-			do conf itemsGatherAuto 0
+			do conf lockMap none
+			do conf itemsGatherAuto 2
 		]
 	}
 }
@@ -3977,21 +3963,20 @@ automacro Party12_LeaderNoviceMelee {
 	}
 }
 
-# Unfinished Novices: solo prt_fild08 until 1st job — never follow leader yet
+# Novices also follow/assist leader (hit what leader hits)
 automacro Party12_NoviceFarmUntilJob {
 	exclusive 1
 	timeout 8
 	priority 0
 	ConfigKey partyRole member
 	JobID 0
-	ConfigKeyNot grindJob1st 1
 	ConfigKeyNot grindJobbing 1
+	ConfigKeyNot grindSelling 1
 	call {
 		[
-			log Party12 novice solo nofollow
-			do conf follow 0
-			do conf followBot 0
-			do eval Party12_NoviceSoloUntilJob()
+			log Party12 novice follow assist leader
+			do eval Party12_ApplyMemberFollow()
+			do eval Party12_StickToLeader()
 		]
 	}
 }
@@ -4004,8 +3989,6 @@ automacro Party12_MemberAssistFix {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
-	# Unfinished Novices farm prt_fild08 alone — do not force follow
-	Eval !($char && ($char->{jobID} // 0) == 0 && ($config{grindJob1st} || '') ne '1')
 	call {
 		[
 			do conf attackAuto_party 1
@@ -4015,6 +3998,9 @@ automacro Party12_MemberAssistFix {
 			do conf attackMaxDistance 14
 			do conf follow 1
 			do conf followBot 1
+			do conf followTarget DanaJayLd
+			do conf route_randomWalk 0
+			do conf lockMap none
 			do eval Party12_StickToLeader()
 		]
 	}
