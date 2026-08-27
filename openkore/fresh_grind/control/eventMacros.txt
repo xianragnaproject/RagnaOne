@@ -2941,8 +2941,8 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf attackChangeTarget 1");
 	Commands::run("conf attackDistance 2");
 	Commands::run("conf attackMaxDistance 14");
-	Commands::run("conf followDistanceMax 3");
-	Commands::run("conf followDistanceMin 1");
+	Commands::run("conf followDistanceMax 8");
+	Commands::run("conf followDistanceMin 2");
 	Commands::run("conf route_randomWalk 0");
 	# Soft loot while stacked: itemsTakeAuto/Gather 2 blocks ai_autoAttack
 	# whenever take/gather is queued (loot spam = never attack).
@@ -2991,17 +2991,26 @@ sub Party12_StickToLeader {
 		return 1;
 	}
 
-	my $near = 0;
-	my $max = ($config{followDistanceMax} || 4) + 3;
+	my $dist;
+	my $seen = 0;
 	if ($playersList) {
 		for my $p (@$playersList) {
 			next unless $p;
 			my $n = eval { $p->name };
 			next unless defined $n && $n eq $lead;
-			my $d = blockDistance($char->{pos_to}, $p->{pos_to});
-			$near = 1 if defined $d && $d <= $max;
+			$dist = blockDistance($char->{pos_to}, $p->{pos_to});
+			$seen = 1;
 			last;
 		}
+	}
+	# Wide near window + hysteresis so leader kiting doesn't cancel every swing.
+	my $nearOn = 18;
+	my $nearOff = 24;
+	my $attacking = (($config{attackAuto} // '') eq '2');
+	my $near = 0;
+	if ($seen && defined $dist) {
+		$near = 1 if $dist <= $nearOn;
+		$near = 1 if $attacking && $dist <= $nearOff;
 	}
 	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
 	# while walking — that stalls follow + blocks EXP Even Share).
@@ -3016,12 +3025,8 @@ sub Party12_StickToLeader {
 		Commands::run("conf attackAuto_party 1");
 		Commands::run("conf attackAuto_followTarget 1");
 		Commands::run("conf attackChangeTarget 1");
-		# Drop loot/route queues that block ai_autoAttack
+		# Drop loot queues that block ai_autoAttack — do NOT clear attack/move
 		AI::clear("take", "items_take", "items_gather");
-		# Near master: drop stuck route/move so attack can fire
-		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
-			AI::clear("move", "route");
-		}
 	}
 	ai_follow($lead) if defined &ai_follow;
 	return 1;
@@ -3990,9 +3995,9 @@ automacro Party12_LeaderNoviceMelee {
 
 # Novices also follow/assist leader (hit what leader hits)
 automacro Party12_NoviceFarmUntilJob {
-	exclusive 1
-	timeout 8
-	priority 0
+	exclusive 0
+	timeout 30
+	priority 5
 	ConfigKey partyRole member
 	JobID 0
 	ConfigKeyNot grindJobbing 1
@@ -4000,32 +4005,21 @@ automacro Party12_NoviceFarmUntilJob {
 	call {
 		[
 			log Party12 novice follow assist leader
-			do eval Party12_ApplyMemberFollow()
 			do eval Party12_StickToLeader()
 		]
 	}
 }
 
 automacro Party12_MemberAssistFix {
-	exclusive 1
-	timeout 6
-	priority 1
+	exclusive 0
+	timeout 20
+	priority 4
 	ConfigKey partyRole member
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
 	call {
 		[
-			do conf attackAuto_party 1
-			do conf attackAuto_followTarget 1
-			do conf attackChangeTarget 1
-			do conf attackDistance 2
-			do conf attackMaxDistance 14
-			do conf follow 1
-			do conf followBot 1
-			do conf followTarget DanaJayLd
-			do conf route_randomWalk 0
-			do conf lockMap none
 			do eval Party12_StickToLeader()
 		]
 	}
