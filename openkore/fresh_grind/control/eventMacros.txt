@@ -3724,9 +3724,9 @@ automacro Party12_LeaderInvite {
 
 
 automacro Party12_MemberEnforce {
-	exclusive 1
-	timeout 3
-	priority 1
+	exclusive 0
+	timeout 12
+	priority 4
 	ConfigKey partyRole member
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindSelling 1
@@ -3812,7 +3812,7 @@ automacro Party12_LootEnforce {
 automacro Party12_SellOverweight {
 	exclusive 1
 	timeout 45
-	priority 1
+	priority 0
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
