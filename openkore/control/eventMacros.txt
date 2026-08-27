@@ -3972,7 +3972,7 @@ automacro Party12_LeaderDistanceFix {
 	}
 }
 
-# Party12 novice leader — nearby melee targets (not map-wide 14)
+# Party12 novice leader — knife melee (2 cells). Was 8 and starved kills with can't-reach drops.
 automacro Party12_LeaderNoviceMelee {
 	exclusive 1
 	timeout 20
@@ -3981,13 +3981,13 @@ automacro Party12_LeaderNoviceMelee {
 	JobID 0
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
-	ConfigKeyNot attackMaxDistance 8
+	ConfigKeyNot attackMaxDistance 2
 	call {
 		[
-			log Party12 leader novice melee distance
+			log Party12 leader novice knife melee
 			do conf attackDistance 1
-			do conf attackMaxDistance 8
-			do conf attackChangeTarget 0
+			do conf attackMaxDistance 2
+			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf attackAuto_party 0
 		]
