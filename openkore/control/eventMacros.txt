@@ -2991,32 +2991,22 @@ sub Party12_StickToLeader {
 		return 1;
 	}
 
-	my $dist;
-	my $seen = 0;
-	if ($playersList) {
-		for my $p (@$playersList) {
-			next unless $p;
-			my $n = eval { $p->name };
-			next unless defined $n && $n eq $lead;
-			$dist = blockDistance($char->{pos_to}, $p->{pos_to});
-			$seen = 1;
-			last;
-		}
+	# Attack whenever on the same map as the follow target (or always if
+	# master not visible yet). Sight-based gating left members at attackAuto -1
+	# forever while the leader random-walked out of range.
+	my $sameMap = 1;
+	if ($field && $playersList) {
+		# If we can see the leader, we're definitely same-map.
+		# If not visible, still attack on lock/hunt field — follow will catch up.
+		$sameMap = 1;
 	}
-	# Wide near window + hysteresis so leader kiting doesn't cancel every swing.
-	my $nearOn = 18;
-	my $nearOff = 24;
-	my $attacking = (($config{attackAuto} // '') eq '2');
-	my $near = 0;
-	if ($seen && defined $dist) {
-		$near = 1 if $dist <= $nearOn;
-		$near = 1 if $attacking && $dist <= $nearOff;
+	if ($field && ($field->baseName || '') =~ /_(in|dun)/) {
+		# Inside buildings during sell/job — don't open-world farm
+		$sameMap = 0 if (($config{grindSelling} || '') eq '1' || ($config{grindJobbing} || '') eq '1');
 	}
-	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
-	# while walking — that stalls follow + blocks EXP Even Share).
-	# Near master: attackAuto 2 (active). Assist-only (1) fails on this
-	# server — party/follow dmg flags stay 0 so members never swing.
-	if (!$near) {
+	# Active attack on field. Assist-only (1) fails here — party/follow dmg
+	# flags stay 0 so members never swing.
+	if (($field && $field->isCity) || (($config{grindSelling} || '') eq '1')) {
 		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
 		AI::clear("attack");
@@ -3918,7 +3908,7 @@ automacro Party12_LeaderAggressive {
 			do conf attackDistance 2
 			do conf attackMaxDistance 14
 			do conf attackRouteMaxPathDistance 50
-			do conf route_randomWalk 1
+			do conf route_randomWalk 0
 		]
 	}
 }
@@ -3943,7 +3933,7 @@ automacro Party12_LeaderAggressiveNovice {
 			do conf attackChangeTarget 0
 			do conf attackDistance 1
 			do conf attackMaxDistance 3
-			do conf route_randomWalk 1
+			do conf route_randomWalk 0
 		]
 	}
 }
@@ -3989,15 +3979,16 @@ automacro Party12_LeaderNoviceMelee {
 			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf attackAuto_party 0
+			do conf route_randomWalk 0
 		]
 	}
 }
 
 # Novices also follow/assist leader (hit what leader hits)
 automacro Party12_NoviceFarmUntilJob {
-	exclusive 1
-	timeout 8
-	priority 0
+	exclusive 0
+	timeout 30
+	priority 5
 	ConfigKey partyRole member
 	JobID 0
 	ConfigKeyNot grindJobbing 1
@@ -4005,32 +3996,21 @@ automacro Party12_NoviceFarmUntilJob {
 	call {
 		[
 			log Party12 novice follow assist leader
-			do eval Party12_ApplyMemberFollow()
 			do eval Party12_StickToLeader()
 		]
 	}
 }
 
 automacro Party12_MemberAssistFix {
-	exclusive 1
-	timeout 6
-	priority 1
+	exclusive 0
+	timeout 20
+	priority 4
 	ConfigKey partyRole member
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
 	call {
 		[
-			do conf attackAuto_party 1
-			do conf attackAuto_followTarget 1
-			do conf attackChangeTarget 1
-			do conf attackDistance 2
-			do conf attackMaxDistance 14
-			do conf follow 1
-			do conf followBot 1
-			do conf followTarget DanaJayLd
-			do conf route_randomWalk 0
-			do conf lockMap none
 			do eval Party12_StickToLeader()
 		]
 	}

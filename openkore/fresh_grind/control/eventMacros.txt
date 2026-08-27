@@ -2991,32 +2991,10 @@ sub Party12_StickToLeader {
 		return 1;
 	}
 
-	my $dist;
-	my $seen = 0;
-	if ($playersList) {
-		for my $p (@$playersList) {
-			next unless $p;
-			my $n = eval { $p->name };
-			next unless defined $n && $n eq $lead;
-			$dist = blockDistance($char->{pos_to}, $p->{pos_to});
-			$seen = 1;
-			last;
-		}
-	}
-	# Wide near window + hysteresis so leader kiting doesn't cancel every swing.
-	my $nearOn = 18;
-	my $nearOff = 24;
-	my $attacking = (($config{attackAuto} // '') eq '2');
-	my $near = 0;
-	if ($seen && defined $dist) {
-		$near = 1 if $dist <= $nearOn;
-		$near = 1 if $attacking && $dist <= $nearOff;
-	}
-	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
-	# while walking — that stalls follow + blocks EXP Even Share).
-	# Near master: attackAuto 2 (active). Assist-only (1) fails on this
-	# server — party/follow dmg flags stay 0 so members never swing.
-	if (!$near) {
+	# Always attack on the field while following. Sight-based near/far gating
+	# left members at attackAuto -1 while the leader walked out of range.
+	# Assist-only (1) also fails here — party/follow dmg flags stay 0.
+	if (($field && $field->isCity) || (($config{grindSelling} || '') eq '1')) {
 		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
 		AI::clear("attack");
@@ -3918,7 +3896,7 @@ automacro Party12_LeaderAggressive {
 			do conf attackDistance 2
 			do conf attackMaxDistance 14
 			do conf attackRouteMaxPathDistance 50
-			do conf route_randomWalk 1
+			do conf route_randomWalk 0
 		]
 	}
 }
@@ -3943,7 +3921,7 @@ automacro Party12_LeaderAggressiveNovice {
 			do conf attackChangeTarget 0
 			do conf attackDistance 1
 			do conf attackMaxDistance 3
-			do conf route_randomWalk 1
+			do conf route_randomWalk 0
 		]
 	}
 }
@@ -3989,6 +3967,7 @@ automacro Party12_LeaderNoviceMelee {
 			do conf attackChangeTarget 1
 			do conf attackAuto 2
 			do conf attackAuto_party 0
+			do conf route_randomWalk 0
 		]
 	}
 }
