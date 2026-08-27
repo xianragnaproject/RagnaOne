@@ -2991,10 +2991,31 @@ sub Party12_StickToLeader {
 		return 1;
 	}
 
-	# Always attack on the field while following. Sight-based near/far gating
-	# left members at attackAuto -1 while the leader walked out of range.
-	# Assist-only (1) also fails here — party/follow dmg flags stay 0.
-	if (($field && $field->isCity) || (($config{grindSelling} || '') eq '1')) {
+	# Fight only when stacked near the leader. Always-on attackAuto 2 made
+	# members stop every Poring on the map and fall 70-120 cells behind.
+	# Assist-only (1) still fails here (party/follow dmg flags stay 0), so
+	# use aggressive 2 when near. Wide hysteresis so brief kiting is OK.
+	my $dist;
+	my $seen = 0;
+	if ($playersList) {
+		for my $p (@$playersList) {
+			next unless $p;
+			my $n = eval { $p->name };
+			next unless defined $n && $n eq $lead;
+			$dist = blockDistance($char->{pos_to}, $p->{pos_to});
+			$seen = 1;
+			last;
+		}
+	}
+	my $nearOn = 30;
+	my $nearOff = 40;
+	my $attacking = (($config{attackAuto} // '') eq '2');
+	my $near = 0;
+	if ($seen && defined $dist) {
+		$near = 1 if $dist <= $nearOn;
+		$near = 1 if $attacking && $dist <= $nearOff;
+	}
+	if (($field && $field->isCity) || (($config{grindSelling} || '') eq '1') || !$near) {
 		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
 		AI::clear("attack");
@@ -3003,7 +3024,6 @@ sub Party12_StickToLeader {
 		Commands::run("conf attackAuto_party 1");
 		Commands::run("conf attackAuto_followTarget 1");
 		Commands::run("conf attackChangeTarget 1");
-		# Drop loot queues that block ai_autoAttack — do NOT clear attack/move
 		AI::clear("take", "items_take", "items_gather");
 	}
 	ai_follow($lead) if defined &ai_follow;
