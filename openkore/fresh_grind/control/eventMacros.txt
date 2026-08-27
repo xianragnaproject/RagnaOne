@@ -2886,7 +2886,7 @@ sub Party12_EnsurePartyInvites {
 		next if $in{$name};
 		Commands::run("party request $name");
 	}
-	Commands::run("party share 1");
+	Commands::run("party share 0"); # Individual while spread novices; even share after stacked jobs
 	return 1;
 }
 
