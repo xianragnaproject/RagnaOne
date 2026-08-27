@@ -1,5 +1,6 @@
 # mon_control — hunt soft farm mobs; avoid Creamy (kills novices)
-# attack: 2 = always auto-attack when it appears; 0 = ignore; -1 = avoid
+# attack: 1 = auto-attack; 0 = ignore; -1 = avoid
+# (OpenKore clean-target path only accepts attack_auto 1 or 3)
 # Specific lines override "all" (matched by lc name or nameID).
 
 Creamy -1 0 0
@@ -25,4 +26,4 @@ Red Mushroom 0 0 0
 1008 0 0 0
 Fabre 0 0 0
 
-all 2 0 0
+all 1 0 0

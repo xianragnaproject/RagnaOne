@@ -2934,7 +2934,7 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf lockMap none");
 	Commands::run("conf lockMap_x none");
 	Commands::run("conf lockMap_y none");
-	# attackAuto owned by Party12_StickToLeader (-1 while seeking, 1 when near)
+	# attackAuto owned by Party12_StickToLeader (-1 while seeking, 2 when near)
 	Commands::run("conf attackAuto_party 1");
 	Commands::run("conf attackAuto_followTarget 1");
 	Commands::run("conf attackAuto_inLockOnly 0");
@@ -2944,10 +2944,11 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf followDistanceMax 3");
 	Commands::run("conf followDistanceMin 1");
 	Commands::run("conf route_randomWalk 0");
-	# Loot hard: take kills + gather ground drops (party kills too)
-	Commands::run("conf itemsTakeAuto 2");
+	# Soft loot while stacked: itemsTakeAuto/Gather 2 blocks ai_autoAttack
+	# whenever take/gather is queued (loot spam = never attack).
+	Commands::run("conf itemsTakeAuto 1");
 	Commands::run("conf itemsTakeAuto_party 1");
-	Commands::run("conf itemsGatherAuto 2");
+	Commands::run("conf itemsGatherAuto 0");
 	Commands::run("conf grindPartyMode 1");
 	# sellAuto stays off during follow; Party12_SellOverweight handles OW sells
 	unless (($config{grindSelling} || '') eq '1') {
@@ -2957,7 +2958,7 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf teleportAuto_hp 0");
 	Commands::run("conf sitAuto_idle 0");
 	Commands::run("conf sitAuto_hp_lower 50");
-	Log::message("[Grind] Party member HARD follow/assist $lead (attackAuto 1)\n", "success");
+	Log::message("[Grind] Party member HARD follow/assist $lead (attackAuto 2 near)\n", "success");
 	return 1;
 }
 
@@ -2971,7 +2972,7 @@ sub Party12_StickToLeader {
 	my $lead = $config{followTarget} || $config{partyLeaderName} || '';
 	return 1 if $lead eq '';
 
-	# Don't yank sitAuto: forcing attackAuto 1 while low HP stands the bot
+	# Don't yank sitAuto: forcing combat while low HP stands the bot
 	# and keeps it dying at 1-2% (seen on GarethOakf2).
 	my $hpPct = 100;
 	if ($char) {
@@ -3004,17 +3005,20 @@ sub Party12_StickToLeader {
 	}
 	# Far from master: attackAuto -1 (0 still retaliates when Porings slap you
 	# while walking — that stalls follow + blocks EXP Even Share).
-	# Near master: assist-only (attackAuto 1) so they help kill his targets.
+	# Near master: attackAuto 2 (active). Assist-only (1) fails on this
+	# server — party/follow dmg flags stay 0 so members never swing.
 	if (!$near) {
 		Commands::run("conf attackAuto -1") if (($config{attackAuto} // '') ne '-1');
 		if ($char) { eval { $char->sendAttackStop }; }
 		AI::clear("attack");
 	} else {
-		Commands::run("conf attackAuto 1") if (($config{attackAuto} // '') ne '1');
+		Commands::run("conf attackAuto 2") if (($config{attackAuto} // '') ne '2');
 		Commands::run("conf attackAuto_party 1");
 		Commands::run("conf attackAuto_followTarget 1");
 		Commands::run("conf attackChangeTarget 1");
-		# Near master: drop stuck route/move so assist can fire
+		# Drop loot/route queues that block ai_autoAttack
+		AI::clear("take", "items_take", "items_gather");
+		# Near master: drop stuck route/move so attack can fire
 		if (AI::action() eq "move" || (AI::action() eq "route" && !(AI::args() && AI::args()->{isFollow}))) {
 			AI::clear("move", "route");
 		}
