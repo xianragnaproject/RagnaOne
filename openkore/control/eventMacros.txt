@@ -2864,6 +2864,32 @@ sub Grind_StartHunt {
 }
 
 # Unfinished Novice members: solo prt_fild08 (or Job Master) — never follow into death zones
+# Create P99 if needed; invite only members not already in party (no long exclusive pauses).
+sub Party12_EnsurePartyInvites {
+	my @names = qw(
+		CoraEdged2 FelixEdgeg1 DorianEdgeg2 DanaCroftc1 ElsaGalec2
+		HanaOako1 EllisEdgeo2 FayeHoltr1 DanaEdger2 FayeIvesf1 GarethOakf2
+	);
+	unless ($char && $char->{party}{joined}) {
+		Commands::run("party create P99");
+		return 1;
+	}
+	my %in;
+	for my $id (keys %{$char->{party}{users} || {}}) {
+		my $u = $char->{party}{users}{$id};
+		next unless $u && $u->{name};
+		$in{$u->{name}} = 1;
+	}
+	my $n = scalar(keys %in);
+	return 1 if $n >= 12;
+	for my $name (@names) {
+		next if $in{$name};
+		Commands::run("party request $name");
+	}
+	Commands::run("party share 1");
+	return 1;
+}
+
 sub Party12_NoviceSoloUntilJob {
 	Commands::run("conf follow 0");
 	Commands::run("conf followBot 0");
@@ -3671,62 +3697,19 @@ automacro Grind_ReportZeny {
 ###############################################################################
 # Party12 — leader invites; members follow/assist DanaJayLd
 ###############################################################################
+# Only when party missing members — full P99 was re-inviting forever and
+# exclusive pauses starved leader combat/XP.
 automacro Party12_LeaderInvite {
 	exclusive 1
-	timeout 45
+	timeout 120
 	priority 2
 	ConfigKey partyRole leader
-	BaseLevel >= 1
 	JobLevel >= 7
+	Eval !($char && $char->{party}{joined} && scalar(keys %{$char->{party}{users} || {}}) >= 12)
 	call {
 		[
-			log Party12: create/invite party
-			do party create P99
-			pause 2
-		]
-		[
-			do party request CoraEdged2
-			pause 3
-		]
-		[
-			do party request FelixEdgeg1
-			pause 3
-		]
-		[
-			do party request DorianEdgeg2
-			pause 3
-		]
-		[
-			do party request DanaCroftc1
-			pause 3
-		]
-		[
-			do party request ElsaGalec2
-			pause 3
-		]
-		[
-			do party request HanaOako1
-			pause 3
-		]
-		[
-			do party request EllisEdgeo2
-			pause 3
-		]
-		[
-			do party request FayeHoltr1
-			pause 3
-		]
-		[
-			do party request DanaEdger2
-			pause 3
-		]
-		[
-			do party request FayeIvesf1
-			pause 3
-		]
-		[
-			do party request GarethOakf2
-			pause 3
+			log Party12: create or top-up party
+			do eval Party12_EnsurePartyInvites()
 		]
 	}
 }
