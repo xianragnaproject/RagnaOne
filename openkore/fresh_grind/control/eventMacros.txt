@@ -3880,17 +3880,17 @@ automacro Party12_LeaderEvenShare {
 	ConfigKey partyEvenShareActive 1
 	call {
 		[
-			log Party12 force Even Share EXP item div
+			log Party12 force Even Share EXP no item share
 			do conf partyAutoShare 1
-			do conf partyAutoShareItem 1
-			do conf partyAutoShareItemDiv 1
+			do conf partyAutoShareItem 0
+			do conf partyAutoShareItemDiv 0
 			do conf attackAuto 0
 			pause 2
 			do party share 1
 			pause 1
-			do party shareitem 1
+			do party shareitem 0
 			pause 1
-			do party sharediv 1
+			do party sharediv 0
 			pause 1
 			do conf attackAuto 2
 			do conf attackMaxDistance 14
