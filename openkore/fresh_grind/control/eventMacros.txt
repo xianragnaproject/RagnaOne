@@ -2944,10 +2944,10 @@ sub Party12_ApplyMemberFollow {
 	Commands::run("conf followDistanceMax 8");
 	Commands::run("conf followDistanceMin 2");
 	Commands::run("conf route_randomWalk 0");
-	# Soft loot while stacked: itemsTakeAuto/Gather 2 blocks ai_autoAttack
-	# whenever take/gather is queued (loot spam = never attack).
-	Commands::run("conf itemsTakeAuto 1");
-	Commands::run("conf itemsTakeAuto_party 1");
+	# No loot while stacked: soft take (1) still fills inventory (Jellopy/etc)
+	# and can sit-lock the leader on overweight. Kill XP only.
+	Commands::run("conf itemsTakeAuto 0");
+	Commands::run("conf itemsTakeAuto_party 0");
 	Commands::run("conf itemsGatherAuto 0");
 	Commands::run("conf grindPartyMode 1");
 	# sellAuto stays off during follow; Party12_SellOverweight handles OW sells
@@ -3787,8 +3787,8 @@ automacro Party12_MemberRefollow {
 			do conf followDistanceMin 1
 			do conf route_randomWalk 0
 			do conf lockMap none
-			do conf itemsTakeAuto 1
-			do conf itemsTakeAuto_party 1
+			do conf itemsTakeAuto 0
+			do conf itemsTakeAuto_party 0
 			do conf itemsGatherAuto 0
 			do eval Party12_StickToLeader()
 		]
@@ -3797,8 +3797,9 @@ automacro Party12_MemberRefollow {
 
 
 
-# Party12 — loot while grinding (soft: don't block ai_autoAttack)
-# itemsTakeAuto/Gather 2 queues take on every drop and blocks attacking.
+# Party12 — keep loot OFF while grinding (avoid overweight sit-lock).
+# itemsTakeAuto/Gather 2 queues take on every drop and blocks attacking;
+# soft take (1) still picks kill drops and can fill weight on long stacks.
 automacro Party12_LootEnforce {
 	exclusive 0
 	timeout 20
@@ -3806,12 +3807,12 @@ automacro Party12_LootEnforce {
 	ConfigKeyNot grindSelling 1
 	ConfigKeyNot grindJobbing 1
 	ConfigKeyNot grindAfk 1
-	ConfigKeyNot itemsTakeAuto 1
+	ConfigKeyNot itemsTakeAuto 0
 	call {
 		[
-			log Party12: soft loot - take kills only, gather off
-			do conf itemsTakeAuto 1
-			do conf itemsTakeAuto_party 1
+			log Party12: loot off no overweight
+			do conf itemsTakeAuto 0
+			do conf itemsTakeAuto_party 0
 			do conf itemsGatherAuto 0
 			do conf itemsMaxWeight 89
 			do conf itemsMaxWeight_sellOrStore 50
