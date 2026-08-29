@@ -2886,7 +2886,9 @@ sub Party12_EnsurePartyInvites {
 		next if $in{$name};
 		Commands::run("party request $name");
 	}
-	Commands::run("party share 1"); # Even share while party stacked on leader
+	# Individual Take: Even Share with 12 novices floors Poring/Lunatic XP to 0.
+	# Re-enable Even Share later via partyEvenShareActive when exp/kill is larger.
+	Commands::run("party share 0");
 	return 1;
 }
 
