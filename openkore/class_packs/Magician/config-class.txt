@@ -1,0 +1,17 @@
+######## Class pack: Magician ########
+grindTargetJob Magician
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Increase SP Recovery 8, Sight 1, Fire Bolt 10, Cold Bolt 5, Lightning Bolt 5, Napalm Beat 5
+attackDistance 9
+attackMaxDistance 9
+attackDistanceAuto 0
+
+attackSkillSlot Fire Bolt {
+	lvl 10
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+}
+

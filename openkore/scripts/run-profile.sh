@@ -16,8 +16,10 @@ attempt=0
 while true; do
   attempt=$((attempt + 1))
   echo "[run-profile] $(date -u +%Y-%m-%dT%H:%M:%SZ) starting $PROFILE (attempt $attempt)"
-  # Unquoted EXP so $PROFILE expands; escape expect/$ for Tcl.
-  expect <<EXP || true
+  # Expect script MUST be a file (not a heredoc on stdin). A heredoc makes
+  # `interact` see EOF immediately and kill OpenKore right after login.
+  EXPFILE=$(mktemp /tmp/ok-expect.XXXXXX)
+  cat > "$EXPFILE" <<EXP
 set timeout -1
 log_user 1
 set pass {$PASS_TCL}
@@ -25,37 +27,41 @@ spawn perl ./openkore.pl --profile=$PROFILE --interface=Console
 expect {
   -re {Compile portals} {
     expect -re {Enter your answer:}
-    send "1\r"
+    send "1\\r"
     exp_continue
   }
   -re {Please choose a character} {
     expect -re {Enter your answer:}
-    send "0\r"
+    send "0\\r"
     exp_continue
   }
   -re {Please choose a server} {
     expect -re {Enter your answer:}
-    send "0\r"
+    send "0\\r"
     exp_continue
   }
   -re {Password Error|Enter your Ragnarok Online password again} {
-    puts "\\n\[run-profile\] password prompt — resending configured password"
+    puts "\\n\\[run-profile\\] password prompt — resending configured password"
     expect -re {Enter your answer:}
-    send -- "\$pass\r"
+    send -- "\$pass\\r"
     exp_continue
   }
   -re {You are now in the game} {
-    puts "\\n\[run-profile\] in-game — macros own movement; holding"
-    exp_continue
+    puts "\\n\\[run-profile\\] in-game — macros own movement; console interactive"
+    # Hand tty to OpenKore so tmux send-keys / attach work.
+    # Returns on disconnect/EOF — outer loop then restarts.
+    interact
   }
   -re {Timeout on Map Server|Disconnected from Map Server|connecting to Account Server} {
-    puts "\\n\[run-profile\] disconnect — waiting for auto-relog"
+    puts "\\n\\[run-profile\\] disconnect — waiting for auto-relog"
     exp_continue
   }
   eof
 }
 EXP
+  expect -f "$EXPFILE" || true
   code=$?
+  rm -f "$EXPFILE"
   echo "[run-profile] $(date -u +%Y-%m-%dT%H:%M:%SZ) $PROFILE exited code=$code — restarting in 8s"
   sleep 8
 done

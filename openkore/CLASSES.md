@@ -11,7 +11,7 @@ Supported packs:
 
 Not included: 2-2 jobs (Crusader, Sage, Monk, Alchemist, Rogue, Bard, Dancer).
 
-Job Master: Prontera `150,180`. Second-job menu choice is `r0` for every 2-1 path.
+Job Master: Prontera `150,180` (Ep2 only). **Episode 4: Job Master missing — use classic guild quests.** Second-job menu when Job Master exists is `r0` for every 2-1 path.
 
 ## Clean packs (AssassinClean progression)
 

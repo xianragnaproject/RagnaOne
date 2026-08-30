@@ -1,0 +1,14 @@
+# profile	class	role	char	username	password	sex	leader_char	grindTargetJob
+# Randomized 1st-job targets (Ep4: classic guild quests — Job Master missing)
+PSwdLead	Magician	leader	DanaJayLd	p48f77520	WM84oX34rj9V	M	DanaJayLd	Magician
+PSwd2	Acolyte	member	CoraEdged2	p7d4c9cdf	JvIKPDyHj26F	M	DanaJayLd	Acolyte
+PMag1	Swordman	member	FelixEdgeg1	p595c0fbe	AZKm2mz4biWx	F	DanaJayLd	Swordman
+PMag2	Archer	member	DorianEdgeg2	pfc06f2f2	keWzOQPOjG4m	F	DanaJayLd	Archer
+PArc1	Thief	member	DanaCroftc1	pb2f7a1d0	cXvLIUKSigSu	F	DanaJayLd	Thief
+PArc2	Thief	member	ElsaGalec2	pa669a22b	U95hCtCpYzSS	M	DanaJayLd	Thief
+PAco1	Acolyte	member	HanaOako1	pbeb27fb6	lXU2v2mSxIsJ	M	DanaJayLd	Acolyte
+PAco2	Archer	member	EllisEdgeo2	p0154e3bf	1xHLTwK-MHkT	F	DanaJayLd	Archer
+PMer1	Swordman	member	FayeHoltr1	pb09c6ea6	SpBg9Kj_F6Wq	F	DanaJayLd	Swordman
+PMer2	Merchant	member	DanaEdger2	p819799d4	MLTGFICtQiaT	F	DanaJayLd	Merchant
+PThf1	Magician	member	FayeIvesf1	pbf573c96	dgT8SMVnjVCp	M	DanaJayLd	Magician
+PThf2	Merchant	member	GarethOakf2	pf5851f07	fXix5ALBF6Ga	M	DanaJayLd	Merchant

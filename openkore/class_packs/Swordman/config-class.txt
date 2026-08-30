@@ -1,0 +1,17 @@
+######## Class pack: Swordman ########
+grindTargetJob Swordman
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Sword Mastery 10, Bash 10, Magnum Break 10, Provoke 5, Endure 5, Increase HP Recovery 5
+attackDistance 1
+attackMaxDistance 1
+attackDistanceAuto 0
+
+attackSkillSlot Bash {
+	lvl 10
+	dist 1
+	maxDist 2
+	sp > 5
+	notInTown 1
+	timeout 1
+}
+

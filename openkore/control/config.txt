@@ -2,8 +2,8 @@
 
 master RagnaOne
 server 0
-username CHANGE_ME
-password CHANGE_ME
+username
+password
 loginPinCode
 char 0
 
@@ -29,9 +29,9 @@ attackAuto_notInTown 1
 attackAuto_notWhile_storageAuto 1
 attackAuto_notWhile_buyAuto 1
 attackAuto_notWhile_sellAuto 1
-attackDistance 1
+attackDistance 2
 attackDistanceAuto 1
-attackMaxDistance 1
+attackMaxDistance 14
 attackRouteMaxPathDistance 50
 attackMaxRouteTime 6
 attackMinPlayerDistance 0
@@ -74,7 +74,7 @@ dcPause 1
 
 ######## Sit / heal — human pacing ########
 
-sitAuto_hp_lower 40
+sitAuto_hp_lower 50
 sitAuto_hp_upper 80
 sitAuto_sp_lower 20
 sitAuto_sp_upper 50
@@ -403,3 +403,7 @@ saveMap_warpChatCommand
 ######## Optional: disconnect when done leveling ########
 # dcOnLevel 99 already set above
 macro_orphans terminate
+
+partyAutoShare 1
+partyAutoShareItem 1
+partyAutoShareItemDiv 1

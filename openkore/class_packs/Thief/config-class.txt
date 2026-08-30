@@ -1,0 +1,17 @@
+######## Class pack: Thief ########
+grindTargetJob Thief
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Double Attack 10, Improve Dodge 10, Steal 10, Hiding 10, Envenom 10, Detoxify 1
+attackDistance 1
+attackMaxDistance 1
+attackDistanceAuto 0
+
+attackSkillSlot Envenom {
+	lvl 5
+	dist 1
+	maxDist 2
+	sp > 8
+	notInTown 1
+	timeout 2
+}
+

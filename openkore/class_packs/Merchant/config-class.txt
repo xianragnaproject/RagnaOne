@@ -1,0 +1,17 @@
+######## Class pack: Merchant ########
+grindTargetJob Merchant
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Enlarge Weight Limit 10, Discount 10, Overcharge 10, Pushcart 10, Vending 1, Mammonite 10, Item Appraisal 1
+attackDistance 1
+attackMaxDistance 1
+attackDistanceAuto 0
+
+attackSkillSlot Mammonite {
+	lvl 10
+	dist 1
+	maxDist 2
+	sp > 8
+	notInTown 1
+	timeout 2
+}
+

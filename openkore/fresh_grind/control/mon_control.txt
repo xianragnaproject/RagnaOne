@@ -1,5 +1,29 @@
-# mon_control — ALWAYS attack everything (aggressive)
-# attack: 2 = always auto-attack when it appears
-# Never leave mobs alone — no Fabre/-1 avoids
+# mon_control — hunt soft farm mobs; avoid Creamy (kills novices)
+# attack: 1 = auto-attack; 0 = ignore; -1 = avoid
+# (OpenKore clean-target path only accepts attack_auto 1 or 3)
+# Specific lines override "all" (matched by lc name or nameID).
 
-all 2 0 0
+Creamy -1 0 0
+Elder Willow -1 0 0
+
+# Decorative plants — ID + name (prevents pay_fild "Can't reach" loops)
+1078 0 0 0
+1079 0 0 0
+1080 0 0 0
+1081 0 0 0
+1082 0 0 0
+1083 0 0 0
+Green Plant 0 0 0
+Yellow Plant 0 0 0
+White Plant 0 0 0
+Red Plant 0 0 0
+Blue Plant 0 0 0
+Shining Plant 0 0 0
+Black Mushroom 0 0 0
+Red Mushroom 0 0 0
+
+# Pupa / Fabre: ignore
+1008 0 0 0
+Fabre 0 0 0
+
+all 1 0 0

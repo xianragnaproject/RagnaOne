@@ -1,0 +1,17 @@
+######## Class pack: Archer ########
+grindTargetJob Archer
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Owl's Eye 10, Vulture's Eye 10, Double Strafe 10, Improve Concentration 5, Arrow Shower 10
+attackDistance 9
+attackMaxDistance 9
+attackDistanceAuto 0
+
+attackSkillSlot Double Strafe {
+	lvl 10
+	dist 9
+	maxDist 9
+	sp > 8
+	notInTown 1
+	timeout 1
+}
+

@@ -1,7 +1,7 @@
 # RagnaOne OpenKore servers entry
 
 [RagnaOne]
-ip 173.208.138.84
+ip 93.127.139.197
 port 6900
 master_version 14
 version 55

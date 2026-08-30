@@ -1,0 +1,29 @@
+######## Class pack: Acolyte ########
+grindTargetJob Acolyte
+skillsAddAuto 1
+skillsAddAuto_list Basic Skill 9, Heal 10, Increase Healing 5, Blessing 10, Increase AGI 10, Angelus 5, Ruwach 1, Teleport 2, Warp Portal 1
+attackDistance 2
+attackMaxDistance 2
+attackDistanceAuto 0
+
+useSelf_skill Heal {
+	lvl 10
+	hp < 60%
+	sp > 10
+	timeout 1
+}
+partySkill Blessing {
+	lvl 5
+	target_whenStatusInactive Blessing
+	sp > 20
+	notInTown 1
+	timeout 8
+}
+partySkill Increase AGI {
+	lvl 5
+	target_whenStatusInactive Increase AGI
+	sp > 20
+	notInTown 1
+	timeout 8
+}
+
