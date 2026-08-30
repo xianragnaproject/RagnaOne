@@ -26,13 +26,22 @@ For multi-bot, copy each class `control/*` into `~/openkore/profiles/<Name>/`, s
 ~/openkore/scripts/start-bot.sh Wizard
 ```
 
-## Job Master (live)
+## Job change (Episode 4)
 
-NPC: **Prontera `150,180`** (`Job Master#ep2`)
+Prontera Job Master (`150/155,180`) is **missing** on this Episode 4 build. Leave `grindUseJobMaster 0`.
 
-First jobs: Swordman=`r0`, Magician=`r1`, Archer=`r2`, Acolyte=`r3`, Merchant=`r4`, Thief=`r5`
+Use classic guild quests instead (Job 10 + Basic Skill 9):
 
-Second job (2-1 only): always `r0` (Knight / Wizard / Hunter / Priest / Blacksmith / Assassin).
+| 1st job | Town / NPC |
+|---------|------------|
+| Swordman | Izlude `izlude_in` Swordman Association (`74,172`) + exam in `job_sword1` |
+| Magician | Geffen `geffen_in` Mage Guildsman (`164,124`) + Mixed Solution test |
+| Archer | Payon Archer Village `payon_in02` (`64,71`) — needs Trunk points |
+| Acolyte | Prontera Church `prt_church` Cleric#aco (`184,41`) — visit field ascetic, return |
+| Merchant | Alberta `alberta_in` Chief Mahnsoo (`53,43`) — fee + delivery |
+| Thief | Morroc Ruins → `moc_prydb1` / mushroom farm |
+
+Party12 randomized targets are in `profiles/PARTY12_MAP.txt` (`grindTargetJob` column) and each profile `grindTargetJob`.
 
 ## Shared map route (base → 99)
 
